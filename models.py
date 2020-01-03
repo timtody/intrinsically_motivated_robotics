@@ -33,10 +33,10 @@ class ForwardModule(nn.Module):
         self.conv_mod = shared_conv
         convw = shared_conv.conv2d_size_out(w, 4)
         convh = shared_conv.conv2d_size_out(h, 4)
-        linear_input_size = convw * convh * 32
+        conv_out_size = convw * convh * 32
         # we add + 1 because of the concatenated action
-        self.linear = nn.Linear(linear_input_size + 1, 256)
-        self.head = nn.Linear(256, linear_input_size)
+        self.linear = nn.Linear(conv_out_size + 1, 256)
+        self.head = nn.Linear(256, conv_out_size)
 
     def forward(self, x, a):
         x = self.conv_mod(x)
@@ -52,8 +52,9 @@ class InverseModule(nn.Module):
         self.conv_mod = shared_conv
         convw = shared_conv.conv2d_size_out(w, 4)
         convh = shared_conv.conv2d_size_out(h, 4)
-        linear_input_size = convw * convh * 32
-        self.linear = nn.Linear(linear_input_size * 2, 256)
+        conv_out_size = convw * convh * 32
+        # * 2 because we concatenate two states
+        self.linear = nn.Linear(conv_out_size * 2, 256)
         self.head = nn.Linear(256, n_actions)
 
     def forward(self, x, y):
