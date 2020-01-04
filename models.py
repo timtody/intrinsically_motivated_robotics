@@ -10,57 +10,67 @@ class ConvModule(nn.Module):
         self.conv2 = nn.Conv2d(32, 32, 3, stride=2, padding=1)
         self.conv3 = nn.Conv2d(32, 32, 3, stride=2, padding=1)
         self.conv4 = nn.Conv2d(32, 32, 3, stride=2, padding=1)
-    
+
     def forward(self, x):
         x = F.elu(self.conv1(x))
         x = F.elu(self.conv2(x))
         x = F.elu(self.conv3(x))
         x = F.elu(self.conv4(x))
-        return x
+        return x.flatten()
     
-    def conv2d_size_out(self, size, n_convs, kernel_size=3, stride=2, padding=1):
-        for i in range(n_convs):
-            size = ((size - (kernel_size - 1) - 1) + padding * 2) // stride  + 1
-        return size
-
-
-shared_conv = ConvModule()
-
 
 class ForwardModule(nn.Module):
-    def __init__(self, h, w):
+    def __init__(self, conv_out_size, conv_base):
         super(ForwardModule, self).__init__()
-        self.conv_mod = shared_conv
-        convw = shared_conv.conv2d_size_out(w, 4)
-        convh = shared_conv.conv2d_size_out(h, 4)
-        conv_out_size = convw * convh * 32
+        self.conv_base = conv_base
         # we add + 1 because of the concatenated action
         self.linear = nn.Linear(conv_out_size + 1, 256)
         self.head = nn.Linear(256, conv_out_size)
 
     def forward(self, x, a):
-        x = self.conv_mod(x)
-        x = torch.cat([x.flatten(), a])
+        x = self.conv_base(x)
+        x = torch.cat([x, a])
         x = self.linear(x)
         x = self.head(x)
         return x
 
 
 class InverseModule(nn.Module):
-    def __init__(self, h, w, n_actions):
+    def __init__(self, conv_out_size, conv_base, n_actions):
         super(InverseModule, self).__init__()
-        self.conv_mod = shared_conv
-        convw = shared_conv.conv2d_size_out(w, 4)
-        convh = shared_conv.conv2d_size_out(h, 4)
-        conv_out_size = convw * convh * 32
+        self.conv_base = conv_base
         # * 2 because we concatenate two states
         self.linear = nn.Linear(conv_out_size * 2, 256)
         self.head = nn.Linear(256, n_actions)
 
     def forward(self, x, y):
-        x = self.conv_mod(x)
-        y = self.conv_mod(y)
-        x = torch.cat([x.flatten(), y.flatten()])
+        x = self.conv_base(x)
+        y = self.conv_base(y)
+        x = torch.cat([x, y])
         x = self.linear(x)
         x = self.head(x)
         return x
+    
+
+class ICModule:
+    def __init__(self, h, w, n_actions):
+        self._conv_base = ConvModule()
+        convw = shared_conv._conv2d_size_out(w, 4)
+        convh = shared_conv._conv2d_size_out(h, 4)
+        conv_out_size = convw * convh * 32
+        self._inverse = InverseModule(conv_out_size, conv_base, n_actions)
+        self._forward = ForwardModule(conv_out_size, conv_base)
+    
+    def _conv2d_size_out(self, size, n_convs, kernel_size=3, stride=2, padding=1):
+        for i in range(n_convs):
+            size = ((size - (kernel_size - 1) - 1) + padding * 2) // stride + 1
+        return size
+    
+    def embed(self, state):
+        return self._conv_base(state)
+    
+    def next_state(self, state, action):
+        return self._forward(state, action)
+    
+    def get_action(self, this_state, next_state):
+        return self._inverse(this_state, next_state)
