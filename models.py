@@ -74,3 +74,35 @@ class ICModule:
     
     def get_action(self, this_state, next_state):
         return self._inverse(this_state, next_state)
+
+
+class DNNPolicy(nn.Module):
+    """
+    To be implemented.
+    """
+    def __init__(self):
+        super(DNNPolicy, self).__ini__()
+    
+    def forward(self, x):
+        pass
+    
+
+class FCPolicy(nn.Module):
+    """
+    For testing continuous cart pole before using real env.
+    """
+    def __init__(self, state_size, n_actions):
+        super(FCPolicy, self).__init__()
+        self.linear_1 = nn.Linear(state_size, 128)
+        self.linear_2 = nn.Linear(128, 128)
+        self.logits = nn.Linear(128, n_actions)
+        self.value = nn.Linear(128, 1)
+    
+    def forward(self, x):
+        x = F.relu(self.linear_1(x))
+        x = F.relu(self.linear_2(x))
+        logits = self.logits(x)
+        value = self.value(x)
+        probs = F.softmax(logits, dim=-1)
+        return probs, value
+    
