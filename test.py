@@ -2,6 +2,7 @@ import torch
 import torch.optim as optim
 import torch.nn.functional as F
 
+import gym
 import random
 from matplotlib import pyplot as plt
 from models import ForwardModule, InverseModule, shared_conv
