@@ -1,9 +1,19 @@
+"""
+Contains models to reproduce the findings from 
+https://pathak22.github.io/noreward-rl/resources/icml17.pdf
+"""
+from itertools import chain
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
 
 class ConvModule(nn.Module):
+    """
+    Provides thes shared convolutional base for the inverse and forward model.
+    """
+
     def __init__(self):
         super(ConvModule, self).__init__()
         self.conv1 = nn.Conv2d(1, 32, 3, stride=2, padding=1)
@@ -17,9 +27,19 @@ class ConvModule(nn.Module):
         x = F.elu(self.conv3(x))
         x = F.elu(self.conv4(x))
         return x.flatten()
-    
+
+    @staticmethod
+    def _conv2d_size_out(size, n_convs, kernel_size=3, stride=2, padding=1):
+        for _ in range(n_convs):
+            size = ((size - (kernel_size - 1) - 1) + padding * 2) // stride + 1
+        return size
+
 
 class ForwardModule(nn.Module):
+    """
+    Module for learning the forward mapping of state x action -> next state
+    """
+
     def __init__(self, conv_out_size, conv_base):
         super(ForwardModule, self).__init__()
         self.conv_base = conv_base
@@ -36,6 +56,10 @@ class ForwardModule(nn.Module):
 
 
 class InverseModule(nn.Module):
+    """
+    Module for learning the inverse mapping of state x next state -> action.
+    """
+
     def __init__(self, conv_out_size, conv_base, n_actions):
         super(InverseModule, self).__init__()
         self.conv_base = conv_base
@@ -50,27 +74,44 @@ class InverseModule(nn.Module):
         x = self.linear(x)
         x = self.head(x)
         return x
-    
+
 
 class ICModule:
+    """
+    Intrinsic curiosity module.
+    """
+
     def __init__(self, h, w, n_actions):
         self._conv_base = ConvModule()
-        convw = shared_conv._conv2d_size_out(w, 4)
-        convh = shared_conv._conv2d_size_out(h, 4)
+        convw = ConvModule._conv2d_size_out(w, 4)
+        convh = ConvModule._conv2d_size_out(h, 4)
         conv_out_size = convw * convh * 32
-        self._inverse = InverseModule(conv_out_size, conv_base, n_actions)
-        self._forward = ForwardModule(conv_out_size, conv_base)
-    
-    def _conv2d_size_out(self, size, n_convs, kernel_size=3, stride=2, padding=1):
-        for i in range(n_convs):
-            size = ((size - (kernel_size - 1) - 1) + padding * 2) // stride + 1
-        return size
-    
+
+        # define forward and inverse modules
+        self._inverse = InverseModule(
+            conv_out_size, self._conv_base, n_actions)
+        self._forward = ForwardModule(conv_out_size, self._conv_base)
+
+    def parameters(self):
+        """
+        Returns all parameters.
+        """
+        return set(chain(self._inverse.parameters(), self._forward.parameters()))
+
     def embed(self, state):
+        """
+        Returns the state embedding from the shared convolutional base.
+        """
         return self._conv_base(state)
-    
+
     def next_state(self, state, action):
+        """
+        Given state and action, predicts the next state in embedding space.
+        """
         return self._forward(state, action)
-    
+
     def get_action(self, this_state, next_state):
+        """
+        Given two states, predicts the action taken.
+        """
         return self._inverse(this_state, next_state)
