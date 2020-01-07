@@ -1,9 +1,0 @@
-wandb_version: 1
-
-_wandb:
-  desc: null
-  value:
-    cli_version: 0.8.18
-    framework: torch
-    is_jupyter_run: false
-    python_version: 3.6.9
