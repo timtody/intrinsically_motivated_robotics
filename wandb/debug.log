@@ -1,0 +1,175 @@
+2020-01-07 17:20:15,697 DEBUG   MainThread:29349 [wandb_config.py:_load_defaults():110] no defaults not found in config-defaults.yaml
+2020-01-07 17:20:15,729 DEBUG   MainThread:29349 [cmd.py:execute():728] Popen(['git', 'cat-file', '--batch-check'], cwd=/home/taylor/projects/curious, universal_newlines=False, shell=None, istream=<valid stream>)
+2020-01-07 17:20:15,759 DEBUG   MainThread:29349 [cmd.py:execute():728] Popen(['git', 'rev-parse', '--show-toplevel'], cwd=/home/taylor/projects/curious, universal_newlines=False, shell=None, istream=None)
+2020-01-07 17:20:15,773 DEBUG   MainThread:29349 [cmd.py:execute():728] Popen(['git', 'status', '--porcelain', '--untracked-files'], cwd=/home/taylor/projects/curious, universal_newlines=False, shell=None, istream=None)
+2020-01-07 17:20:15,828 DEBUG   MainThread:29349 [run_manager.py:__init__():535] Initialized sync for curious/jbfrqlra
+2020-01-07 17:20:15,873 INFO    MainThread:29349 [run_manager.py:wrap_existing_process():1133] wrapping existing process 29314
+2020-01-07 17:20:15,876 WARNING MainThread:29349 [io_wrap.py:register():104] SIGWINCH handler was not None: <Handlers.SIG_DFL: 0>
+2020-01-07 17:20:15,886 DEBUG   MainThread:29349 [connectionpool.py:_new_conn():959] Starting new HTTPS connection (1): pypi.org:443
+2020-01-07 17:20:15,958 DEBUG   MainThread:29349 [connectionpool.py:_make_request():437] https://pypi.org:443 "GET /pypi/wandb/json HTTP/1.1" 200 38782
+2020-01-07 17:20:15,972 INFO    MainThread:29349 [run_manager.py:init_run():918] system metrics and metadata threads started
+2020-01-07 17:20:15,974 INFO    MainThread:29349 [run_manager.py:init_run():952] upserting run before process can begin, waiting at most 10 seconds
+2020-01-07 17:20:16,009 DEBUG   Thread-14 :29349 [connectionpool.py:_new_conn():959] Starting new HTTPS connection (1): api.wandb.ai:443
+2020-01-07 17:20:16,250 DEBUG   Thread-14 :29349 [connectionpool.py:_make_request():437] https://api.wandb.ai:443 "POST /graphql HTTP/1.1" 200 511
+2020-01-07 17:20:16,274 INFO    Thread-14 :29349 [run_manager.py:_upsert_run():1037] saving patches
+2020-01-07 17:20:16,277 DEBUG   Thread-14 :29349 [cmd.py:execute():728] Popen(['git', 'rev-parse', '--show-toplevel'], cwd=/home/taylor/projects/curious, universal_newlines=False, shell=None, istream=None)
+2020-01-07 17:20:16,295 DEBUG   Thread-14 :29349 [cmd.py:execute():728] Popen(['git', 'diff', '--cached', '--abbrev=40', '--full-index', '--raw'], cwd=/home/taylor/projects/curious, universal_newlines=False, shell=None, istream=None)
+2020-01-07 17:20:16,325 DEBUG   Thread-14 :29349 [cmd.py:execute():728] Popen(['git', 'diff', '--abbrev=40', '--full-index', '--raw'], cwd=/home/taylor/projects/curious, universal_newlines=False, shell=None, istream=None)
+2020-01-07 17:20:16,345 DEBUG   Thread-14 :29349 [cmd.py:execute():728] Popen(['git', 'version'], cwd=/home/taylor/projects/curious, universal_newlines=False, shell=None, istream=None)
+2020-01-07 17:20:16,433 INFO    Thread-14 :29349 [run_manager.py:_upsert_run():1041] saving pip packages
+2020-01-07 17:20:16,443 INFO    Thread-14 :29349 [run_manager.py:_upsert_run():1043] initializing streaming files api
+2020-01-07 17:20:16,447 INFO    Thread-14 :29349 [run_manager.py:_upsert_run():1050] unblocking file change observer, beginning sync with W&B servers
+2020-01-07 17:20:16,450 INFO    MainThread:29349 [run_manager.py:wrap_existing_process():1150] informing user process we are ready to proceed
+2020-01-07 17:20:16,460 INFO    MainThread:29349 [run_manager.py:_sync_etc():1257] entering loop for messages from user process
+2020-01-07 17:20:16,462 DEBUG   Thread-15 :29349 [connectionpool.py:_new_conn():959] Starting new HTTPS connection (1): api.wandb.ai:443
+2020-01-07 17:20:16,615 DEBUG   Thread-15 :29349 [connectionpool.py:_make_request():437] https://api.wandb.ai:443 "POST /graphql HTTP/1.1" 200 46
+2020-01-07 17:20:16,715 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/config.yaml
+2020-01-07 17:20:16,723 DEBUG   Thread-3  :29349 [connectionpool.py:_new_conn():959] Starting new HTTPS connection (1): api.wandb.ai:443
+2020-01-07 17:20:16,887 DEBUG   Thread-3  :29349 [connectionpool.py:_make_request():437] https://api.wandb.ai:443 "POST /graphql HTTP/1.1" 200 559
+2020-01-07 17:20:16,900 INFO    Thread-3  :29349 [run_manager.py:_on_file_created():671] file/dir created: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/requirements.txt
+2020-01-07 17:20:16,902 INFO    Thread-3  :29349 [run_manager.py:_on_file_created():671] file/dir created: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/diff.patch
+2020-01-07 17:20:16,905 INFO    Thread-3  :29349 [run_manager.py:_on_file_created():671] file/dir created: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/output.log
+2020-01-07 17:20:16,909 INFO    Thread-3  :29349 [run_manager.py:_on_file_created():671] file/dir created: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-metadata.json
+2020-01-07 17:20:18,722 DEBUG   Thread-16 :29349 [connectionpool.py:_new_conn():959] Starting new HTTPS connection (1): api.wandb.ai:443
+2020-01-07 17:20:18,880 DEBUG   Thread-16 :29349 [connectionpool.py:_make_request():437] https://api.wandb.ai:443 "POST /graphql HTTP/1.1" 200 763
+2020-01-07 17:20:18,887 DEBUG   Thread-16 :29349 [connectionpool.py:_new_conn():959] Starting new HTTPS connection (1): storage.googleapis.com:443
+2020-01-07 17:20:19,249 DEBUG   Thread-16 :29349 [connectionpool.py:_make_request():437] https://storage.googleapis.com:443 "PUT /wandb-production.appspot.com/timtody/curious/jbfrqlra/___batch_archive_1.tgz?Expires=1578414078&GoogleAccessId=gorilla-cloud-storage%40wandb-production.iam.gserviceaccount.com&Signature=IoVGhKJ4NavrtdFFHCCYUpYVkjPFQRH6qZMO3dRcae5amfkreGOJw9Scmn1MHiG3N%2BLZqG4YiRVRbYRznivUogmvDFpsrSnILa6h2sLDjNXOJ3%2FbXXD%2FcVkESnYZHfvxrSrik51wjJ4qFulyizRpH3szlEavbcPsIWD%2BnkS5SdLPmP5QjJVjtRi71Lo3IFinK6VBcspekI1%2FcObSQCH8kaqPenjOBrs%2B%2BqK3Htr1xhWKpKDENxMKw5DbYEUW8dFc0XLT3ZIIyVBZeewrC5IN5L20sHT4WNo%2BLzql7o0F8LlDEE09nZc1oOhC7YOqJFs1Yp2MwT7h9ZngtasWYCcshQ%3D%3D HTTP/1.1" 200 0
+2020-01-07 17:20:20,720 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-history.jsonl
+2020-01-07 17:20:20,730 DEBUG   Thread-7  :29349 [connectionpool.py:_new_conn():959] Starting new HTTPS connection (1): api.wandb.ai:443
+2020-01-07 17:20:20,730 INFO    Thread-3  :29349 [run_manager.py:_on_file_created():671] file/dir created: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-summary.json
+2020-01-07 17:20:20,919 DEBUG   Thread-7  :29349 [connectionpool.py:_make_request():437] https://api.wandb.ai:443 "POST /files/timtody/curious/jbfrqlra/file_stream HTTP/1.1" 200 311
+2020-01-07 17:20:23,086 DEBUG   Thread-7  :29349 [connectionpool.py:_make_request():437] https://api.wandb.ai:443 "POST /files/timtody/curious/jbfrqlra/file_stream HTTP/1.1" 200 311
+2020-01-07 17:20:23,722 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-history.jsonl
+2020-01-07 17:20:23,725 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-summary.json
+2020-01-07 17:20:25,891 DEBUG   Thread-7  :29349 [connectionpool.py:_make_request():437] https://api.wandb.ai:443 "POST /files/timtody/curious/jbfrqlra/file_stream HTTP/1.1" 200 311
+2020-01-07 17:20:27,728 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-history.jsonl
+2020-01-07 17:20:27,731 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-summary.json
+2020-01-07 17:20:27,885 DEBUG   Thread-7  :29349 [connectionpool.py:_make_request():437] https://api.wandb.ai:443 "POST /files/timtody/curious/jbfrqlra/file_stream HTTP/1.1" 200 311
+2020-01-07 17:20:28,729 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-history.jsonl
+2020-01-07 17:20:28,731 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-summary.json
+2020-01-07 17:20:30,898 DEBUG   Thread-7  :29349 [connectionpool.py:_make_request():437] https://api.wandb.ai:443 "POST /files/timtody/curious/jbfrqlra/file_stream HTTP/1.1" 200 311
+2020-01-07 17:20:31,619 DEBUG   Thread-15 :29349 [connectionpool.py:_new_conn():959] Starting new HTTPS connection (1): api.wandb.ai:443
+2020-01-07 17:20:31,735 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-history.jsonl
+2020-01-07 17:20:31,738 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-summary.json
+2020-01-07 17:20:31,756 DEBUG   Thread-15 :29349 [connectionpool.py:_make_request():437] https://api.wandb.ai:443 "POST /graphql HTTP/1.1" 200 46
+2020-01-07 17:20:32,735 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-metadata.json
+2020-01-07 17:20:33,896 DEBUG   Thread-7  :29349 [connectionpool.py:_make_request():437] https://api.wandb.ai:443 "POST /files/timtody/curious/jbfrqlra/file_stream HTTP/1.1" 200 311
+2020-01-07 17:20:35,739 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-history.jsonl
+2020-01-07 17:20:35,741 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-summary.json
+2020-01-07 17:20:35,915 DEBUG   Thread-7  :29349 [connectionpool.py:_make_request():437] https://api.wandb.ai:443 "POST /files/timtody/curious/jbfrqlra/file_stream HTTP/1.1" 200 311
+2020-01-07 17:20:38,742 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-history.jsonl
+2020-01-07 17:20:38,745 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-summary.json
+2020-01-07 17:20:38,883 DEBUG   Thread-7  :29349 [connectionpool.py:_make_request():437] https://api.wandb.ai:443 "POST /files/timtody/curious/jbfrqlra/file_stream HTTP/1.1" 200 311
+2020-01-07 17:20:41,062 DEBUG   Thread-7  :29349 [connectionpool.py:_make_request():437] https://api.wandb.ai:443 "POST /files/timtody/curious/jbfrqlra/file_stream HTTP/1.1" 200 311
+2020-01-07 17:20:41,747 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-history.jsonl
+2020-01-07 17:20:41,749 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-summary.json
+2020-01-07 17:20:43,917 DEBUG   Thread-7  :29349 [connectionpool.py:_make_request():437] https://api.wandb.ai:443 "POST /files/timtody/curious/jbfrqlra/file_stream HTTP/1.1" 200 311
+2020-01-07 17:20:44,752 INFO    Thread-3  :29349 [run_manager.py:_on_file_created():671] file/dir created: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-events.jsonl
+2020-01-07 17:20:45,753 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-history.jsonl
+2020-01-07 17:20:45,756 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-summary.json
+2020-01-07 17:20:45,950 DEBUG   Thread-7  :29349 [connectionpool.py:_make_request():437] https://api.wandb.ai:443 "POST /files/timtody/curious/jbfrqlra/file_stream HTTP/1.1" 200 311
+2020-01-07 17:20:46,766 DEBUG   Thread-15 :29349 [connectionpool.py:_new_conn():959] Starting new HTTPS connection (1): api.wandb.ai:443
+2020-01-07 17:20:46,922 DEBUG   Thread-15 :29349 [connectionpool.py:_make_request():437] https://api.wandb.ai:443 "POST /graphql HTTP/1.1" 200 46
+2020-01-07 17:20:48,098 DEBUG   Thread-7  :29349 [connectionpool.py:_make_request():437] https://api.wandb.ai:443 "POST /files/timtody/curious/jbfrqlra/file_stream HTTP/1.1" 200 311
+2020-01-07 17:20:48,759 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-history.jsonl
+2020-01-07 17:20:48,762 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-metadata.json
+2020-01-07 17:20:48,765 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-summary.json
+2020-01-07 17:20:50,920 DEBUG   Thread-7  :29349 [connectionpool.py:_make_request():437] https://api.wandb.ai:443 "POST /files/timtody/curious/jbfrqlra/file_stream HTTP/1.1" 200 311
+2020-01-07 17:20:52,765 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-history.jsonl
+2020-01-07 17:20:52,768 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-summary.json
+2020-01-07 17:20:52,930 DEBUG   Thread-7  :29349 [connectionpool.py:_make_request():437] https://api.wandb.ai:443 "POST /files/timtody/curious/jbfrqlra/file_stream HTTP/1.1" 200 311
+2020-01-07 17:20:53,766 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-history.jsonl
+2020-01-07 17:20:53,769 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-summary.json
+2020-01-07 17:20:55,926 DEBUG   Thread-7  :29349 [connectionpool.py:_make_request():437] https://api.wandb.ai:443 "POST /files/timtody/curious/jbfrqlra/file_stream HTTP/1.1" 200 311
+2020-01-07 17:20:56,771 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-history.jsonl
+2020-01-07 17:20:56,774 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-summary.json
+2020-01-07 17:20:58,942 DEBUG   Thread-7  :29349 [connectionpool.py:_make_request():437] https://api.wandb.ai:443 "POST /files/timtody/curious/jbfrqlra/file_stream HTTP/1.1" 200 311
+2020-01-07 17:20:59,775 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-history.jsonl
+2020-01-07 17:20:59,777 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-summary.json
+2020-01-07 17:21:01,932 DEBUG   Thread-15 :29349 [connectionpool.py:_new_conn():959] Starting new HTTPS connection (1): api.wandb.ai:443
+2020-01-07 17:21:01,944 DEBUG   Thread-7  :29349 [connectionpool.py:_make_request():437] https://api.wandb.ai:443 "POST /files/timtody/curious/jbfrqlra/file_stream HTTP/1.1" 200 311
+2020-01-07 17:21:02,087 DEBUG   Thread-15 :29349 [connectionpool.py:_make_request():437] https://api.wandb.ai:443 "POST /graphql HTTP/1.1" 200 46
+2020-01-07 17:21:03,782 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-history.jsonl
+2020-01-07 17:21:03,785 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-summary.json
+2020-01-07 17:21:03,945 DEBUG   Thread-7  :29349 [connectionpool.py:_make_request():437] https://api.wandb.ai:443 "POST /files/timtody/curious/jbfrqlra/file_stream HTTP/1.1" 200 311
+2020-01-07 17:21:04,783 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-metadata.json
+2020-01-07 17:21:06,087 DEBUG   Thread-7  :29349 [connectionpool.py:_make_request():437] https://api.wandb.ai:443 "POST /files/timtody/curious/jbfrqlra/file_stream HTTP/1.1" 200 311
+2020-01-07 17:21:06,786 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-history.jsonl
+2020-01-07 17:21:06,788 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-summary.json
+2020-01-07 17:21:08,956 DEBUG   Thread-7  :29349 [connectionpool.py:_make_request():437] https://api.wandb.ai:443 "POST /files/timtody/curious/jbfrqlra/file_stream HTTP/1.1" 200 311
+2020-01-07 17:21:09,793 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-history.jsonl
+2020-01-07 17:21:09,796 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-summary.json
+2020-01-07 17:21:11,796 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-history.jsonl
+2020-01-07 17:21:11,800 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-summary.json
+2020-01-07 17:21:11,965 DEBUG   Thread-7  :29349 [connectionpool.py:_make_request():437] https://api.wandb.ai:443 "POST /files/timtody/curious/jbfrqlra/file_stream HTTP/1.1" 200 311
+2020-01-07 17:21:14,802 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-events.jsonl
+2020-01-07 17:21:15,803 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-history.jsonl
+2020-01-07 17:21:15,807 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-summary.json
+2020-01-07 17:21:17,099 DEBUG   Thread-15 :29349 [connectionpool.py:_new_conn():959] Starting new HTTPS connection (1): api.wandb.ai:443
+2020-01-07 17:21:17,254 DEBUG   Thread-15 :29349 [connectionpool.py:_make_request():437] https://api.wandb.ai:443 "POST /graphql HTTP/1.1" 200 46
+2020-01-07 17:21:18,807 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-history.jsonl
+2020-01-07 17:21:18,811 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-summary.json
+2020-01-07 17:21:20,810 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-metadata.json
+2020-01-07 17:21:22,813 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-history.jsonl
+2020-01-07 17:21:22,901 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-summary.json
+2020-01-07 17:21:22,991 DEBUG   Thread-7  :29349 [connectionpool.py:_make_request():437] https://api.wandb.ai:443 "POST /files/timtody/curious/jbfrqlra/file_stream HTTP/1.1" 200 311
+2020-01-07 17:21:24,816 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-history.jsonl
+2020-01-07 17:21:24,819 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-summary.json
+2020-01-07 17:21:27,820 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-history.jsonl
+2020-01-07 17:21:27,847 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-summary.json
+2020-01-07 17:21:30,825 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-history.jsonl
+2020-01-07 17:21:30,828 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-summary.json
+2020-01-07 17:21:32,264 DEBUG   Thread-15 :29349 [connectionpool.py:_new_conn():959] Starting new HTTPS connection (1): api.wandb.ai:443
+2020-01-07 17:21:32,427 DEBUG   Thread-15 :29349 [connectionpool.py:_make_request():437] https://api.wandb.ai:443 "POST /graphql HTTP/1.1" 200 46
+2020-01-07 17:21:32,828 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-history.jsonl
+2020-01-07 17:21:32,834 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-summary.json
+2020-01-07 17:21:32,983 DEBUG   Thread-7  :29349 [connectionpool.py:_make_request():437] https://api.wandb.ai:443 "POST /files/timtody/curious/jbfrqlra/file_stream HTTP/1.1" 200 311
+2020-01-07 17:21:35,833 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-history.jsonl
+2020-01-07 17:21:35,836 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-summary.json
+2020-01-07 17:21:36,834 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-metadata.json
+2020-01-07 17:21:38,837 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-history.jsonl
+2020-01-07 17:21:38,840 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-summary.json
+2020-01-07 17:21:42,846 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-history.jsonl
+2020-01-07 17:21:42,849 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-summary.json
+2020-01-07 17:21:43,002 DEBUG   Thread-7  :29349 [connectionpool.py:_make_request():437] https://api.wandb.ai:443 "POST /files/timtody/curious/jbfrqlra/file_stream HTTP/1.1" 200 311
+2020-01-07 17:21:44,849 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-events.jsonl
+2020-01-07 17:21:45,851 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-history.jsonl
+2020-01-07 17:21:45,853 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-summary.json
+2020-01-07 17:21:47,438 DEBUG   Thread-15 :29349 [connectionpool.py:_new_conn():959] Starting new HTTPS connection (1): api.wandb.ai:443
+2020-01-07 17:21:47,592 DEBUG   Thread-15 :29349 [connectionpool.py:_make_request():437] https://api.wandb.ai:443 "POST /graphql HTTP/1.1" 200 46
+2020-01-07 17:21:47,854 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-history.jsonl
+2020-01-07 17:21:47,857 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-summary.json
+2020-01-07 17:21:49,857 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-history.jsonl
+2020-01-07 17:21:49,860 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-summary.json
+2020-01-07 17:21:52,860 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-history.jsonl
+2020-01-07 17:21:52,863 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-metadata.json
+2020-01-07 17:21:52,867 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-summary.json
+2020-01-07 17:21:53,000 DEBUG   Thread-7  :29349 [connectionpool.py:_make_request():437] https://api.wandb.ai:443 "POST /files/timtody/curious/jbfrqlra/file_stream HTTP/1.1" 200 311
+2020-01-07 17:21:56,866 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-history.jsonl
+2020-01-07 17:21:56,870 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-summary.json
+2020-01-07 17:21:59,870 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-history.jsonl
+2020-01-07 17:21:59,873 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-summary.json
+2020-01-07 17:22:02,595 DEBUG   Thread-15 :29349 [connectionpool.py:_new_conn():959] Starting new HTTPS connection (1): api.wandb.ai:443
+2020-01-07 17:22:02,735 DEBUG   Thread-15 :29349 [connectionpool.py:_make_request():437] https://api.wandb.ai:443 "POST /graphql HTTP/1.1" 200 46
+2020-01-07 17:22:03,877 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-history.jsonl
+2020-01-07 17:22:03,880 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-summary.json
+2020-01-07 17:22:04,023 DEBUG   Thread-7  :29349 [connectionpool.py:_make_request():437] https://api.wandb.ai:443 "POST /files/timtody/curious/jbfrqlra/file_stream HTTP/1.1" 200 311
+2020-01-07 17:22:06,880 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-history.jsonl
+2020-01-07 17:22:06,883 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-summary.json
+2020-01-07 17:22:08,883 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-metadata.json
+2020-01-07 17:22:10,886 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-history.jsonl
+2020-01-07 17:22:10,889 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-summary.json
+2020-01-07 17:22:13,891 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-history.jsonl
+2020-01-07 17:22:13,896 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-summary.json
+2020-01-07 17:22:14,033 DEBUG   Thread-7  :29349 [connectionpool.py:_make_request():437] https://api.wandb.ai:443 "POST /files/timtody/curious/jbfrqlra/file_stream HTTP/1.1" 200 311
+2020-01-07 17:22:14,892 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-events.jsonl
+2020-01-07 17:22:15,926 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-history.jsonl
+2020-01-07 17:22:16,928 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-summary.json
+2020-01-07 17:22:17,741 DEBUG   Thread-15 :29349 [connectionpool.py:_new_conn():959] Starting new HTTPS connection (1): api.wandb.ai:443
+2020-01-07 17:22:17,879 DEBUG   Thread-15 :29349 [connectionpool.py:_make_request():437] https://api.wandb.ai:443 "POST /graphql HTTP/1.1" 200 46
+2020-01-07 17:22:18,931 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-history.jsonl
+2020-01-07 17:22:18,934 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-summary.json
+2020-01-07 17:22:20,934 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-history.jsonl
+2020-01-07 17:22:20,937 INFO    Thread-3  :29349 [run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-summary.json
+bfrqlra/wandb-history.jsonl
+2020-01-07 17:22:20,937 INFO    Thread-3  :29349 [jbfrqlra:run_manager.py:_on_file_modified():682] file/dir modified: /home/taylor/projects/curious/wandb/run-20200107_162012-jbfrqlra/wandb-summary.json

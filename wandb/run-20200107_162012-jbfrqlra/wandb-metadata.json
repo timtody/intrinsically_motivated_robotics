@@ -1,0 +1,23 @@
+{
+    "root": "/home/taylor/projects/curious",
+    "program": "test.py",
+    "git": {
+        "remote": "https://github.com/timtody/curious.git",
+        "commit": "a1a7fd2460f0978f63f625ccb7fe1732cdda1a81"
+    },
+    "email": "taylor@fias.science",
+    "startedAt": "2020-01-07T16:20:13.254068",
+    "host": "oscar",
+    "username": "taylor",
+    "executable": "/home/taylor/.software/anaconda3/envs/rl/bin/python",
+    "os": "Linux-4.4.0-169-generic-x86_64-with-debian-stretch-sid",
+    "python": "3.6.9",
+    "cpu_count": 4,
+    "args": [],
+    "state": "running",
+    "jobType": null,
+    "mode": "run",
+    "name": "test-mountain-car",
+    "project": "curious",
+    "heartbeatAt": "2020-01-07T16:22:08.168079"
+}
