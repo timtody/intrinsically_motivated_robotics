@@ -2,6 +2,9 @@ import gym
 #import rlbench.gym
 from models import FCPolicy
 from a2c import A2CAgent
+from utils import SkipWrapper
+from matplotlib import pyplot as plt
+
 
 env = gym.make('MountainCarContinuous-v0')
 # Alternatively, for vision:
@@ -12,17 +15,18 @@ action_dim = env.action_space.shape[0]
 fc_policy = FCPolicy(obs_space, action_dim)
 agent = A2CAgent()
 agent.set_policy_network(fc_policy)
-
-training_steps = int(1e6)
+skip_wrapper = SkipWrapper(4)
+env = skip_wrapper(env)
+training_steps = int(1e4)
 
 obs, done = env.reset(), False
 
 episode_len = 0
 episode_reward = 0
+rewards = []
 for i in range(training_steps):
     if done:
-        print(episode_len)
-        print(episode_reward)
+        rewards.append(episode_reward)
         agent.train()
         episode_reward = 0
         episode_len = 0
@@ -35,6 +39,6 @@ for i in range(training_steps):
     agent.set_done(done)
     env.render()  # Note: rendering increases step time.
     
-
+plt.plot(rewards)
 print('Done')
 env.close()
