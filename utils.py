@@ -36,3 +36,19 @@ class ReplayBuffer(object):
             torch.FloatTensor(self.reward[ind]).to(self.device),
             torch.FloatTensor(self.not_done[ind]).to(self.device)
         )
+
+
+class StateBuffer:
+    def __init__(self, size):
+        self.size = size
+
+    def push(self, partial_state):
+        partial_state = torch.tensor(partial_state.copy()).unsqueeze(0)
+        self.state = torch.cat((partial_state, self.state[:-1]))
+        return self.state
+    
+    def reset(self, partial_state):
+        partial_state = torch.tensor(partial_state.copy())
+        states = [partial_state for _ in range(self.size)]
+        self.state = torch.stack(states)
+        return self.state

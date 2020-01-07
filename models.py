@@ -134,18 +134,18 @@ class FCPolicy(nn.Module):
     For testing continuous cart pole before using real env.
     """
     
-    def __init__(self, state_size, n_actions):
+    def __init__(self, state_size, action_dim):
         super(FCPolicy, self).__init__()
         self.linear_1 = nn.Linear(state_size, 128)
         self.linear_2 = nn.Linear(128, 128)
-        self.logits = nn.Linear(128, n_actions)
+        self.locs = nn.Linear(128, action_dim)
+        self.stds = nn.Linear(128, action_dim)
         self.value = nn.Linear(128, 1)
     
     def forward(self, x):
         x = F.relu(self.linear_1(x))
         x = F.relu(self.linear_2(x))
-        logits = self.logits(x)
+        locs = self.locs(x)
+        stds = F.relu(self.stds(x)) + 0.001
         value = self.value(x)
-        probs = F.softmax(logits, dim=-1)
-        return probs, value
-    
+        return locs, stds, value
