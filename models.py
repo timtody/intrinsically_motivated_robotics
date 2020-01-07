@@ -123,7 +123,7 @@ class DNNPolicy(nn.Module):
     """
     
     def __init__(self):
-        super(DNNPolicy, self).__ini__()
+        super(DNNPolicy, self).__init__()
     
     def forward(self, x):
         pass
