@@ -4,7 +4,7 @@ import torch.nn.functional as F
 import wandb
 from omegaconf import OmegaConf
 from models import ICModule
-from ppo import PPO, Memory
+from ppo_cont import PPO, Memory
 
 cnf = OmegaConf.load("conf/conf.yaml")
 cnf.merge_with_cli()
@@ -13,11 +13,10 @@ env = gym.make(cnf.main.env_name)
 
 # move to cnf file
 obs_space = env.observation_space.shape[0]
-n_actions = 2187
-
-agent = PPO(obs_space, n_actions, **cnf.ppo)
+action_dim = env.action_space.shape[0]
+agent = PPO(obs_space, action_dim, **cnf.ppo)
 memory = Memory()
-icmodule = ICModule(obs_space, 1, n_actions)
+icmodule = ICModule(obs_space, 1, action_dim)
 
 if cnf.main.use_wb:
     wandb.init(project=cnf.wandb.project, name=cnf.wandb.name)
