@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 
-class A2CAgent:
+class CURAgent:
     def __init__(self):
         self.policy = None
         self.opt = None

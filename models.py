@@ -6,6 +6,7 @@ from itertools import chain
 
 import torch
 import torch.nn as nn
+import torch.optim as optim
 import torch.nn.functional as F
 
 
@@ -35,20 +36,38 @@ class ConvModule(nn.Module):
         return size
 
 
+class FCModule(nn.Module):
+    """
+    Docstring: todo
+    """
+    
+    def __init__(self, input_dim):
+        super(FCModule, self).__init__()
+        self.fc1 = nn.Linear(input_dim, 128)
+        self.fc2 = nn.Linear(128, 256)
+        self.fc3 = nn.Linear(256, 256)
+    
+    def forward(self, x):
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = F.relu(self.fc3(x))
+        return x
+
+
 class ForwardModule(nn.Module):
     """
     Module for learning the forward mapping of state x action -> next state
     """
 
-    def __init__(self, conv_out_size, conv_base):
+    def __init__(self, conv_out_size, base):
         super(ForwardModule, self).__init__()
-        self.conv_base = conv_base
+        self.base = base
         # we add + 1 because of the concatenated action
         self.linear = nn.Linear(conv_out_size + 1, 256)
         self.head = nn.Linear(256, conv_out_size)
 
     def forward(self, x, a):
-        x = self.conv_base(x)
+        x = self.base(x)
         x = torch.cat([x, a])
         x = self.linear(x)
         x = self.head(x)
@@ -60,16 +79,16 @@ class InverseModule(nn.Module):
     Module for learning the inverse mapping of state x next state -> action.
     """
 
-    def __init__(self, conv_out_size, conv_base, n_actions):
+    def __init__(self, conv_out_size, base, n_actions):
         super(InverseModule, self).__init__()
-        self.conv_base = conv_base
+        self.base = base
         # * 2 because we concatenate two states
         self.linear = nn.Linear(conv_out_size * 2, 256)
         self.head = nn.Linear(256, n_actions)
 
     def forward(self, x, y):
-        x = self.conv_base(x)
-        y = self.conv_base(y)
+        x = self.base(x)
+        y = self.base(y)
         x = torch.cat([x, y])
         x = self.linear(x)
         x = self.head(x)
@@ -82,15 +101,19 @@ class ICModule:
     """
 
     def __init__(self, h, w, n_actions):
-        self._conv_base = ConvModule()
+        #self._conv_base = ConvModule()
+        self.base = FCModule(h * w)
         convw = ConvModule._conv2d_size_out(w, 4)
         convh = ConvModule._conv2d_size_out(h, 4)
-        conv_out_size = convw * convh * 32
+        # change this and make it modular
+        conv_out_size = 256
 
         # define forward and inverse modules
         self._inverse = InverseModule(
-            conv_out_size, self._conv_base, n_actions)
-        self._forward = ForwardModule(conv_out_size, self._conv_base)
+            conv_out_size, self.base, n_actions)
+        self._forward = ForwardModule(conv_out_size, self.base)
+
+        self.opt = optim.Adadelta(self.parameters())
 
     def parameters(self):
         """
@@ -102,7 +125,7 @@ class ICModule:
         """
         Returns the state embedding from the shared convolutional base.
         """
-        return self._conv_base(state)
+        return self.base(state)
 
     def next_state(self, state, action):
         """
@@ -115,6 +138,16 @@ class ICModule:
         Given two states, predicts the action taken.
         """
         return self._inverse(this_state, next_state)
+    
+    def train_forward(self, this_state, next_state, action):
+        next_state_embed_pred = self.next_state(this_state, action)
+        next_state_embed_true = self.embed(next_state)
+        self.opt.zero_grad()
+        loss = F.mse_loss(next_state_embed_pred, next_state_embed_true)
+        loss.backward()
+        self.opt.step()
+        return loss.item()
+        
 
 
 class DNNPolicy(nn.Module):
@@ -134,8 +167,28 @@ class FCPolicy(nn.Module):
     For testing continuous cart pole before using real env.
     """
     
-    def __init__(self, state_size, action_dim):
+    def __init__(self, state_size, n_actions):
         super(FCPolicy, self).__init__()
+        self.linear_1 = nn.Linear(state_size, 128)
+        self.linear_2 = nn.Linear(128, 128)
+        self.logits = nn.Linear(128, n_actions)
+        self.value = nn.Linear(128, 1)
+    
+    def forward(self, x):
+        x = F.relu(self.linear_1(x))
+        x = F.relu(self.linear_2(x))
+        logits = self.logits(x)
+        value = self.value(x)
+        return logits, value
+
+
+class FCPolicyCont(nn.Module):
+    """
+    For testing continuous cart pole before using real env.
+    """
+    
+    def __init__(self, state_size, action_dim):
+        super(FCPolicyCont, self).__init__()
         self.linear_1 = nn.Linear(state_size, 128)
         self.linear_2 = nn.Linear(128, 128)
         self.locs = nn.Linear(128, action_dim)
@@ -146,6 +199,6 @@ class FCPolicy(nn.Module):
         x = F.relu(self.linear_1(x))
         x = F.relu(self.linear_2(x))
         locs = self.locs(x)
-        stds = F.relu(self.stds(x)) + 0.001
+        stds = F.softplus(self.stds(x))
         value = self.value(x)
         return locs, stds, value
