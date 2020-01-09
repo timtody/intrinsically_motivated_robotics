@@ -3,11 +3,11 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 
+
 class CURAgent:
     def __init__(self):
         self.policy = None
         self.opt = None
-        
         self.rewards = []
         self.entropies = []
         self.logprobs = []
@@ -24,14 +24,14 @@ class CURAgent:
 
     def train(self):
         pass
-    
+
     def _compute_loss(self):
         pass
 
     def set_policy_network(self, net):
         self.policy = net
         self.opt = optim.Adadelta(net.parameters())
-    
+
     def _clear_buffers(self):
         self.rewards = []
         self.logprobs = []

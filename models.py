@@ -9,6 +9,8 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 
+from utils import LossBuffer
+
 
 class ConvModule(nn.Module):
     """
@@ -95,12 +97,13 @@ class InverseModule(nn.Module):
         return x
 
 
-class ICModule:
+class ICModule(nn.Module):
     """
     Intrinsic curiosity module.
     """
 
     def __init__(self, h, w, action_dim):
+        super(ICModule, self).__init__()
         # self._conv_base = ConvModule()
         self.base = FCModule(h * w)
         # convw = ConvModule._conv2d_size_out(w, 4)
@@ -114,6 +117,11 @@ class ICModule:
         self._forward = ForwardModule(conv_out_size, action_dim, self.base)
 
         self.opt = optim.Adam(self.parameters(), lr=1e-4)
+
+        self.loss_buffer = LossBuffer(200)
+
+    def forward(self, x):
+        raise NotImplementedError
 
     def parameters(self):
         """
@@ -149,33 +157,39 @@ class ICModule:
         loss = F.mse_loss(next_state_embed_pred, next_state_embed_true)
         loss.backward()
         self.opt.step()
+        loss = self._process_loss(loss)
         return loss.item()
+
+    def _process_loss(self, loss):
+        self.loss_buffer.push(loss)
+        runinng_std = self.loss_buffer.get_std()
+        return loss / runinng_std
 
 
 class DNNPolicy(nn.Module):
     """
     To be implemented.
     """
-    
+
     def __init__(self):
         super(DNNPolicy, self).__init__()
-    
+
     def forward(self, x):
         pass
-    
+
 
 class FCPolicy(nn.Module):
     """
     For testing continuous cart pole before using real env.
     """
-    
+
     def __init__(self, state_size, n_actions):
         super(FCPolicy, self).__init__()
         self.linear_1 = nn.Linear(state_size, 128)
         self.linear_2 = nn.Linear(128, 128)
         self.logits = nn.Linear(128, n_actions)
         self.value = nn.Linear(128, 1)
-    
+
     def forward(self, x):
         x = F.relu(self.linear_1(x))
         x = F.relu(self.linear_2(x))
@@ -188,7 +202,7 @@ class FCPolicyCont(nn.Module):
     """
     For testing continuous cart pole before using real env.
     """
-    
+
     def __init__(self, state_size, action_dim):
         super(FCPolicyCont, self).__init__()
         self.linear_1 = nn.Linear(state_size, 128)
@@ -196,7 +210,7 @@ class FCPolicyCont(nn.Module):
         self.locs = nn.Linear(128, action_dim)
         self.stds = nn.Linear(128, action_dim)
         self.value = nn.Linear(128, 1)
-    
+
     def forward(self, x):
         x = F.relu(self.linear_1(x))
         x = F.relu(self.linear_2(x))

@@ -15,7 +15,8 @@ class ReplayBuffer(object):
         self.reward = np.zeros((max_size, 1))
         self.not_done = np.zeros((max_size, 1))
 
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device(
+            "cuda" if torch.cuda.is_available() else "cpu")
 
     def add(self, state, action, next_state, reward, done):
         self.state[self.ptr] = state
@@ -47,13 +48,13 @@ class StateBuffer:
         partial_state = torch.tensor(partial_state.copy()).unsqueeze(0)
         self.state = torch.cat((partial_state, self.state[:-1]))
         return self.state
-    
+
     def reset(self, partial_state):
         partial_state = torch.tensor(partial_state.copy())
         states = [partial_state for _ in range(self.size)]
         self.state = torch.stack(states)
         return self.state
-    
+
 
 def SkipWrapper(repeat_count):
     class SkipWrapper(gym.Wrapper):
@@ -61,6 +62,7 @@ def SkipWrapper(repeat_count):
             Generic common frame skipping wrapper
             Will perform action for `x` additional steps
         """
+
         def __init__(self, env):
             super(SkipWrapper, self).__init__(env)
             self.repeat_count = repeat_count
@@ -76,7 +78,7 @@ def SkipWrapper(repeat_count):
                 total_reward += reward
                 current_step += 1
             if 'skip.stepcount' in info:
-                raise gym.error.Error('Key "skip.stepcount" already in info. Make sure you are not stacking ' \
+                raise gym.error.Error('Key "skip.stepcount" already in info. Make sure you are not stacking '
                                       'the SkipWrapper wrappers.')
             info['skip.stepcount'] = self.stepcount
             return obs, total_reward, done, info
@@ -86,3 +88,25 @@ def SkipWrapper(repeat_count):
             return self.env.reset()
 
     return SkipWrapper
+
+
+class LossBuffer:
+    def __init__(self, size, discount=0.99):
+        self.size = size
+        # I added a 0 here so that in the first step the std will not be NaN
+        self.returns = [0]
+        self.current_return = 0
+        self.discount = discount
+
+    def push(self, rew):
+        self.current_return = self.discount * self.current_return + rew
+        self.push_ret(self.current_return)
+
+    def push_ret(self, ret):
+        if len(self.returns) > self.size:
+            del self.returns[0]
+        self.returns.append(ret)
+
+    def get_std(self):
+        returns = torch.tensor(self.returns)
+        return returns.std()
