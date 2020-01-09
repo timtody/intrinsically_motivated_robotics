@@ -42,6 +42,6 @@ for i in range(training_steps):
     agent.append_reward(reward)
     agent.set_done(done)
     env.render()  # Note: rendering increases step time.
-    
+
 print('Done')
 env.close()

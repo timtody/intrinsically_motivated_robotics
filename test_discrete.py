@@ -46,6 +46,6 @@ for i in range(training_steps):
         memory.clear_memory()
         timestep = 0
     env.render()  # Note: rendering increases step time.
-    
+
 print('Done')
 env.close()

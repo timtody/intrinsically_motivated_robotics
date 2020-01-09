@@ -23,17 +23,30 @@ if cnf.wandb.use:
     wandb.watch(agent.policy, log="all")
 
 state = env.reset()
+print(state[:16])
+state, _, _, _ = env.step([1, 0, 0, 0, 0, 0, 0, 0])
+for i in range(100):
+    env.step([1, 0, 0, 0, 0, 0, 0, 0])
+    print(state[:16])
+exit(1)
 done = False
+timestep = 0
 for i in range(cnf.main.max_timesteps):
+    timestep += 1
     action = agent.policy_old.act(state, memory)
     next_state, _, done, _ = env.step(action)
     # env.render()
     loss = icmodule.train_forward(state, next_state, action)
     if cnf.wandb.use:
         wandb.log({
-            "loss": loss
+            "intrinsic reward": loss
         })
     # IM loss = reward currently
     reward = loss
     memory.rewards.append(reward)
+    memory.is_terminals.append(done)
     state = next_state
+    if timestep % 100 == 0:
+        agent.update(memory)
+        memory.clear_memory()
+        timestep = 0

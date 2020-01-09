@@ -38,7 +38,7 @@ class ContActionLayer(nn.Module):
 class ActorCritic(nn.Module):
     def __init__(self, state_dim, action_dim, n_latent_var):
         super(ActorCritic, self).__init__()
-
+        self.action_dim = action_dim
         self.cont_action = ContActionLayer(n_latent_var, action_dim)
         # actor
         self.action_layer = nn.Sequential(
@@ -68,7 +68,7 @@ class ActorCritic(nn.Module):
     def act(self, state, memory):
         state = torch.from_numpy(state).float().to(device)
         locs, stds = self.action_layer_cont(state)
-        stds = torch.eye(locs.size(0)) * stds
+        stds = torch.eye(self.action_dim) * stds
         dist = MultivariateNormal(locs, stds)
         action = dist.sample()
 
@@ -80,8 +80,9 @@ class ActorCritic(nn.Module):
 
     def evaluate(self, state, action):
         locs, stds = self.action_layer_cont(state)
-        stds = torch.eye(locs.size(0)) * stds
-        dist = MultivariateNormal(locs, stds)
+        # construct batch of diagonal matrices from stds
+        covariance_matrix = torch.diag_embed(stds)
+        dist = MultivariateNormal(locs, covariance_matrix)
 
         action_logprobs = dist.log_prob(action)
         dist_entropy = dist.entropy()

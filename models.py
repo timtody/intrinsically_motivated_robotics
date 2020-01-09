@@ -113,7 +113,7 @@ class ICModule:
             conv_out_size, self.base, action_dim)
         self._forward = ForwardModule(conv_out_size, action_dim, self.base)
 
-        self.opt = optim.Adadelta(self.parameters())
+        self.opt = optim.Adam(self.parameters(), lr=1e-4)
 
     def parameters(self):
         """
