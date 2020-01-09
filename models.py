@@ -40,13 +40,13 @@ class FCModule(nn.Module):
     """
     Docstring: todo
     """
-    
+
     def __init__(self, input_dim):
         super(FCModule, self).__init__()
         self.fc1 = nn.Linear(input_dim, 128)
         self.fc2 = nn.Linear(128, 256)
         self.fc3 = nn.Linear(256, 256)
-    
+
     def forward(self, x):
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
@@ -59,11 +59,11 @@ class ForwardModule(nn.Module):
     Module for learning the forward mapping of state x action -> next state
     """
 
-    def __init__(self, conv_out_size, base):
+    def __init__(self, conv_out_size, action_dim, base):
         super(ForwardModule, self).__init__()
         self.base = base
         # we add + 1 because of the concatenated action
-        self.linear = nn.Linear(conv_out_size + 1, 256)
+        self.linear = nn.Linear(conv_out_size + action_dim, 256)
         self.head = nn.Linear(256, conv_out_size)
 
     def forward(self, x, a):
@@ -100,18 +100,18 @@ class ICModule:
     Intrinsic curiosity module.
     """
 
-    def __init__(self, h, w, n_actions):
-        #self._conv_base = ConvModule()
+    def __init__(self, h, w, action_dim):
+        # self._conv_base = ConvModule()
         self.base = FCModule(h * w)
-        convw = ConvModule._conv2d_size_out(w, 4)
-        convh = ConvModule._conv2d_size_out(h, 4)
+        # convw = ConvModule._conv2d_size_out(w, 4)
+        # convh = ConvModule._conv2d_size_out(h, 4)
         # change this and make it modular
         conv_out_size = 256
 
         # define forward and inverse modules
         self._inverse = InverseModule(
-            conv_out_size, self.base, n_actions)
-        self._forward = ForwardModule(conv_out_size, self.base)
+            conv_out_size, self.base, action_dim)
+        self._forward = ForwardModule(conv_out_size, action_dim, self.base)
 
         self.opt = optim.Adadelta(self.parameters())
 
@@ -138,8 +138,11 @@ class ICModule:
         Given two states, predicts the action taken.
         """
         return self._inverse(this_state, next_state)
-    
+
     def train_forward(self, this_state, next_state, action):
+        action = torch.tensor(action).float()
+        this_state = torch.tensor(this_state).float()
+        next_state = torch.tensor(next_state).float()
         next_state_embed_pred = self.next_state(this_state, action)
         next_state_embed_true = self.embed(next_state)
         self.opt.zero_grad()
@@ -147,7 +150,6 @@ class ICModule:
         loss.backward()
         self.opt.step()
         return loss.item()
-        
 
 
 class DNNPolicy(nn.Module):
