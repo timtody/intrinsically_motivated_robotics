@@ -1,6 +1,5 @@
 import gym
 import rlbench.gym
-import torch.nn.functional as F
 import wandb
 from omegaconf import OmegaConf
 from models import ICModule
@@ -20,7 +19,7 @@ icmodule = ICModule(obs_space, 1, action_dim)
 
 if cnf.main.use_wb:
     wandb.init(project=cnf.wandb.project, name=cnf.wandb.name)
-    wandb.watch(policy, log="all")
+    wandb.watch(agent.policy, log="all")
 
 state = env.reset()
 done = False
@@ -28,9 +27,9 @@ for i in range(cnf.main.max_timesteps):
     action = agent.policy_old.act(state, memory)
     print(action)
     exit(1)
-    state, _, done, _ = env.step(action)
+    next_state, _, done, _ = env.step(action)
     loss = icmodule.train_forward(state, next_state, action)
     # IM loss = reward currently
     reward = loss
     agent.append_reward(reward)
-    
+    state = next_state
