@@ -1,6 +1,7 @@
 main:
   env_name: 'reach_target-state-v0'
   max_timesteps: 10000
+  train_each: 100
 
 wandb:
   use: False

@@ -110,3 +110,16 @@ class LossBuffer:
     def get_std(self):
         returns = torch.tensor(self.returns)
         return returns.std()
+
+
+class ColorGradient:
+    def __init__(self, color1, color2):
+        self.color1 = color1
+        self.color2 = color2
+        self.colors = zip(color1, color2)
+    
+    def get(self, p):
+        red = self.color1[0] + p * (self.color2[0] - self.color2[0])
+        green = self.color1[1] + p * (self.color2[1] - self.color2[1])
+        blue = self.color1[2] + p * (self.color2[2] - self.color2[2])
+        return [red, green, blue]

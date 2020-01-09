@@ -4,8 +4,8 @@ import torch.nn.functional as F
 from torch.distributions import MultivariateNormal
 
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
+# device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = torch.device("cpu")
 
 class Memory:
     def __init__(self):
@@ -76,7 +76,7 @@ class ActorCritic(nn.Module):
         memory.actions.append(action)
         memory.logprobs.append(dist.log_prob(action))
 
-        return action.clamp(-.2, .2).numpy()
+        return action.clamp(-.1, .1).numpy()
 
     def evaluate(self, state, action):
         locs, stds = self.action_layer_cont(state)

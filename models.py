@@ -157,8 +157,7 @@ class ICModule(nn.Module):
         loss = F.mse_loss(next_state_embed_pred, next_state_embed_true)
         loss.backward()
         self.opt.step()
-        loss = self._process_loss(loss)
-        return loss.item()
+        return loss
 
     def _process_loss(self, loss):
         self.loss_buffer.push(loss)
