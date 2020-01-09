@@ -119,7 +119,7 @@ class ColorGradient:
         self.colors = zip(color1, color2)
     
     def get(self, p):
-        red = self.color1[0] + p * (self.color2[0] - self.color2[0])
-        green = self.color1[1] + p * (self.color2[1] - self.color2[1])
-        blue = self.color1[2] + p * (self.color2[2] - self.color2[2])
+        red = self.color1[0] + p * (self.color2[0] - self.color1[0])
+        green = self.color1[1] + p * (self.color2[1] - self.color1[1])
+        blue = self.color1[2] + p * (self.color2[2] - self.color1[2])
         return [red, green, blue]
