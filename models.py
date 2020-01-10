@@ -12,6 +12,9 @@ import torch.nn.functional as F
 from utils import LossBuffer
 
 
+torch.manual_seed(42)
+
+
 class ConvModule(nn.Module):
     """
     Provides thes shared convolutional base for the inverse and forward model.

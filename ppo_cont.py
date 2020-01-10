@@ -75,8 +75,7 @@ class ActorCritic(nn.Module):
         memory.states.append(state)
         memory.actions.append(action)
         memory.logprobs.append(dist.log_prob(action))
-
-        return action.clamp(-.1, .1).numpy()
+        return (torch.tanh(action)).numpy()
 
     def evaluate(self, state, action):
         locs, stds = self.action_layer_cont(state)
