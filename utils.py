@@ -218,3 +218,6 @@ class Plotter3D:
     def show(self):
         self.add_slider()
         self.fig.show()
+
+    def save(self, fname):
+        self.fig.write_html(fname)

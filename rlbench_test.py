@@ -8,12 +8,10 @@ env = gym.make('reach_target-state-v0')
 env = ObsWrapper(env)
 # Alternatively, for vision:
 # env = gym.make('reach_target-vision-v0')
-
 training_steps = 1000
 episode_length = 40
 direction = True
 gripper_positions = []
-wandb.init(project="test", name="curaudo")
 
 for i in range(training_steps):
     if i % episode_length == 0:
@@ -26,10 +24,6 @@ for i in range(training_steps):
                                       )
                              )
     # env.render()
-
-wandb.log({
-            "gripper positions": wandb.Object3D(np.array(gripper_positions))
-            })
 
 print('Done')
 env.close()

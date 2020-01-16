@@ -79,6 +79,7 @@ for i in range(cnf.main.max_timesteps):
     if i % 500 == 499:
         plotter3d.plot_3d_data(gripper_positions)
 
+plotter3d.save("data/bigue_test.html")
 plotter3d.show()
 
 env.close()
