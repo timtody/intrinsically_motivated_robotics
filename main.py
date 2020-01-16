@@ -6,8 +6,7 @@ from omegaconf import OmegaConf
 from models import ICModule
 from ppo_cont import PPO, Memory
 from wrappers import ObsWrapper
-from utils import ColorGradient, PointCloud
-import plotly.graph_objects as go
+from utils import ColorGradient, Plotter3D, PointCloud
 
 
 cnf = OmegaConf.load("conf/conf.yaml")
@@ -37,12 +36,14 @@ gripper_positions = []
 
 # color gradients for visualizing point cloud
 gradient = ColorGradient()
+plotter3d = Plotter3D()
+point_cloud = PointCloud()
+plotter3d.plot_outer_cloud(point_cloud)
 
 cum_im_reward = 0
 for i in range(cnf.main.max_timesteps):
     timestep += 1
-    gripper_positions.append(np.array([*state.gripper_pose[:3],
-                                       100, 100, 100]))
+    gripper_positions.append(np.array(state.gripper_pose[:3]))
 
     action = agent.policy_old.act(state.get_low_dim_data(), memory)
     next_state, _, done, _ = env.step(action)
@@ -72,29 +73,12 @@ for i in range(cnf.main.max_timesteps):
         memory.clear_memory()
         timestep = 0
     if i % 500 == 499 and cnf.wandb.use:
-        print(np.array(gripper_positions)[0])
-        print(np.array(gripper_positions).shape)
         wandb.log({
             "gripper positions": wandb.Object3D(np.array(gripper_positions))
             })
+    if i % 500 == 499:
+        plotter3d.plot_3d_data(gripper_positions)
 
-point_cloud = PointCloud()
-x, y, z = point_cloud.get_outer()
-x0, y0, z0, r, g, b = zip(*gripper_positions)
-fig = go.Figure(data=[
-    go.Scatter3d(x=x, y=y, z=z,
-                 mode='markers'),
-    go.Scatter3d(x=x0, y=y0, z=z0)
-])
-fig.show()
-r = np.zeros_like(x) + 100
-g = np.zeros_like(y) + 100
-b = np.zeros_like(z) + 100
-outer_layer = np.array(list(zip(x, y, z, r, g, b)))
-print(outer_layer[0])
-print(outer_layer.shape)
-wandb.log({
-            "gripper positions": wandb.Object3D(outer_layer)
-            })
+plotter3d.show()
 
 env.close()

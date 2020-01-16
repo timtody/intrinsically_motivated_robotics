@@ -3,6 +3,9 @@ import torch
 import gym
 
 
+import plotly.graph_objects as go
+
+
 class PointCloud:
     def get_outer(self):
         radius = 0.9285090706636693
@@ -138,7 +141,7 @@ class LossBuffer:
 
 
 class ColorGradient:
-    def __init__(self, color1=[220, 36, 36], color2=[74, 86, 157]):
+    def __init__(self, color2=[220, 36, 36], color1=[74, 86, 157]):
         self.color1 = color1
         self.color2 = color2
         self.colors = zip(color1, color2)
@@ -148,3 +151,70 @@ class ColorGradient:
         green = self.color1[1] + p * (self.color2[1] - self.color1[1])
         blue = self.color1[2] + p * (self.color2[2] - self.color1[2])
         return [red, green, blue]
+
+
+class Plotter3D:
+    def __init__(self):
+        self.fig = go.Figure()
+
+    def plot_outer_cloud(self, point_cloud):
+        x, y, z = point_cloud.get_outer()
+        self.fig.add_trace(
+            go.Scatter3d(
+                x=x,
+                y=y,
+                z=z,
+                mode='markers',
+                marker=dict(
+                    size=2,
+                    color=1,
+                    colorscale='Viridis',   # choose a colorscale
+                    opacity=0.2
+                ))
+        )
+
+    def plot_3d_data(self, data):
+        x, y, z = zip(*data)
+        self.fig.add_trace(
+            go.Scatter3d(
+                visible=False,
+                x=x,
+                y=y,
+                z=z,
+                marker=dict(
+                    size=2,
+                    color=np.arange(len(x)),
+                    colorscale="Viridis",
+                    opacity=0.8
+                ),
+                line=dict(
+                    color="lightblue",
+                    width=1
+                )
+            )
+        )
+
+    def add_slider(self):
+        steps = []
+        n_traces = len(self.fig.data)
+        for i in range(n_traces):
+            step = dict(
+                method="restyle",
+                args=["visible", [False] * n_traces],
+            )
+            step["args"][1][i] = True
+            step["args"][1][0] = True
+            steps.append(step)
+
+        sliders = [dict(
+            active=0,
+            currentvalue={"prefix": "Frequency: "},
+            pad={"t": 50},
+            steps=steps
+        )]
+
+        self.fig.update_layout(sliders=sliders)
+
+    def show(self):
+        self.add_slider()
+        self.fig.show()
