@@ -3,6 +3,31 @@ import torch
 import gym
 
 
+class PointCloud:
+    def get_outer(self):
+        radius = 0.9285090706636693
+        origin = [-0.2678461927495279, -0.006510627535040618,
+                  1.0827146125969983]
+        theta = np.linspace(0, np.pi, 20)
+        phi = np.linspace(0, 2*np.pi, 20)
+        x0 = origin[0] + radius * np.outer(np.sin(theta),
+                                           np.cos(phi)).flatten()
+        y0 = origin[1] + radius * np.outer(np.sin(theta),
+                                           np.sin(phi)).flatten()
+        z0 = origin[2] + radius * np.outer(np.cos(theta),
+                                           np.ones_like(theta)).flatten()
+        x = []
+        y = []
+        z = []
+
+        for xx, yy, zz in zip(x0, y0, z0):
+            if zz > 0.85:
+                x.append(xx)
+                y.append(yy)
+                z.append(zz)
+        return x, y, z
+
+
 class ReplayBuffer(object):
     def __init__(self, state_dim, action_dim, max_size=int(1e6)):
         self.max_size = max_size
@@ -113,11 +138,11 @@ class LossBuffer:
 
 
 class ColorGradient:
-    def __init__(self, color1, color2):
+    def __init__(self, color1=[220, 36, 36], color2=[74, 86, 157]):
         self.color1 = color1
         self.color2 = color2
         self.colors = zip(color1, color2)
-    
+
     def get(self, p):
         red = self.color1[0] + p * (self.color2[0] - self.color1[0])
         green = self.color1[1] + p * (self.color2[1] - self.color1[1])

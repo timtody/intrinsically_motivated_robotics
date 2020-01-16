@@ -6,7 +6,7 @@ from omegaconf import OmegaConf
 from models import ICModule
 from ppo_cont import PPO, Memory
 from wrappers import ObsWrapper
-from utils import ColorGradient
+from utils import ColorGradient, PointCloud
 
 cnf = OmegaConf.load("conf/conf.yaml")
 cnf.merge_with_cli()
@@ -33,13 +33,11 @@ done = False
 timestep = 0
 gripper_positions = []
 
-# color gradients
-red = [220, 36, 36]
-blue = [74, 86, 157]
-gradient = ColorGradient(blue, red)
-cum_im_reward = 0
-last_action = np.zeros(8)
+# color gradients for visualizing point cloud
+gradient = ColorGradient()
+point_cloud = PointCloud()
 
+cum_im_reward = 0
 for i in range(cnf.main.max_timesteps):
     timestep += 1
     gripper_positions.append(np.array([*state.gripper_pose[:3],
@@ -49,7 +47,6 @@ for i in range(cnf.main.max_timesteps):
                                       )
                              )
     action = agent.policy_old.act(state.get_low_dim_data(), memory)
-    action_diff = np.abs(last_action - action)
     next_state, _, done, _ = env.step(action)
     # env.render()
     im_loss = icmodule.train_forward(state.get_low_dim_data(),
@@ -63,7 +60,7 @@ for i in range(cnf.main.max_timesteps):
             "intrinsic reward": im_loss_processed,
             "return std": icmodule.loss_buffer.get_std(),
             "cummulative im reward": cum_im_reward,
-            **{f"action {i}": action[i] for i in range(len(action))}
+            **{f"joint {i}": action[i] for i in range(len(action))}
         })
     # IM loss = reward currently
     reward = im_loss_processed
