@@ -19,6 +19,7 @@ action_mode = ActionMode(ArmActionMode.ABS_JOINT_VELOCITY)
 env = Environment(action_mode)
 env.launch()
 # wandb.init(project="test", name="curaudo")
+task
 
 task = env.get_task(ReachTarget)
 descriptions, obs = task.reset()
