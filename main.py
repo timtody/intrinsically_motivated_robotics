@@ -91,7 +91,7 @@ for i in range(cnf.main.max_timesteps):
         wandb.log({
             "gripper positions": wandb.Object3D(np.array(gripper_positions))
         })
-    if i % 5000 == 4999:
+    if i % cnf.main.pc_each == cnf.main.pc_each - 1:
         plotter3d = Plotter3D()
         plotter3d.plot_outer_cloud(point_cloud)
         plotter3d.plot_3d_data(gripper_positions)
