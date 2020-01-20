@@ -95,7 +95,7 @@ for i in range(cnf.main.max_timesteps):
         plotter3d = Plotter3D()
         plotter3d.plot_outer_cloud(point_cloud)
         plotter3d.plot_3d_data(gripper_positions)
-        plotter3d.save(f"data/pc_step_{i}_{cnf.wandb.name}")
+        plotter3d.save(f"data/pc_step_{i}_{cnf.wandb.name}.html")
 
 video_writer.close()
 
