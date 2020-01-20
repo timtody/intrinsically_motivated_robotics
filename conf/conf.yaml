@@ -5,6 +5,7 @@ main:
   video_length: 1000
   video_name: "vid/recording_"
   video_format: ".mp4"
+  pc_each: 5000
 
 wandb:
   use: False
