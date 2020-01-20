@@ -9,6 +9,7 @@ from wrappers import ObsWrapper
 from utils import ColorGradient, Plotter3D, PointCloud
 from imageio import get_writer
 import matplotlib.pyplot as plt
+import torch
 
 
 cnf = OmegaConf.load("conf/conf.yaml")
@@ -75,7 +76,7 @@ for i in range(cnf.main.max_timesteps):
             **{f"joint {i}": action[i] for i in range(len(action))}
         })
     # IM loss = reward currently
-    reward = im_loss_processed
+    reward = im_loss_processed - torch.norm(action)
     memory.rewards.append(reward)
     memory.is_terminals.append(done)
     state = next_state
