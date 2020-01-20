@@ -42,7 +42,7 @@ plotter3d = Plotter3D()
 point_cloud = PointCloud()
 plotter3d.plot_outer_cloud(point_cloud)
 
-video_writer = get_writer(cnf.main.video_name + "_" +
+video_writer = get_writer(cnf.main.video_name +
                           str(0) + cnf.main.video_format,
                           fps=30)
 
