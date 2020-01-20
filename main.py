@@ -75,6 +75,7 @@ for i in range(cnf.main.max_timesteps):
             "cummulative im reward": cum_im_reward,
             **{f"joint {i}": action[i] for i in range(len(action))}
         })
+
     # IM loss = reward currently
     reward = im_loss_processed - torch.norm(action)
     memory.rewards.append(reward)
@@ -91,10 +92,11 @@ for i in range(cnf.main.max_timesteps):
             "gripper positions": wandb.Object3D(np.array(gripper_positions))
         })
     if i % 500 == 499:
+        plotter3d = Plotter3D()
+        plotter3d.plot_outer_cloud(point_cloud)
         plotter3d.plot_3d_data(gripper_positions)
+        plotter3d.save(f"data/pc_step_{i}_{cnf.wandb.name}")
 
-plotter3d.save("data/bigue_test.html")
-plotter3d.show()
 video_writer.close()
 
 env.close()
