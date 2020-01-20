@@ -1,7 +1,10 @@
 main:
   env_name: 'reach_target-state-v0'
-  max_timesteps: 10000
+  max_timesteps: 100000
   train_each: 100
+  video_length: 1000
+  video_name: "vid/recording_"
+  video_format: ".mp4"
 
 wandb:
   use: False

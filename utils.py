@@ -216,7 +216,7 @@ class Plotter3D:
         self.fig.update_layout(sliders=sliders)
 
     def show(self):
-        self.add_slider()
+        # self.add_slider()
         self.fig.show()
 
     def save(self, fname):

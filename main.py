@@ -7,6 +7,8 @@ from models import ICModule
 from ppo_cont import PPO, Memory
 from wrappers import ObsWrapper
 from utils import ColorGradient, Plotter3D, PointCloud
+from imageio import get_writer
+import matplotlib.pyplot as plt
 
 
 cnf = OmegaConf.load("conf/conf.yaml")
@@ -40,14 +42,25 @@ plotter3d = Plotter3D()
 point_cloud = PointCloud()
 plotter3d.plot_outer_cloud(point_cloud)
 
+video_writer = get_writer(cnf.main.video_name + "_" +
+                          str(0) + cnf.main.video_format,
+                          fps=30)
+
 cum_im_reward = 0
 for i in range(cnf.main.max_timesteps):
     timestep += 1
-    gripper_positions.append(np.array(state.gripper_pose[:3]))
 
+    if i % cnf.main.video_length == cnf.main.video_length - 1:
+        video_writer.close()
+        video_writer = get_writer(cnf.main.video_name +
+                                  str(i) + cnf.main.video_format,
+                                  fps=30)
+
+    gripper_positions.append(np.array(state.gripper_pose[:3]))
     action = agent.policy_old.act(state.get_low_dim_data(), memory)
     next_state, _, done, _ = env.step(action)
-    # env.render()
+    output_img = env.render(mode="rgb_array")
+    video_writer.append_data(output_img.copy())
     im_loss = icmodule.train_forward(state.get_low_dim_data(),
                                      next_state.get_low_dim_data(),
                                      action)
@@ -75,11 +88,12 @@ for i in range(cnf.main.max_timesteps):
     if i % 500 == 499 and cnf.wandb.use:
         wandb.log({
             "gripper positions": wandb.Object3D(np.array(gripper_positions))
-            })
+        })
     if i % 500 == 499:
         plotter3d.plot_3d_data(gripper_positions)
 
 plotter3d.save("data/bigue_test.html")
 plotter3d.show()
+video_writer.close()
 
 env.close()

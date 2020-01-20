@@ -128,9 +128,11 @@ class ICModule(nn.Module):
 
     def parameters(self):
         """
-        Returns all parameters of the ICModule, removing unnecessary weights from convolutional base.
+        Returns all parameters of the ICModule, removing unnecessary weights
+        from base network.
         """
-        return set(chain(self._inverse.parameters(), self._forward.parameters()))
+        return set(chain(self._inverse.parameters(),
+                         self._forward.parameters()))
 
     def embed(self, state):
         """
@@ -156,8 +158,10 @@ class ICModule(nn.Module):
         next_state = torch.tensor(next_state).float()
         next_state_embed_pred = self.next_state(this_state, action)
         next_state_embed_true = self.embed(next_state)
+        
         self.opt.zero_grad()
-        loss = F.mse_loss(next_state_embed_pred, next_state_embed_true)
+        loss = F.mse_loss(next_state_embed_pred,
+                          next_state_embed_true)
         loss.backward()
         self.opt.step()
         return loss
@@ -220,45 +224,3 @@ class FCPolicyCont(nn.Module):
         stds = F.softplus(self.stds(x))
         value = self.value(x)
         return locs, stds, value
-
-
-class Sphere(nn.Module):
-    """
-    Estimating a sphere as reachable points
-    """
-
-    def __init__(self):
-        super(Sphere, self).__init__()
-        self.l1 = nn.Linear(3, 256)
-        self.l2 = nn.Linear(3, 256)
-        self.r = nn.Linear(256, 1)
-        self.o = nn.Linear(256, 3)
-        self.opt = optim.Adam(self.parameters())
-
-    def forward(self, x):
-        x1 = self.l1(x)
-        x2 = self.l2(x)
-        radius = self.r(x1)
-        origin = self.o(x2)
-        return radius, origin
-
-    def train(self, inputs, epochs):
-        inputs = torch.tensor(inputs)
-        losses = []
-        for _ in range(epochs):
-            r, o = self.forward(inputs)
-            self.opt.zero_grad()
-            # calculate loss
-            loss = 0
-            for e in inputs:
-                dist = torch.dist(e, o)
-                # print(dist)
-                loss += (dist - r)**2
-            loss = loss.mean()
-            loss.backward(retain_graph=True)
-
-            losses.append(loss)
-            self.opt.step()
-
-        r, o = self.forward(inputs)
-        return r.mean().item(), o.mean(dim=0).detach().numpy(), losses
