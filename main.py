@@ -77,7 +77,8 @@ for i in range(cnf.main.max_timesteps):
         })
 
     # IM loss = reward currently
-    reward = im_loss_processed - torch.norm(torch.tensor(action))
+    reward = im_loss_processed - torch.norm(torch.tensor(action)) *\
+        cnf.main.norm_scale
     memory.rewards.append(reward)
     memory.is_terminals.append(done)
     state = next_state
@@ -95,7 +96,7 @@ for i in range(cnf.main.max_timesteps):
         plotter3d = Plotter3D()
         plotter3d.plot_outer_cloud(point_cloud)
         plotter3d.plot_3d_data(gripper_positions)
-        plotter3d.save(f"data/pc_step_{i}_{cnf.wandb.name}")
+        plotter3d.save(f"data/pc_step_{i}_{cnf.wandb.name}.html")
         wandb.log({
             "plotly pc": plotter3d.fig
         })

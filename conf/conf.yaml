@@ -6,6 +6,7 @@ main:
   video_name: "vid/recording_"
   video_format: ".mp4"
   pc_each: 5000
+  norm_scale: 0.25
 
 wandb:
   use: False
