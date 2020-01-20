@@ -77,7 +77,7 @@ for i in range(cnf.main.max_timesteps):
         })
 
     # IM loss = reward currently
-    reward = im_loss_processed - torch.norm(action)
+    reward = im_loss_processed - torch.norm(torch.tensor(action))
     memory.rewards.append(reward)
     memory.is_terminals.append(done)
     state = next_state
