@@ -7,12 +7,6 @@ from models import Sphere
 import plotly.graph_objects as go
 import wandb
 
-#fig = plt.figure()
-#ax = fig.add_subplot(121, projection="3d")
-#ax2d = fig.add_subplot(122)
-#ax.set_xlim(-1, 1)
-#ax.set_ylim(-1, 1)
-#.set_zlim(0, 2)
 wandb.init(project="test")
 
 radius = 0.9285090706636693

@@ -1,10 +1,6 @@
 from rlbench.environment import Environment
 from rlbench.action_modes import ActionMode, ArmActionMode
 from rlbench.tasks import ReachTarget
-import numpy as np
-
-
-obs, reward, terminate = task.step(np.random.normal(8))
 
 
 class Env:

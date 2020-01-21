@@ -36,7 +36,7 @@ class ContActionLayer(nn.Module):
 
 
 class ActorCritic(nn.Module):
-    def __init__(self, state_dim, action_dim, n_latent_var):
+    def __init__(self, state_dim, action_dim, n_latent_var, max_action):
         super(ActorCritic, self).__init__()
         self.action_dim = action_dim
         self.cont_action = ContActionLayer(n_latent_var, action_dim)
@@ -100,7 +100,8 @@ class PPO:
                  betas,
                  gamma,
                  K_epochs,
-                 eps_clip):
+                 eps_clip,
+                 max_action):
         self.lr = lr
         self.betas = betas
         self.gamma = gamma
@@ -108,11 +109,11 @@ class PPO:
         self.K_epochs = K_epochs
 
         self.policy = ActorCritic(
-            state_dim, action_dim, n_latent_var).to(device)
+            state_dim, action_dim, n_latent_var, max_action).to(device)
         self.optimizer = torch.optim.Adam(
             self.policy.parameters(), lr=lr, betas=betas)
         self.policy_old = ActorCritic(
-            state_dim, action_dim, n_latent_var).to(device)
+            state_dim, action_dim, n_latent_var, max_action).to(device)
         self.policy_old.load_state_dict(self.policy.state_dict())
 
         self.MseLoss = nn.MSELoss()
