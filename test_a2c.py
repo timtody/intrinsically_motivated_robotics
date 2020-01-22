@@ -51,7 +51,7 @@ for i in range(training_steps):
             agent.update(memory)
             memory.clear_memory()
             timestep = 0
-    print("Done! Last reward was", reward)
+    print("Done! Episode reward reward was", episode_reward)
     wandb.log({"reward": episode_reward})
     episode_reward = 0
     obs = env.reset()

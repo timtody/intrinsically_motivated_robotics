@@ -6,6 +6,8 @@ from torch.distributions import MultivariateNormal
 
 # device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 device = torch.device("cpu")
+torch.manual_seed(42)
+
 
 class Memory:
     def __init__(self):
@@ -76,7 +78,8 @@ class ActorCritic(nn.Module):
         memory.states.append(state)
         memory.actions.append(action)
         memory.logprobs.append(dist.log_prob(action))
-        return torch.tanh(action).numpy() * self.max_action
+        return action.clamp(-self.max_action, self.max_action).numpy()
+        # return torch.tanh(action).numpy() * self.max_action
 
     def evaluate(self, state, action):
         locs, stds = self.action_layer_cont(state)

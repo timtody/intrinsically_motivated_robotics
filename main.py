@@ -60,7 +60,7 @@ for i in range(cnf.main.max_timesteps):
 
     gripper_positions.append(np.array(state.gripper_pose[:3]))
     action = agent.policy_old.act(state.get_low_dim_data(), memory)
-    next_state, _, done, _ = env.step(action)
+    next_state, env_reward, done, _ = env.step(action)
     output_img = env.render(mode="rgb_array")
     video_writer.append_data(output_img.copy())
     im_loss = icmodule.train_forward(state.get_low_dim_data(),
@@ -69,9 +69,10 @@ for i in range(cnf.main.max_timesteps):
     im_loss_processed = icmodule._process_loss(im_loss)
     cum_im_reward += im_loss_processed
 
-    # IM loss = reward - action norm
+    # IM loss = reward - action norm + external reward
+    # TODO: this might need some more scaling factors
     norm = torch.norm(torch.tensor(action))
-    reward = im_loss_processed - norm * cnf.main.norm_scale
+    reward = im_loss_processed - norm * cnf.main.norm_scale + env_reward
     if cnf.wandb.use:
         wandb.log({
             "intrinsic reward raw": im_loss,
@@ -80,6 +81,7 @@ for i in range(cnf.main.max_timesteps):
             "action norm": norm,
             "return std": icmodule.loss_buffer.get_std(),
             "cummulative im reward": cum_im_reward,
+            "external reward": env_reward,
             **{f"joint {i}": action[i] for i in range(len(action))}
         })
     memory.rewards.append(reward)

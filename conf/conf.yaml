@@ -15,7 +15,7 @@ wandb:
   name: test
 
 ppo:
-  n_discrete: 7
+  #n_discrete: 7
   n_latent_var: 256
   lr: 0.002
   betas: [0.9, 0.999]
