@@ -39,6 +39,7 @@ class ActorCritic(nn.Module):
     def __init__(self, state_dim, action_dim, n_latent_var, max_action):
         super(ActorCritic, self).__init__()
         self.action_dim = action_dim
+        self.max_action = max_action
         self.cont_action = ContActionLayer(n_latent_var, action_dim)
         # actor
         self.action_layer = nn.Sequential(
@@ -75,7 +76,7 @@ class ActorCritic(nn.Module):
         memory.states.append(state)
         memory.actions.append(action)
         memory.logprobs.append(dist.log_prob(action))
-        return (torch.tanh(action)).numpy() * 0.1
+        return torch.tanh(action).numpy() * self.max_action
 
     def evaluate(self, state, action):
         locs, stds = self.action_layer_cont(state)

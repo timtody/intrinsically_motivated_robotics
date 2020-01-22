@@ -23,7 +23,7 @@ class Memory:
 
 
 class ActorCritic(nn.Module):
-    def __init__(self, state_dim, action_dim, n_latent_var):
+    def __init__(self, state_dim, n_actions, n_discrete, n_latent_var):
         super(ActorCritic, self).__init__()
 
         # actor
@@ -32,7 +32,7 @@ class ActorCritic(nn.Module):
             nn.Tanh(),
             nn.Linear(n_latent_var, n_latent_var),
             nn.Tanh(),
-            nn.Linear(n_latent_var, action_dim),
+            nn.Linear(n_latent_var, n_actions),
             nn.Softmax(dim=-1)
         )
 
@@ -74,7 +74,8 @@ class ActorCritic(nn.Module):
 
 class PPO:
     def __init__(self, state_dim,
-                 action_dim,
+                 n_actions,
+                 n_discrete,
                  n_latent_var,
                  lr,
                  betas,
@@ -90,11 +91,11 @@ class PPO:
         self.K_epochs = K_epochs
 
         self.policy = ActorCritic(
-            state_dim, action_dim, n_latent_var).to(device)
+            state_dim, n_actions, n_discrete, n_latent_var).to(device)
         self.optimizer = torch.optim.Adam(
             self.policy.parameters(), lr=lr, betas=betas)
         self.policy_old = ActorCritic(
-            state_dim, action_dim, n_latent_var).to(device)
+            state_dim, n_actions, n_discrete, n_latent_var).to(device)
         self.policy_old.load_state_dict(self.policy.state_dict())
 
         self.MseLoss = nn.MSELoss()

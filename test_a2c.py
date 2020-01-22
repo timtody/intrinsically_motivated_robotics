@@ -21,10 +21,6 @@ cnf.merge_with_cli()
 # move to cnf file
 obs_space = env.observation_space.shape[0]
 action_dim = env.action_space.shape[0]
-print(env.action_space.high)
-print(env.action_space.low)
-print(env.action_space.shape)
-exit(1)
 agent = PPO(obs_space, action_dim, **cnf.ppo)
 memory = Memory()
 
