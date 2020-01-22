@@ -61,6 +61,8 @@ for i in range(cnf.main.max_timesteps):
     gripper_positions.append(np.array(state.gripper_pose[:3]))
     action = agent.policy_old.act(state.get_low_dim_data(), memory)
     next_state, env_reward, done, _ = env.step(action)
+    if env_reward >= 0:
+        env.reset()
     output_img = env.render(mode="rgb_array")
     video_writer.append_data(output_img.copy())
     im_loss = icmodule.train_forward(state.get_low_dim_data(),
@@ -105,6 +107,7 @@ for i in range(cnf.main.max_timesteps):
         wandb.log({
             "plotly pc": plotter3d.fig
         })
+        gripper_positions = []
 
 video_writer.close()
 

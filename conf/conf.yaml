@@ -6,7 +6,7 @@ main:
   video_folder: vid
   video_name: ${main.video_folder}/recording_ 
   video_format: .mp4
-  pc_each: 2500
+  pc_each: ${main.video_length}
   norm_scale: 0.25
 
 wandb:
