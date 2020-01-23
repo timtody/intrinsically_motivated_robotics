@@ -29,7 +29,9 @@ memory = Memory()
 icmodule = ICModule(obs_space, 1, action_dim)
 
 if cnf.wandb.use:
-    wandb.init(project=cnf.wandb.project, name=cnf.wandb.name)
+    wandb.init(project=cnf.wandb.project,
+               name=cnf.wandb.name,
+               config=cnf)
     wandb.watch(agent.policy, log="all")
     wandb.watch(icmodule._forward, log="all")
 
@@ -69,7 +71,7 @@ for i in range(cnf.main.max_timesteps):
                                      next_state.get_low_dim_data(),
                                      action)
     im_loss_processed = icmodule._process_loss(im_loss)
-    cum_im_reward += im_loss_processed
+    cum_im_reward += im_loss
 
     # IM loss = reward - action norm + external reward
     # TODO: this might need some more scaling factors

@@ -121,7 +121,7 @@ class ICModule(nn.Module):
 
         self.opt = optim.Adam(self.parameters(), lr=1e-4)
 
-        self.loss_buffer = LossBuffer(200)
+        self.loss_buffer = LossBuffer(1000)
 
     def forward(self, x):
         raise NotImplementedError
