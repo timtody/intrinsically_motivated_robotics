@@ -169,7 +169,7 @@ class ICModule(nn.Module):
     def _process_loss(self, loss):
         self.loss_buffer.push(loss)
         runinng_std = self.loss_buffer.get_std()
-        return loss / runinng_std + 0.001
+        return loss / runinng_std + 0.0001
 
 
 class DNNPolicy(nn.Module):
