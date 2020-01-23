@@ -177,7 +177,7 @@ class Plotter3D:
         x, y, z = zip(*data)
         self.fig.add_trace(
             go.Scatter3d(
-                visible=False,
+                visible=True,
                 x=x,
                 y=y,
                 z=z,

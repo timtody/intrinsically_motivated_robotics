@@ -1,11 +1,12 @@
 main:
-  env_name: 'reach_target-state-v0'
+  env_name: reach_target-state-v0
   max_timesteps: 100000
   train_each: 100
   video_length: 1000
-  video_name: "vid/recording_"
-  video_format: ".mp4"
-  pc_each: 5000
+  video_folder: vid
+  video_name: ${main.video_folder}/recording_ 
+  video_format: .mp4
+  pc_each: ${main.video_length}
   norm_scale: 0.25
 
 wandb:
@@ -14,9 +15,11 @@ wandb:
   name: test
 
 ppo:
+  #n_discrete: 7
   n_latent_var: 256
   lr: 0.002
   betas: [0.9, 0.999]
   K_epochs: 4
   eps_clip: 0.2
-  gamma: 0.99 
+  gamma: 0.99
+  max_action: 0.1

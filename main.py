@@ -9,13 +9,14 @@ from wrappers import ObsWrapper
 from utils import ColorGradient, Plotter3D, PointCloud
 from imageio import get_writer
 import matplotlib.pyplot as plt
+from logger import Logger
 import torch
 
-
+# logging and hyperparameters
 cnf = OmegaConf.load("conf/conf.yaml")
 cnf.merge_with_cli()
-# enable strict mode
 OmegaConf.set_struct(cnf, True)
+Logger.setup(cnf)
 
 env = gym.make(cnf.main.env_name)
 env = ObsWrapper(env)
@@ -59,7 +60,9 @@ for i in range(cnf.main.max_timesteps):
 
     gripper_positions.append(np.array(state.gripper_pose[:3]))
     action = agent.policy_old.act(state.get_low_dim_data(), memory)
-    next_state, _, done, _ = env.step(action)
+    next_state, env_reward, done, _ = env.step(action)
+    # if env_reward >= 0:
+    #     env.reset()
     output_img = env.render(mode="rgb_array")
     video_writer.append_data(output_img.copy())
     im_loss = icmodule.train_forward(state.get_low_dim_data(),
@@ -67,18 +70,22 @@ for i in range(cnf.main.max_timesteps):
                                      action)
     im_loss_processed = icmodule._process_loss(im_loss)
     cum_im_reward += im_loss_processed
+
+    # IM loss = reward - action norm + external reward
+    # TODO: this might need some more scaling factors
+    norm = torch.norm(torch.tensor(action))
+    reward = im_loss_processed - norm * cnf.main.norm_scale + env_reward
     if cnf.wandb.use:
         wandb.log({
             "intrinsic reward raw": im_loss,
             "intrinsic reward": im_loss_processed,
+            "total reward": reward,
+            "action norm": norm,
             "return std": icmodule.loss_buffer.get_std(),
             "cummulative im reward": cum_im_reward,
+            "external reward": env_reward,
             **{f"joint {i}": action[i] for i in range(len(action))}
         })
-
-    # IM loss = reward currently
-    reward = im_loss_processed - torch.norm(torch.tensor(action)) *\
-        cnf.main.norm_scale
     memory.rewards.append(reward)
     memory.is_terminals.append(done)
     state = next_state
@@ -88,10 +95,10 @@ for i in range(cnf.main.max_timesteps):
         agent.update(memory)
         memory.clear_memory()
         timestep = 0
-    if i % 500 == 499 and cnf.wandb.use:
-        wandb.log({
-            "gripper positions": wandb.Object3D(np.array(gripper_positions))
-        })
+    # if i % 500 == 499 and cnf.wandb.use:
+    #     wandb.log({
+    #         "gripper positions": wandb.Object3D(np.array(gripper_positions))
+    #     })
     if i % cnf.main.pc_each == cnf.main.pc_each - 1:
         plotter3d = Plotter3D()
         plotter3d.plot_outer_cloud(point_cloud)
@@ -100,6 +107,7 @@ for i in range(cnf.main.max_timesteps):
         wandb.log({
             "plotly pc": plotter3d.fig
         })
+        gripper_positions = []
 
 video_writer.close()
 

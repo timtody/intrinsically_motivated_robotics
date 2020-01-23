@@ -158,7 +158,7 @@ class ICModule(nn.Module):
         next_state = torch.tensor(next_state).float()
         next_state_embed_pred = self.next_state(this_state, action)
         next_state_embed_true = self.embed(next_state)
-        
+
         self.opt.zero_grad()
         loss = F.mse_loss(next_state_embed_pred,
                           next_state_embed_true)
@@ -169,7 +169,7 @@ class ICModule(nn.Module):
     def _process_loss(self, loss):
         self.loss_buffer.push(loss)
         runinng_std = self.loss_buffer.get_std()
-        return loss / runinng_std
+        return loss / runinng_std + 0.0001
 
 
 class DNNPolicy(nn.Module):

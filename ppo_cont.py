@@ -6,6 +6,8 @@ from torch.distributions import MultivariateNormal
 
 # device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 device = torch.device("cpu")
+torch.manual_seed(42)
+
 
 class Memory:
     def __init__(self):
@@ -36,9 +38,10 @@ class ContActionLayer(nn.Module):
 
 
 class ActorCritic(nn.Module):
-    def __init__(self, state_dim, action_dim, n_latent_var):
+    def __init__(self, state_dim, action_dim, n_latent_var, max_action):
         super(ActorCritic, self).__init__()
         self.action_dim = action_dim
+        self.max_action = max_action
         self.cont_action = ContActionLayer(n_latent_var, action_dim)
         # actor
         self.action_layer = nn.Sequential(
@@ -75,7 +78,8 @@ class ActorCritic(nn.Module):
         memory.states.append(state)
         memory.actions.append(action)
         memory.logprobs.append(dist.log_prob(action))
-        return (torch.tanh(action)).numpy() * 0.1
+        return action.clamp(-self.max_action, self.max_action).numpy()
+        # return torch.tanh(action).numpy() * self.max_action
 
     def evaluate(self, state, action):
         locs, stds = self.action_layer_cont(state)
@@ -100,7 +104,8 @@ class PPO:
                  betas,
                  gamma,
                  K_epochs,
-                 eps_clip):
+                 eps_clip,
+                 max_action):
         self.lr = lr
         self.betas = betas
         self.gamma = gamma
@@ -108,11 +113,11 @@ class PPO:
         self.K_epochs = K_epochs
 
         self.policy = ActorCritic(
-            state_dim, action_dim, n_latent_var).to(device)
+            state_dim, action_dim, n_latent_var, max_action).to(device)
         self.optimizer = torch.optim.Adam(
             self.policy.parameters(), lr=lr, betas=betas)
         self.policy_old = ActorCritic(
-            state_dim, action_dim, n_latent_var).to(device)
+            state_dim, action_dim, n_latent_var, max_action).to(device)
         self.policy_old.load_state_dict(self.policy.state_dict())
 
         self.MseLoss = nn.MSELoss()
