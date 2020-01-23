@@ -19,11 +19,16 @@ OmegaConf.set_struct(cnf, True)
 
 env = gym.make(cnf.main.env_name)
 env = ObsWrapper(env)
-
 obs_space = env.observation_space.shape[0]
 action_dim = env.action_space.shape[0]
 agent = PPO(obs_space, action_dim, **cnf.ppo)
 memory = Memory()
+
+if cnf.wandb.use:
+    wandb.init(project=cnf.wandb.project,
+               name=cnf.wandb.name,
+               config=cnf)
+    wandb.watch(agent.policy, log="all")
 
 def get_target():
     return env.task._task.target.get_position()
@@ -36,11 +41,32 @@ def get_distance():
     tip = torch.tensor(get_tip())
     return torch.dist(target, tip)
 
-obs = env.reset()
-done = False
 
+MAX_LEN = 100
+timestep = 0
 for i in range(1000):
+    timestep += 1
+    obs = env.reset()
+    done = False
+    episode_reward = 0
+    episode_length = 0
+    
     while not done:
         obs, reward, done, info = env.step(env.action_space.sample())
-        print(get_distance().item())
-        env.render()
+        reward = -get_distance() + reward
+        memory.rewards.append(reward)
+        memory.is_terminals.append(done)
+        
+        if timestep % 100 == 0:
+            agent.update(memory)
+            memory.clear_memory()
+            timestep = 0
+        
+        episode_reward += reward
+        episode_length += 1
+        if episode_length >= MAX_LEN:
+            done = True
+    
+    wandb.log({
+        "episode reward": episode_reward
+    })
