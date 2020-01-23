@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 from logger import Logger
 import torch
 
+
 # logging and hyperparameters
 cnf = OmegaConf.load("conf/conf.yaml")
 cnf.merge_with_cli()
