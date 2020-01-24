@@ -2,15 +2,15 @@ main:
   env_name: reach_target-state-v0
   
 ppo:
-  n_latent_var: 256
+  n_latent_var: 512
   lr: 0.002
   betas: [0.9, 0.999]
-  K_epochs: 4
+  K_epochs: 6
   eps_clip: 0.2
   gamma: 0.99
-  max_action: 0.1
+  max_action: 1
 
 wandb:
   use: False
-  project: curious
+  project: test
   name: test

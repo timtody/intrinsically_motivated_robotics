@@ -6,12 +6,13 @@ from omegaconf import OmegaConf
 from models import ICModule
 from ppo_cont import PPO, Memory
 from wrappers import ObsWrapper
-from utils import ColorGradient, Plotter3D, PointCloud
+from utils import ColorGradient, Plotter3D, PointCloud, ReturnWindow
 from imageio import get_writer
 import matplotlib.pyplot as plt
 from logger import Logger
 import torch
 
+RP_EVERY = 1000
 
 # logging and hyperparameters
 cnf = OmegaConf.load("conf/conf.yaml")
@@ -52,6 +53,8 @@ video_writer = get_writer(cnf.main.video_name +
                           fps=30)
 
 cum_im_reward = 0
+
+
 for i in range(cnf.main.max_timesteps):
     timestep += 1
 
@@ -63,6 +66,7 @@ for i in range(cnf.main.max_timesteps):
 
     gripper_positions.append(np.array(state.gripper_pose[:3]))
     action = agent.policy_old.act(state.get_low_dim_data(), memory)
+    
     next_state, env_reward, done, _ = env.step(action)
     # if env_reward >= 0:
     #     env.reset()
@@ -93,7 +97,19 @@ for i in range(cnf.main.max_timesteps):
     memory.is_terminals.append(done)
     state = next_state
     last_action = action
-
+    
+    if i % RP_EVERY in range(RP_EVERY-200, RP_EVERY):
+        if i % RP_EVERY == RP_EVERY-200:
+            try: writer.close()
+            except: pass
+            win = ReturnWindow(0.99, lookback=200)
+            writer = get_writer(f"vid/return_plot_step{i}.mp4", fps=60)
+            
+        pred_ret = agent.policy_old.get_value(state.get_low_dim_data())
+        win.update(reward.item(), pred_ret.item())
+        frame = win.get_frame()
+        writer.append_data(frame)
+    
     if timestep % cnf.main.train_each == 0:
         agent.update(memory)
         memory.clear_memory()
@@ -102,7 +118,7 @@ for i in range(cnf.main.max_timesteps):
     #     wandb.log({
     #         "gripper positions": wandb.Object3D(np.array(gripper_positions))
     #     })
-    if i % cnf.main.pc_each == cnf.main.pc_each - 1:
+    if i % cnf.main.pc_each == cnf.main.pc_each - 1 and cnf.wandb.use:
         plotter3d = Plotter3D()
         plotter3d.plot_outer_cloud(point_cloud)
         plotter3d.plot_3d_data(gripper_positions)
@@ -113,5 +129,5 @@ for i in range(cnf.main.max_timesteps):
         gripper_positions = []
 
 video_writer.close()
-
+writer.close()
 env.close()

@@ -21,7 +21,7 @@ env = gym.make(cnf.main.env_name)
 env = ObsWrapper(env)
 obs_space = env.observation_space.shape[0]
 action_dim = env.action_space.shape[0]
-agent = PPO(obs_space, action_dim, **cnf.ppo)
+agent = PPO(obs_space, 3, **cnf.ppo)
 memory = Memory()
 
 if cnf.wandb.use:
@@ -45,7 +45,7 @@ def get_distance():
     return torch.dist(target, tip)
 
 
-MAX_LEN = 150
+MAX_LEN = 250
 timestep = 0
 
 for i in range(1000000):
@@ -57,9 +57,16 @@ for i in range(1000000):
 
     while not done:
         action = agent.policy_old.act(obs.get_low_dim_data(), memory)
-        obs, reward, done, info = env.step(action)
+        obs, reward, done, info = env.step([action[0], action[1], 0, 0, 0, action[2], 0, 0])
+        # print(reward, done, get_distance())
+        # print(obs.task_low_dim_state)
+        # env.env.render()
+        if done:
+            print("solved.")
+            print(reward)
+            exit(1)
         solved = done
-        reward = -get_distance() + reward
+        reward = -get_distance()/100 + reward
         memory.rewards.append(reward)
         memory.is_terminals.append(done)
 
@@ -72,7 +79,8 @@ for i in range(1000000):
         episode_length += 1
         if episode_length >= MAX_LEN:
             done = True
-    wandb.log({
-        "episode reward": episode_reward,
-        "solved": int(solved)
-    })
+    if cnf.wandb.use:
+        wandb.log({
+            "episode reward": episode_reward,
+            "solved": int(solved)
+        })

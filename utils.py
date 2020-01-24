@@ -221,3 +221,78 @@ class Plotter3D:
 
     def save(self, fname):
         self.fig.write_html(fname)
+
+import numpy as np
+import matplotlib.pyplot as plt
+from imageio import get_writer
+
+
+class ReturnIAX:
+    def __init__(self, ax, discount_factor, lookback=15):
+        self._ax = ax
+        self._x = np.arange(-lookback + 1, 1)
+        self._return_buffer = np.zeros(lookback)
+        self._prediction_buffer = np.zeros(lookback)
+        self._target_buffer = np.zeros(lookback)
+        self._prediction_part = np.zeros(lookback)
+        self._gammas = np.cumprod(np.full(
+            lookback, discount_factor))[::-1] / discount_factor
+        self._discount_factor = discount_factor
+        self._return_curve, = self._ax.plot(self._x,
+                                            self._return_buffer,
+                                            color="b")
+        self._prediction_curve, = self._ax.plot(self._x,
+                                                self._prediction_buffer,
+                                                color="r")
+
+    def __call__(self, reward, prediction):
+        self._prediction_buffer[:-1] = self._prediction_buffer[1:]
+        self._prediction_buffer[-1] = prediction
+        self._return_buffer[:-1] = self._return_buffer[1:]
+        self._return_buffer += self._gammas * reward - self._prediction_part
+        self._prediction_part = prediction * self._gammas
+        self._return_buffer[-1] = reward
+        self._return_buffer += self._discount_factor * self._prediction_part
+        self._return_curve.set_ydata(self._return_buffer)
+        self._prediction_curve.set_ydata(self._prediction_buffer)
+
+
+class ReturnWindow:
+    def __init__(self, discount_factor, lookback=100):
+        self.fig = plt.figure()
+        ax = self.fig.add_subplot(111)
+        self.iax_return = ReturnIAX(ax, discount_factor, lookback=lookback)
+        self._fig_shown = False
+        ax.set_ylim(-30, 30)
+
+    def close(self):
+        plt.close(self.fig)
+
+    def update(self, reward, prediction):
+        self.iax_return(reward, prediction)
+        if not self._fig_shown:
+            self.fig.canvas.draw()
+            #self.fig.show()
+            self._fig_shown = True
+        else:
+            self.fig.canvas.draw()
+            self.fig.canvas.flush_events()
+
+    def get_frame(self):
+        w, h = self.fig.canvas.get_width_height()
+        return np.fromstring(self.fig.canvas.tostring_rgb(),
+                             dtype=np.uint8).reshape(h, w, 3)
+
+if __name__ == "__main__":
+    import time
+
+    win = ReturnWindow(0.99, lookback=200)
+    writer = get_writer("test.mp4", fps=60)
+
+    for i in range(200):
+        reward = np.random.uniform()
+        prediction = np.random.uniform()
+        win.update(reward, prediction)
+        frame = win.get_frame()
+        writer.append_data(frame)
+    writer.close()

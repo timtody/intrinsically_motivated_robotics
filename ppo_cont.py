@@ -67,6 +67,9 @@ class ActorCritic(nn.Module):
 
     def forward(self):
         raise NotImplementedError
+    
+    def get_value(self, state):
+        return self.value_layer(torch.tensor(state).float())
 
     def act(self, state, memory):
         state = torch.from_numpy(state).float().to(device)
