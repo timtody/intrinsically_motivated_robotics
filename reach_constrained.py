@@ -30,11 +30,14 @@ if cnf.wandb.use:
                config=cnf)
     wandb.watch(agent.policy, log="all")
 
+
 def get_target():
     return env.task._task.target.get_position()
 
+
 def get_tip():
-   return env.task._task.robot.arm.get_tip().get_position() 
+    return env.task._task.robot.arm.get_tip().get_position()
+
 
 def get_distance():
     target = torch.tensor(get_target())
@@ -42,31 +45,34 @@ def get_distance():
     return torch.dist(target, tip)
 
 
-MAX_LEN = 100
+MAX_LEN = 150
 timestep = 0
-for i in range(1000):
+
+for i in range(1000000):
     timestep += 1
     obs = env.reset()
     done = False
     episode_reward = 0
     episode_length = 0
-    
+
     while not done:
-        obs, reward, done, info = env.step(env.action_space.sample())
+        action = agent.policy_old.act(obs.get_low_dim_data(), memory)
+        obs, reward, done, info = env.step(action)
+        solved = done
         reward = -get_distance() + reward
         memory.rewards.append(reward)
         memory.is_terminals.append(done)
-        
+
         if timestep % 100 == 0:
             agent.update(memory)
             memory.clear_memory()
             timestep = 0
-        
+
         episode_reward += reward
         episode_length += 1
         if episode_length >= MAX_LEN:
             done = True
-    
     wandb.log({
-        "episode reward": episode_reward
+        "episode reward": episode_reward,
+        "solved": int(solved)
     })
