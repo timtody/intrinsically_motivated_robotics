@@ -22,4 +22,4 @@ ppo:
   K_epochs: 4
   eps_clip: 0.2
   gamma: 0.99
-  max_action: 0.1
+  maxhttps://pyrep.readthedocs.io/en/latest/https://pyrep.readthedocs.io/en/latest/_action: 0.1

@@ -2,7 +2,7 @@ import gym
 import wandb
 import rlbench.gym
 from omegaconf import OmegaConf
-from ppo_cont import PPO, Memory
+from algo.ppo_cont import PPO, Memory
 from wrappers import ObsWrapper
 from imageio import get_writer
 from logger import Logger
@@ -15,7 +15,7 @@ import torch
 cnf = OmegaConf.load("conf/constrained.yaml")
 cnf.merge_with_cli()
 OmegaConf.set_struct(cnf, True)
-#Logger.setup(cnf)
+# Logger.setup(cnf)
 
 env = gym.make(cnf.main.env_name)
 env = ObsWrapper(env)
