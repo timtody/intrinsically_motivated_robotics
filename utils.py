@@ -1,9 +1,19 @@
 import numpy as np
 import torch
 import gym
+import wandb
 
 
 import plotly.graph_objects as go
+
+
+def prepare_wandb(cnf, *args):
+    if cnf.wandb.use:
+        wandb.init(project=cnf.wandb.project,
+                   name=cnf.wandb.name,
+                   config=cnf)
+        wandb.watch(args[0].policy, log="all")
+        wandb.watch(args[1]._forward, log="all")
 
 
 class PointCloud:

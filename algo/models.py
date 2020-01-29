@@ -119,7 +119,7 @@ class ICModule(nn.Module):
             conv_out_size, self.base, action_dim)
         self._forward = ForwardModule(conv_out_size, action_dim, self.base)
 
-        self.opt = optim.Adam(self.parameters(), lr=1e-4)
+        self.opt = optim.Adam(self.parameters(), lr=1e-5)
 
         self.loss_buffer = LossBuffer(1000)
 

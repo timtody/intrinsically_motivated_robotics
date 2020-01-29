@@ -1,6 +1,6 @@
 main:
   env_name: reach_target-state-v0
-  max_timesteps: 100000
+  max_timesteps: 10000
   train_each: 100
   video_length: 1000
   video_folder: vid
@@ -11,7 +11,7 @@ main:
 
 wandb:
   use: False
-  project: curious
+  project: collision
   name: test
 
 ppo:
@@ -22,4 +22,9 @@ ppo:
   K_epochs: 4
   eps_clip: 0.2
   gamma: 0.99
-  maxhttps://pyrep.readthedocs.io/en/latest/https://pyrep.readthedocs.io/en/latest/_action: 0.1
+  max_action: 0.1
+
+env:
+  scene_path: base.ttt
+  headless: True
+  state: low
