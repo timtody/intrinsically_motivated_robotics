@@ -20,7 +20,7 @@ class Env(gym.Env):
             low=-1.0, high=1.0, shape=(7,)
         )
         # TODO: need to be made more general for vision space
-        obs = self.step([0,0,0,0,0,0,0])
+        obs = self.step([0, 0, 0, 0, 0, 0, 0])
         obs = self.reset()
         self.observation_space = gym.spaces.Box(
             low=-np.inf, high=np.inf, shape=obs.get_all().shape
