@@ -12,7 +12,7 @@ import torch.nn.functional as F
 from utils import LossBuffer
 
 
-torch.manual_seed(42)
+# torch.manual_seed(42)
 
 
 class ConvModule(nn.Module):
@@ -105,10 +105,11 @@ class ICModule(nn.Module):
     Intrinsic curiosity module.
     """
 
-    def __init__(self, h, w, action_dim):
+    def __init__(self, env, h=1, w=1):
         super(ICModule, self).__init__()
         # self._conv_base = ConvModule()
-        self.base = FCModule(h * w)
+        action_dim = env.action_space.shape[0]
+        self.base = FCModule(env.observation_space.shape[0] * w)
         # convw = ConvModule._conv2d_size_out(w, 4)
         # convh = ConvModule._conv2d_size_out(h, 4)
         # change this and make it modular

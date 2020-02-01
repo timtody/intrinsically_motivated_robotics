@@ -12,7 +12,7 @@ class Logger:
 
     @staticmethod
     def _get_path(cnf):
-        path = os.path.join("output", cnf.wandb.name)
+        path = os.path.join("output", cnf.log.name)
         return path
 
     @staticmethod

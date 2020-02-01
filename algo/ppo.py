@@ -28,22 +28,15 @@ class ActorCritic(nn.Module):
 
         # actor
         self.action_layer = nn.Sequential(
-            nn.Linear(state_dim, n_latent_var),
-            nn.Tanh(),
-            nn.Linear(n_latent_var, n_latent_var),
-            nn.Tanh(),
-            nn.Linear(n_latent_var, n_actions),
-            nn.Softmax(dim=-1)
-        )
+            nn.Linear(state_dim, n_latent_var), nn.Tanh(),
+            nn.Linear(n_latent_var, n_latent_var), nn.Tanh(),
+            nn.Linear(n_latent_var, n_actions), nn.Softmax(dim=-1))
 
         # critic
-        self.value_layer = nn.Sequential(
-            nn.Linear(state_dim, n_latent_var),
-            nn.Tanh(),
-            nn.Linear(n_latent_var, n_latent_var),
-            nn.Tanh(),
-            nn.Linear(n_latent_var, 1)
-        )
+        self.value_layer = nn.Sequential(nn.Linear(state_dim, n_latent_var),
+                                         nn.Tanh(),
+                                         nn.Linear(n_latent_var, n_latent_var),
+                                         nn.Tanh(), nn.Linear(n_latent_var, 1))
 
     def forward(self):
         raise NotImplementedError
@@ -73,16 +66,8 @@ class ActorCritic(nn.Module):
 
 
 class PPO:
-    def __init__(self, state_dim,
-                 n_actions,
-                 n_discrete,
-                 n_latent_var,
-                 lr,
-                 betas,
-                 gamma,
-                 K_epochs,
-                 eps_clip,
-                 max_action):
+    def __init__(self, state_dim, n_actions, n_discrete, n_latent_var, lr,
+                 betas, gamma, K_epochs, eps_clip, max_action):
 
         self.lr = lr
         self.betas = betas
@@ -90,12 +75,13 @@ class PPO:
         self.eps_clip = eps_clip
         self.K_epochs = K_epochs
 
-        self.policy = ActorCritic(
-            state_dim, n_actions, n_discrete, n_latent_var).to(device)
-        self.optimizer = torch.optim.Adam(
-            self.policy.parameters(), lr=lr, betas=betas)
-        self.policy_old = ActorCritic(
-            state_dim, n_actions, n_discrete, n_latent_var).to(device)
+        self.policy = ActorCritic(state_dim, n_actions, n_discrete,
+                                  n_latent_var).to(device)
+        self.optimizer = torch.optim.Adam(self.policy.parameters(),
+                                          lr=lr,
+                                          betas=betas)
+        self.policy_old = ActorCritic(state_dim, n_actions, n_discrete,
+                                      n_latent_var).to(device)
         self.policy_old.load_state_dict(self.policy.state_dict())
 
         self.MseLoss = nn.MSELoss()
@@ -104,7 +90,10 @@ class PPO:
         # Monte Carlo estimate of state rewards:
         rewards = []
         discounted_reward = 0
-        for reward, is_terminal in zip(reversed(memory.rewards), reversed(memory.is_terminals)):
+        # bootstrap from value function
+        memory.rewards[-1] = self.policy_old.value_layer(memory.states[-1])
+        for reward, is_terminal in zip(reversed(memory.rewards),
+                                       reversed(memory.is_terminals)):
             if is_terminal:
                 discounted_reward = 0
             discounted_reward = reward + (self.gamma * discounted_reward)
@@ -131,8 +120,8 @@ class PPO:
             # Finding Surrogate Loss:
             advantages = rewards - state_values.detach()
             surr1 = ratios * advantages
-            surr2 = torch.clamp(ratios, 1-self.eps_clip,
-                                1+self.eps_clip) * advantages
+            surr2 = torch.clamp(ratios, 1 - self.eps_clip,
+                                1 + self.eps_clip) * advantages
 
             loss = -torch.min(surr1, surr2) + 0.5 * \
                 self.MseLoss(state_values, rewards) - 0.01*dist_entropy

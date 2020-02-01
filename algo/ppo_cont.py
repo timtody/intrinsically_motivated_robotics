@@ -3,10 +3,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.distributions import MultivariateNormal
 
-
 # device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 device = torch.device("cpu")
-torch.manual_seed(42)
+#torch.manual_seed(42)
 
 
 class Memory:
@@ -38,27 +37,22 @@ class ContActionLayer(nn.Module):
 
 
 class ActorCritic(nn.Module):
-    def __init__(self, state_dim, action_dim, n_latent_var, max_action):
+    def __init__(self, env, n_latent_var, max_action):
         super(ActorCritic, self).__init__()
-        self.action_dim = action_dim
+        self.action_dim = env.action_space.shape[0]
         self.max_action = max_action
-        self.cont_action = ContActionLayer(n_latent_var, action_dim)
+        self.cont_action = ContActionLayer(n_latent_var,
+                                           env.action_space.shape[0])
         # actor
         self.action_layer = nn.Sequential(
-            nn.Linear(state_dim, n_latent_var),
-            nn.Tanh(),
-            nn.Linear(n_latent_var, n_latent_var),
-            nn.Tanh()
-        )
+            nn.Linear(env.observation_space.shape[0], n_latent_var), nn.Tanh(),
+            nn.Linear(n_latent_var, n_latent_var), nn.Tanh())
 
         # critic
         self.value_layer = nn.Sequential(
-            nn.Linear(state_dim, n_latent_var),
-            nn.Tanh(),
-            nn.Linear(n_latent_var, n_latent_var),
-            nn.Tanh(),
-            nn.Linear(n_latent_var, 1)
-        )
+            nn.Linear(env.observation_space.shape[0], n_latent_var), nn.Tanh(),
+            nn.Linear(n_latent_var, n_latent_var), nn.Tanh(),
+            nn.Linear(n_latent_var, 1))
 
     def action_layer_cont(self, x):
         x = self.action_layer(x)
@@ -67,7 +61,7 @@ class ActorCritic(nn.Module):
 
     def forward(self):
         raise NotImplementedError
-    
+
     def get_value(self, state):
         return self.value_layer(torch.tensor(state).float())
 
@@ -99,15 +93,7 @@ class ActorCritic(nn.Module):
 
 
 class PPO:
-    def __init__(self,
-                 state_dim,
-                 action_dim,
-                 n_latent_var,
-                 lr,
-                 betas,
-                 gamma,
-                 K_epochs,
-                 eps_clip,
+    def __init__(self, env, n_latent_var, lr, betas, gamma, K_epochs, eps_clip,
                  max_action):
         self.lr = lr
         self.betas = betas
@@ -115,12 +101,11 @@ class PPO:
         self.eps_clip = eps_clip
         self.K_epochs = K_epochs
 
-        self.policy = ActorCritic(
-            state_dim, action_dim, n_latent_var, max_action).to(device)
-        self.optimizer = torch.optim.Adam(
-            self.policy.parameters(), lr=lr, betas=betas)
-        self.policy_old = ActorCritic(
-            state_dim, action_dim, n_latent_var, max_action).to(device)
+        self.policy = ActorCritic(env, n_latent_var, max_action).to(device)
+        self.optimizer = torch.optim.Adam(self.policy.parameters(),
+                                          lr=lr,
+                                          betas=betas)
+        self.policy_old = ActorCritic(env, n_latent_var, max_action).to(device)
         self.policy_old.load_state_dict(self.policy.state_dict())
 
         self.MseLoss = nn.MSELoss()
@@ -129,7 +114,8 @@ class PPO:
         # Monte Carlo estimate of state rewards:
         rewards = []
         discounted_reward = 0
-        for reward, is_terminal in zip(reversed(memory.rewards), reversed(memory.is_terminals)):
+        for reward, is_terminal in zip(reversed(memory.rewards),
+                                       reversed(memory.is_terminals)):
             if is_terminal:
                 discounted_reward = 0
             discounted_reward = reward + (self.gamma * discounted_reward)
@@ -156,8 +142,8 @@ class PPO:
             # Finding Surrogate Loss:
             advantages = rewards - state_values.detach()
             surr1 = ratios * advantages
-            surr2 = torch.clamp(ratios, 1-self.eps_clip,
-                                1+self.eps_clip) * advantages
+            surr2 = torch.clamp(ratios, 1 - self.eps_clip,
+                                1 + self.eps_clip) * advantages
 
             loss = -torch.min(surr1, surr2) + 0.5 * \
                 self.MseLoss(state_values, rewards) - 0.01*dist_entropy

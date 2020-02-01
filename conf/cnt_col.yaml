@@ -1,0 +1,28 @@
+main:
+  max_timesteps: 50000
+  train_each: 100
+  train: True
+  n_trials: 10
+
+wandb:
+  use: False
+  project: collision
+  name: test
+
+ppo:
+  n_latent_var: 256
+  lr: 0.002
+  betas: [0.9, 0.999]
+  K_epochs: 4
+  eps_clip: 0.2
+  gamma: 0.99
+  max_action: 1
+
+env:
+  scene_path: base.ttt
+  headless: True
+  state: low
+  state_size: all
+
+log:
+  name: ???

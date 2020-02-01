@@ -1,6 +1,6 @@
 main:
   env_name: reach_target-state-v0
-  max_timesteps: 10000
+  max_timesteps: 50000
   train_each: 100
   video_length: 1000
   video_folder: vid
@@ -22,7 +22,7 @@ ppo:
   K_epochs: 4
   eps_clip: 0.2
   gamma: 0.99
-  max_action: 0.1
+  max_action: 1
 
 env:
   scene_path: base.ttt
