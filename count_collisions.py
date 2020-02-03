@@ -20,6 +20,10 @@ icmodule = ICModule(env)
 # prepare logging
 prepare_wandb(cnf, agent, icmodule)
 
+"""
+a = np.array([[2351, 236, 1090, 126, 8912], [6222, 7365,  120,  948, 5490], [5123, 3799,  3747, 1549, 1023]],)
+
+"""
 endresult_list = []
 
 
@@ -57,10 +61,10 @@ for mode in state_modes:
             n_collisions += info["collided"]
             # agent training
             if timestep % cnf.main.train_each == 0 and cnf.main.train:
+                print("training.")
                 agent.update(memory)
                 memory.clear_memory()
                 timestep = 0
-
         trial_list.append(n_collisions)
         # save the data
 
@@ -83,3 +87,5 @@ fig = go.Figure([
            error_y=dict(type='data', array=np.std(endresult_list, axis=1)))
 ])
 fig.show()
+fig.write_html(f"data/{cnf.log.name}_result.html")
+
