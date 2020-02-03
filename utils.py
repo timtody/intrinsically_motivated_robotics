@@ -3,15 +3,12 @@ import torch
 import gym
 import wandb
 
-
 import plotly.graph_objects as go
 
 
 def prepare_wandb(cnf, *args):
     if cnf.wandb.use:
-        wandb.init(project=cnf.wandb.project,
-                   name=cnf.wandb.name,
-                   config=cnf)
+        wandb.init(project=cnf.wandb.project, name=cnf.wandb.name, config=cnf)
         wandb.watch(args[0].policy, log="all")
         wandb.watch(args[1]._forward, log="all")
 
@@ -19,10 +16,11 @@ def prepare_wandb(cnf, *args):
 class PointCloud:
     def get_outer(self):
         radius = 0.9285090706636693
-        origin = [-0.2678461927495279, -0.006510627535040618,
-                  1.0827146125969983]
+        origin = [
+            -0.2678461927495279, -0.006510627535040618, 1.0827146125969983
+        ]
         theta = np.linspace(0, np.pi, 20)
-        phi = np.linspace(0, 2*np.pi, 20)
+        phi = np.linspace(0, 2 * np.pi, 20)
         x0 = origin[0] + radius * np.outer(np.sin(theta),
                                            np.cos(phi)).flatten()
         y0 = origin[1] + radius * np.outer(np.sin(theta),
@@ -69,13 +67,11 @@ class ReplayBuffer(object):
     def sample(self, batch_size):
         ind = np.random.randint(0, self.size, size=batch_size)
 
-        return (
-            torch.FloatTensor(self.state[ind]).to(self.device),
-            torch.FloatTensor(self.action[ind]).to(self.device),
-            torch.FloatTensor(self.next_state[ind]).to(self.device),
-            torch.FloatTensor(self.reward[ind]).to(self.device),
-            torch.FloatTensor(self.not_done[ind]).to(self.device)
-        )
+        return (torch.FloatTensor(self.state[ind]).to(self.device),
+                torch.FloatTensor(self.action[ind]).to(self.device),
+                torch.FloatTensor(self.next_state[ind]).to(self.device),
+                torch.FloatTensor(self.reward[ind]).to(self.device),
+                torch.FloatTensor(self.not_done[ind]).to(self.device))
 
 
 class StateBuffer:
@@ -100,7 +96,6 @@ def SkipWrapper(repeat_count):
             Generic common frame skipping wrapper
             Will perform action for `x` additional steps
         """
-
         def __init__(self, env):
             super(SkipWrapper, self).__init__(env)
             self.repeat_count = repeat_count
@@ -116,8 +111,9 @@ def SkipWrapper(repeat_count):
                 total_reward += reward
                 current_step += 1
             if 'skip.stepcount' in info:
-                raise gym.error.Error('Key "skip.stepcount" already in info. Make sure you are not stacking '
-                                      'the SkipWrapper wrappers.')
+                raise gym.error.Error(
+                    'Key "skip.stepcount" already in info. Make sure you are not stacking '
+                    'the SkipWrapper wrappers.')
             info['skip.stepcount'] = self.stepcount
             return obs, total_reward, done, info
 
@@ -178,31 +174,21 @@ class Plotter3D:
                 marker=dict(
                     size=2,
                     color=1,
-                    colorscale='Viridis',   # choose a colorscale
-                    opacity=0.2
-                ))
-        )
+                    colorscale='Viridis',  # choose a colorscale
+                    opacity=0.2)))
 
     def plot_3d_data(self, data):
         x, y, z = zip(*data)
         self.fig.add_trace(
-            go.Scatter3d(
-                visible=True,
-                x=x,
-                y=y,
-                z=z,
-                marker=dict(
-                    size=2,
-                    color=np.arange(len(x)),
-                    colorscale="Viridis",
-                    opacity=0.8
-                ),
-                line=dict(
-                    color="lightblue",
-                    width=1
-                )
-            )
-        )
+            go.Scatter3d(visible=True,
+                         x=x,
+                         y=y,
+                         z=z,
+                         marker=dict(size=2,
+                                     color=np.arange(len(x)),
+                                     colorscale="Viridis",
+                                     opacity=0.8),
+                         line=dict(color="lightblue", width=1)))
 
     def add_slider(self):
         steps = []
@@ -216,12 +202,12 @@ class Plotter3D:
             step["args"][1][0] = True
             steps.append(step)
 
-        sliders = [dict(
-            active=0,
-            currentvalue={"prefix": "Frequency: "},
-            pad={"t": 50},
-            steps=steps
-        )]
+        sliders = [
+            dict(active=0,
+                 currentvalue={"prefix": "Frequency: "},
+                 pad={"t": 50},
+                 steps=steps)
+        ]
 
         self.fig.update_layout(sliders=sliders)
 
@@ -231,6 +217,7 @@ class Plotter3D:
 
     def save(self, fname):
         self.fig.write_html(fname)
+
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -267,22 +254,36 @@ class ReturnIAX:
         self._prediction_curve.set_ydata(self._prediction_buffer)
 
 
+class ForceIAX:
+    def __init__(self, ax, lookback=500):
+        self._ax = ax
+        self._x = np.arange(-lookback + 1, 1)
+        self._buffer = np.zeros(lookback)
+        self._curve = ax.plot(self._x, self._buffer, color="b")[0]
+
+    def __call__(self, value):
+        self._buffer = np.roll(self._buffer, -1)
+        self._buffer[-1] = value
+        self._curve.set_ydata(self._buffer)
+
+
 class ReturnWindow:
-    def __init__(self, discount_factor, lookback=100):
-        self.fig = plt.figure()
-        ax = self.fig.add_subplot(111)
-        self.iax_return = ReturnIAX(ax, discount_factor, lookback=lookback)
+    def __init__(self, discount_factor=0.99, lookback=200):
+        self.fig, axes = plt.subplots(nrows=5, ncols=3)
+        [ax.set_ylim(-5, 5) for ax in axes.flatten()]
+        [ax.set_xlim(-lookback, 0) for ax in axes.flatten()]
+        self.iaxes = [ForceIAX(ax) for ax in axes.flatten()]
         self._fig_shown = False
-        ax.set_ylim(-30, 30)
 
     def close(self):
         plt.close(self.fig)
 
-    def update(self, reward, prediction):
-        self.iax_return(reward, prediction)
+    def update(self, values):
+        for value, ax in zip(values, self.iaxes):
+            ax(value)
         if not self._fig_shown:
             self.fig.canvas.draw()
-            #self.fig.show()
+            self.fig.show()
             self._fig_shown = True
         else:
             self.fig.canvas.draw()
@@ -293,16 +294,12 @@ class ReturnWindow:
         return np.fromstring(self.fig.canvas.tostring_rgb(),
                              dtype=np.uint8).reshape(h, w, 3)
 
-if __name__ == "__main__":
-    import time
 
-    win = ReturnWindow(0.99, lookback=200)
-    writer = get_writer("test.mp4", fps=60)
+if __name__ == "__main__":
+    win = ReturnWindow()
+    # writer = get_writer("test.mp4", fps=60)
 
     for i in range(200):
-        reward = np.random.uniform()
-        prediction = np.random.uniform()
-        win.update(reward, prediction)
-        frame = win.get_frame()
-        writer.append_data(frame)
-    writer.close()
+        reward = np.random.randn(15)
+        # prediction = np.random.uniform()
+        win.update(reward)
