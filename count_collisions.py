@@ -85,6 +85,5 @@ fig = go.Figure([
            y=np.mean(endresult_list, axis=1),
            error_y=dict(type='data', array=np.std(endresult_list, axis=1)))
 ])
-fig.show()
 fig.write_html(f"data/{cnf.log.name}_result.html")
-    
+fig.show()
