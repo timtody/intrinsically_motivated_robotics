@@ -61,7 +61,6 @@ for mode in state_modes:
             n_collisions += info["collided"]
             # agent training
             if timestep % cnf.main.train_each == 0 and cnf.main.train:
-                print("training.")
                 agent.update(memory)
                 memory.clear_memory()
                 timestep = 0
@@ -88,4 +87,4 @@ fig = go.Figure([
 ])
 fig.show()
 fig.write_html(f"data/{cnf.log.name}_result.html")
-
+    
