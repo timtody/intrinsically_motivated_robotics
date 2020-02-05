@@ -18,7 +18,7 @@ ppo:
   eps_clip: 0.2
   gamma: 0.99
   max_action: 0.1
-  action_std: 0.5
+  action_std: 0.25
 
 env:
   scene_path: base.ttt
