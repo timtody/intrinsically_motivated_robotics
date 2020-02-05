@@ -58,7 +58,7 @@ class Env(gym.Env):
         self._gripper.set_joint_positions(self._gripper_start_positions)
         self._toggle_vel_control(True)
 
-    def _toggle_vel_control(self, is_velocity): 
+    def _toggle_vel_control(self, is_velocity):
         """
         Changes velocity control to *is_velocity*
         """
@@ -68,6 +68,13 @@ class Env(gym.Env):
     def _setup_shapes(self):
         self._table = Shape("diningTable_visible")
         self.concrete = Shape("Concrete")
+        self.target = Shape("Sphere")
+
+    def get_target_position(self):
+        return self.target.get_position()
+
+    def get_tip_position(self):
+        return self._gripper.get_position()
 
     def _setup_force_sensors(self):
         self._fs0 = ForceSensor("force_sensor_0")
@@ -134,6 +141,8 @@ class Env(gym.Env):
         """
         Not gym copliant reset function.
         """
+        self._gripper.set_joint_positions(self._gripper_start_positions)
+        self._arm.set_joint_positions(self._joint_start_positions)
         return self._get_observation()
 
     def render(self):

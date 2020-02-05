@@ -21,17 +21,25 @@ def run(rank, cnf, mode, results):
         cnf.env.state_size = mode
     # re-init random seed per process
     env = Env(cnf)
-    agent = PPO(env, **cnf.ppo)
+    action_dim = env.action_space.shape[0]
+    action_dim = cnf.main.action_dim
+    state_dim = env.observation_space.shape[0]
+    agent = PPO(action_dim, state_dim, **cnf.ppo)
     memory = Memory()
-    icmodule = ICModule(env)
+    icmodule = ICModule(action_dim, state_dim)
     state = env.reset()
     timestep = 0
     n_collisions = 0
+    # start the experiment
     print(f"Starting mode {mode}, rank: {rank}")
-    for _ in range(cnf.main.max_timesteps):
+    for i in range(cnf.main.max_timesteps):
+        # some logging
+        if (i + 1) % 1000 == 0:
+            print(f"rank {rank} at step {i}.")
         timestep += 1
         action = agent.policy_old.act(state.get(), memory)
-        next_state, _, done, info = env.step(action)
+        next_state, _, done, info = env.step(
+            [*action, *[0 for _ in range(7 - cnf.main.action_dim)]])
         im_loss = icmodule.train_forward(state.get(), next_state.get(), action)
         im_loss_processed = icmodule._process_loss(im_loss)
         memory.rewards.append(im_loss_processed)

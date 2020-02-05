@@ -2,7 +2,7 @@ from env.environment import Env
 from algo.models import ICModule
 from conf import get_conf
 from algo.ppo_cont import PPO, Memory
-from utils import prepare_wandb
+from utils import prepare_wandb, PointCloud, Plotter3D
 import pickle
 import wandb
 import plotly.graph_objects as go
@@ -13,19 +13,20 @@ cnf = get_conf("conf/cnt_col.yaml")
 env = Env(cnf)
 # log = Logger.setup(cnf)
 # init models
-agent = PPO(env, **cnf.ppo)
+action_dim = env.action_space.shape[0]
+action_dim = cnf.main.action_dim
+state_dim = env.observation_space.shape[0]
+agent = PPO(action_dim, state_dim, **cnf.ppo)
 memory = Memory()
-icmodule = ICModule(env)
+icmodule = ICModule(action_dim, state_dim)
 
 # prepare logging
 prepare_wandb(cnf, agent, icmodule)
-
 """
 a = np.array([[2351, 236, 1090, 126, 8912], [6222, 7365,  120,  948, 5490], [5123, 3799,  3747, 1549, 1023]],)
 
 """
 endresult_list = []
-
 
 state_modes = ["notrain", "notouch", "all"]
 for mode in state_modes:
@@ -39,9 +40,12 @@ for mode in state_modes:
         # initialize new trial
         env.close()
         env = Env(cnf)
-        agent = PPO(env, **cnf.ppo)
+        action_dim = env.action_space.shape[0]
+        action_dim = cnf.main.action_dim
+        state_dim = env.observation_space.shape[0]
+        agent = PPO(action_dim, state_dim, **cnf.ppo)
         memory = Memory()
-        icmodule = ICModule(env)
+        icmodule = ICModule(action_dim, state_dim)
         state = env.reset()
         done = False
         timestep = 0
@@ -50,7 +54,8 @@ for mode in state_modes:
         for _ in range(cnf.main.max_timesteps):
             timestep += 1
             action = agent.policy_old.act(state.get(), memory)
-            next_state, _, done, info = env.step(action)
+            next_state, _, done, info = env.step(
+                [*action, *[0 for _ in range(7 - cnf.main.action_dim)]])
             im_loss = icmodule.train_forward(state.get(), next_state.get(),
                                              action)
             im_loss_processed = icmodule._process_loss(im_loss)

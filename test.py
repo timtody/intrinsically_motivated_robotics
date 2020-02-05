@@ -1,40 +1,60 @@
 from env.environment import Env
-from conf import get_conf
-from utils import ReturnWindow
-from multiprocessing import Process, Array
+from algo.ppo_cont import PPO, Memory
+from utils import get_conf, prepare_wandb
+from algo.models import ICModule
 import numpy as np
+import wandb
 
-cnf = get_conf("conf/cnt_col.yaml")
+cnf = get_conf("conf/cnf_test.yaml")
 env = Env(cnf)
-state = env.reset()
-done = False
-timestep = 0
-win = ReturnWindow(lookback=50)
+action_dim = env.action_space.shape[0]
+action_dim = cnf.main.action_dim
+state_dim = env.observation_space.shape[0]
+agent = PPO(action_dim, state_dim, **cnf.ppo)
+memory = Memory()
+icmodule = ICModule(action_dim, state_dim)
 
-# for i in range(32):
-#     obs, *_, info = env.step([0, 0, 0, 0, 0, 1, -1])
-
-"""
-a = np.array([[2351, 236, 1090, 126, 8912], [6222, 7365,  120,  948, 5490], [5123, 3799,  3747, 1549, 1023]],)
-
-"""
+# setup target shape
+target_position = env.get_target_position()
 
 
-def run(rank, mode, cnf, results):
-    np.random.seed()
-    print("rank", rank, "writing results.")
-    results[rank] = np.random.randint(99)
+def get_reward(env):
+    tip_position = env.get_tip_position()
+    return -np.linalg.norm(np.array(target_position) - np.array(tip_position))
 
 
-if __name__ == "__main__":
-    processes = []
-    results = Array('d', range(4))
-    for rank in range(4):
-        p = Process(target=run, args=(rank, "notrain", cnf, results))
-        p.start()
-        processes.append(p)
+def get_done(reward):
+    if reward > -0.15:
+        return True
+    return False
 
-    for p in processes:
-        p.join()
 
-    print(results[:])
+# prepare logging
+prepare_wandb(cnf, agent, icmodule)
+
+for i in range(1000):
+    done = False
+    obs = env.reset()
+    timestep = 0
+    for i in range(500):
+        timestep += 1
+        action = agent.policy_old.act(obs.get(), memory)
+        next_obs, _, done, _ = env.step(
+            [*action, *[0 for _ in range(7 - cnf.main.action_dim)]])
+        reward = get_reward(env)
+        done = get_done(reward)
+        memory.rewards.append(reward)
+        memory.is_terminals.append(done)
+
+        if i % 100 == 99:
+            loss, value_loss = agent.update(memory)
+            if cnf.wandb.use:
+                wandb.log({"loss": loss, "value_loss": value_loss})
+            memory.clear_memory()
+
+        if done:
+            print("done")
+            break
+
+    if cnf.wandb.use:
+        wandb.log({"is done": int(done), "episode len": timestep})

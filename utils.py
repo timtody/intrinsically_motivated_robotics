@@ -2,8 +2,19 @@ import numpy as np
 import torch
 import gym
 import wandb
-
 import plotly.graph_objects as go
+from omegaconf import OmegaConf
+import numpy as np
+import matplotlib.pyplot as plt
+from imageio import get_writer
+
+
+def get_conf(path):
+    # logging and hyperparameters
+    cnf = OmegaConf.load(path)
+    cnf.merge_with_cli()
+    OmegaConf.set_struct(cnf, True)
+    return cnf
 
 
 def prepare_wandb(cnf, *args):
@@ -217,11 +228,6 @@ class Plotter3D:
 
     def save(self, fname):
         self.fig.write_html(fname)
-
-
-import numpy as np
-import matplotlib.pyplot as plt
-from imageio import get_writer
 
 
 class ReturnIAX:

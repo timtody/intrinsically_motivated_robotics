@@ -1,8 +1,9 @@
 main:
-  max_timesteps: 50000
+  max_timesteps: 250000
   train_each: 100
   train: True
-  n_trials: 10
+  n_trials: 5
+  action_dim: 3
 
 wandb:
   use: False
@@ -16,7 +17,8 @@ ppo:
   K_epochs: 4
   eps_clip: 0.2
   gamma: 0.99
-  max_action: 1
+  max_action: 0.1
+  action_std: 0.5
 
 env:
   scene_path: base.ttt
@@ -28,4 +30,4 @@ log:
   name: ???
 
 mp:
-  n_procs: 20
+  n_procs: 3

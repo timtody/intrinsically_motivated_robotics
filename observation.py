@@ -23,12 +23,12 @@ class Observation:
         self.joint_velocities = joint_velocities
         self.joint_positions = joint_positions
         self.joint_forces = joint_forces
-        self.gripper_open_amount = gripper_open_amount
+        # self.gripper_open_amount = gripper_open_amount
         self.gripper_pose = gripper_pose
-        self.gripper_joint_positions = gripper_joint_positions
-        self.gripper_touch_forces = [
-            tf for sublist in gripper_touch_forces for tf in sublist
-        ]
+        # self.gripper_joint_positions = gripper_joint_positions
+        # self.gripper_touch_forces = [
+        #     tf for sublist in gripper_touch_forces for tf in sublist
+        # ]
         self.finger_left_forces_touch = finger_left_forces
         self.finger_right_forces_touch = finger_right_forces
         self.wrist_left_forces_touch = wrist_left_forces

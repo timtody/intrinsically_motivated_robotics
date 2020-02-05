@@ -49,13 +49,11 @@ class FCModule(nn.Module):
     def __init__(self, input_dim):
         super(FCModule, self).__init__()
         self.fc1 = nn.Linear(input_dim, 128)
-        self.fc2 = nn.Linear(128, 512)
-        self.fc3 = nn.Linear(512, 1024)
+        self.fc2 = nn.Linear(128, 32)
 
     def forward(self, x):
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
-        x = F.relu(self.fc3(x))
         return x
 
 
@@ -68,13 +66,19 @@ class ForwardModule(nn.Module):
         super(ForwardModule, self).__init__()
         self.base = base
         # we add + 1 because of the concatenated action
-        self.linear = nn.Linear(conv_out_size + action_dim, 1024)
-        self.head = nn.Linear(1024, conv_out_size)
+        self.l1 = nn.Linear(conv_out_size + action_dim, 128)
+        self.l2 = nn.Linear(128, 128)
+        self.head = nn.Linear(128, conv_out_size)
 
     def forward(self, x, a):
-        x = self.base(x)
+        # we probably need to stop the gradient here because
+        # the embedding model could learn tuning down all weights to 0
+        # otherwise
+        with torch.no_grad():
+            x = self.base(x)
         x = torch.cat([x, a])
-        x = self.linear(x)
+        x = self.l1(x)
+        x = self.l2(x)
         x = self.head(x)
         return x
 
@@ -105,24 +109,23 @@ class ICModule(nn.Module):
     Intrinsic curiosity module.
     """
 
-    def __init__(self, env, h=1, w=1):
+    def __init__(self, action_dim, state_dim):
         super(ICModule, self).__init__()
         # self._conv_base = ConvModule()
-        action_dim = env.action_space.shape[0]
-        self.base = FCModule(env.observation_space.shape[0] * w)
+        self.base = FCModule(state_dim)
         # convw = ConvModule._conv2d_size_out(w, 4)
         # convh = ConvModule._conv2d_size_out(h, 4)
         # change this and make it modular
-        conv_out_size = 1024
+        conv_out_size = 32
 
         # define forward and inverse modules
         self._inverse = InverseModule(
             conv_out_size, self.base, action_dim)
         self._forward = ForwardModule(conv_out_size, action_dim, self.base)
 
-        self.opt = optim.Adam(self.parameters(), lr=1e-5)
+        self.opt = optim.Adam(self.parameters(), lr=1e-4)
 
-        self.loss_buffer = LossBuffer(1000)
+        self.loss_buffer = LossBuffer(200)
 
     def forward(self, x):
         raise NotImplementedError
