@@ -80,7 +80,7 @@ class ActorCritic(nn.Module):
         memory.actions.append(action)
         memory.logprobs.append(action_logprob)
 
-        return action.detach().clamp(-self.max_actiom, self.max_action)
+        return action.detach().clamp(-self.max_action, self.max_action)
 
     def evaluate(self, state, action):
         action_mean = self.actor(state)

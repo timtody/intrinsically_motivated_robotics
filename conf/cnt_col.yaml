@@ -1,5 +1,5 @@
 main:
-  max_timesteps: 250000
+  max_timesteps: 100000
   train_each: 100
   train: True
   n_trials: 5
