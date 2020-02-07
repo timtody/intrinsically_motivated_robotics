@@ -11,15 +11,13 @@ import torch.nn.functional as F
 
 from utils import LossBuffer
 
-
-# torch.manual_seed(42)
+torch.manual_seed(130)
 
 
 class ConvModule(nn.Module):
     """
     Provides thes shared convolutional base for the inverse and forward model.
     """
-
     def __init__(self):
         super(ConvModule, self).__init__()
         self.conv1 = nn.Conv2d(1, 32, 3, stride=2, padding=1)
@@ -45,11 +43,10 @@ class FCModule(nn.Module):
     """
     Docstring: todo
     """
-
-    def __init__(self, input_dim):
+    def __init__(self, state_dim, embedding_size):
         super(FCModule, self).__init__()
-        self.fc1 = nn.Linear(input_dim, 128)
-        self.fc2 = nn.Linear(128, 32)
+        self.fc1 = nn.Linear(state_dim, 128)
+        self.fc2 = nn.Linear(128, embedding_size)
 
     def forward(self, x):
         x = F.relu(self.fc1(x))
@@ -61,14 +58,13 @@ class ForwardModule(nn.Module):
     """
     Module for learning the forward mapping of state x action -> next state
     """
-
-    def __init__(self, conv_out_size, action_dim, base):
+    def __init__(self, embedding_size, action_dim, base):
         super(ForwardModule, self).__init__()
         self.base = base
         # we add + 1 because of the concatenated action
-        self.l1 = nn.Linear(conv_out_size + action_dim, 128)
+        self.l1 = nn.Linear(embedding_size + action_dim, 128)
         self.l2 = nn.Linear(128, 128)
-        self.head = nn.Linear(128, conv_out_size)
+        self.head = nn.Linear(128, embedding_size)
 
     def forward(self, x, a):
         # we probably need to stop the gradient here because
@@ -87,12 +83,11 @@ class InverseModule(nn.Module):
     """
     Module for learning the inverse mapping of state x next state -> action.
     """
-
-    def __init__(self, conv_out_size, base, n_actions):
+    def __init__(self, embedding_size, base, n_actions):
         super(InverseModule, self).__init__()
         self.base = base
         # * 2 because we concatenate two states
-        self.linear = nn.Linear(conv_out_size * 2, 1024)
+        self.linear = nn.Linear(embedding_size * 2, 1024)
         self.head = nn.Linear(1024, n_actions)
 
     def forward(self, x, y):
@@ -108,24 +103,20 @@ class ICModule(nn.Module):
     """
     Intrinsic curiosity module.
     """
-
-    def __init__(self, action_dim, state_dim):
+    def __init__(self, action_dim, state_dim, embedding_size):
         super(ICModule, self).__init__()
         # self._conv_base = ConvModule()
-        self.base = FCModule(state_dim)
-        # convw = ConvModule._conv2d_size_out(w, 4)
-        # convh = ConvModule._conv2d_size_out(h, 4)
-        # change this and make it modular
-        conv_out_size = 32
-
+        self.base = FCModule(state_dim, embedding_size)
         # define forward and inverse modules
-        self._inverse = InverseModule(
-            conv_out_size, self.base, action_dim)
-        self._forward = ForwardModule(conv_out_size, action_dim, self.base)
+        self._inverse = InverseModule(embedding_size, self.base, action_dim)
+        self._forward = ForwardModule(embedding_size, action_dim, self.base)
 
-        self.opt = optim.Adam(self.parameters(), lr=1e-4)
+        self.opt = optim.RMSprop(self.parameters(),
+                                 lr=5e-5,
+                                 alpha=0.9,
+                                 centered=True)
 
-        self.loss_buffer = LossBuffer(200)
+        self.loss_buffer = LossBuffer(100)
 
     def forward(self, x):
         raise NotImplementedError
@@ -135,8 +126,8 @@ class ICModule(nn.Module):
         Returns all parameters of the ICModule, removing unnecessary weights
         from base network.
         """
-        return set(chain(self._inverse.parameters(),
-                         self._forward.parameters()))
+        return set(
+            chain(self._inverse.parameters(), self._forward.parameters()))
 
     def embed(self, state):
         """
@@ -164,8 +155,7 @@ class ICModule(nn.Module):
         next_state_embed_true = self.embed(next_state)
 
         self.opt.zero_grad()
-        loss = F.mse_loss(next_state_embed_pred,
-                          next_state_embed_true)
+        loss = F.mse_loss(next_state_embed_pred, next_state_embed_true)
         loss.backward()
         self.opt.step()
         return loss
@@ -173,4 +163,4 @@ class ICModule(nn.Module):
     def _process_loss(self, loss):
         self.loss_buffer.push(loss)
         runinng_std = self.loss_buffer.get_std()
-        return loss / runinng_std + 1e-5
+        return loss / runinng_std + 1e-2

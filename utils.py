@@ -7,6 +7,7 @@ from omegaconf import OmegaConf
 import numpy as np
 import matplotlib.pyplot as plt
 from imageio import get_writer
+import seaborn as sns
 
 
 def get_conf(path):
@@ -268,6 +269,7 @@ class ForceIAX:
         self._curve = ax.plot(self._x, self._buffer, color="b")[0]
 
     def __call__(self, value):
+        self._ax.set_ylim(-max(self._buffer) * 1.1, max(self._buffer) * 1.1)
         self._buffer = np.roll(self._buffer, -1)
         self._buffer[-1] = value
         self._curve.set_ydata(self._buffer)
@@ -279,6 +281,54 @@ class ReturnWindow:
         [ax.set_ylim(-5, 5) for ax in axes.flatten()]
         [ax.set_xlim(-lookback, 0) for ax in axes.flatten()]
         self.iaxes = [ForceIAX(ax) for ax in axes.flatten()]
+        self._fig_shown = False
+
+    def close(self):
+        plt.close(self.fig)
+
+    def update(self, values):
+        for value, ax in zip(values, self.iaxes):
+            ax(value)
+        if not self._fig_shown:
+            self.fig.canvas.draw()
+            self.fig.show()
+            self._fig_shown = True
+        else:
+            self.fig.canvas.draw()
+            self.fig.canvas.flush_events()
+
+    def get_frame(self):
+        w, h = self.fig.canvas.get_width_height()
+        return np.fromstring(self.fig.canvas.tostring_rgb(),
+                             dtype=np.uint8).reshape(h, w, 3)
+
+
+class GraphWindow:
+    def __init__(self, nrows, ncols, discount_factor=0.99, lookback=200):
+        sns.set()
+        plt.tight_layout()
+        plt.autoscale(enable=True, axis='both', tight=None)
+        self.fig, axes = plt.subplots(nrows=nrows, ncols=ncols)
+        if nrows == ncols == 1:
+            axes.set_ylim(-5, 5)
+            axes.set_xlim(-lookback, 0)
+            axes.set_xlabel("t")
+            axes.set_title("IM signal")
+            axes = [axes]
+        else:
+            try:
+                axes = axes.flatten()
+            except Exception:
+                raise
+            [ax.set_ylim(-5, 5) for ax in axes]
+            [ax.set_xlim(-lookback, 0) for ax in axes]
+            [ax.set_xlabel("t") for ax in axes]
+            axes[0].set_title("reward = loss / std(return)")
+            axes[1].set_title("forward loss")
+            axes[2].set_title("return")
+            axes[3].set_title("std(return)")
+
+        self.iaxes = [ForceIAX(ax) for ax in axes]
         self._fig_shown = False
 
     def close(self):

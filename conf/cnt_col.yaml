@@ -11,14 +11,14 @@ wandb:
   name: test
 
 ppo:
-  n_latent_var: 256
+  n_latent_var: 1024
   lr: 0.002
   betas: [0.9, 0.999]
   K_epochs: 4
   eps_clip: 0.2
   gamma: 0.99
-  max_action: 0.1
-  action_std: 0.25
+  max_action: 1
+  action_std: 0.5
 
 env:
   scene_path: base.ttt
@@ -31,3 +31,6 @@ log:
 
 mp:
   n_procs: 3
+
+icm:
+  embedding_size: 200
