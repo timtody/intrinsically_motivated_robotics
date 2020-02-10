@@ -11,7 +11,7 @@ import torch.nn.functional as F
 
 from utils import LossBuffer
 
-torch.manual_seed(130)
+torch.manual_seed(149)
 
 
 class ConvModule(nn.Module):
@@ -163,4 +163,4 @@ class ICModule(nn.Module):
     def _process_loss(self, loss):
         self.loss_buffer.push(loss)
         runinng_std = self.loss_buffer.get_std()
-        return loss / runinng_std + 1e-2
+        return loss / (runinng_std + 1e-2)

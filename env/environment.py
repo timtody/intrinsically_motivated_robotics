@@ -68,10 +68,10 @@ class Env(gym.Env):
     def _setup_shapes(self):
         self._table = Shape("diningTable_visible")
         self.concrete = Shape("Concrete")
-        self.target = Shape("Sphere")
+        # self.target = Shape("Sphere")
 
-    def get_target_position(self):
-        return self.target.get_position()
+    # def get_target_position(self):
+    #     return self.target.get_position()
 
     def get_tip_position(self):
         return self._gripper.get_position()
