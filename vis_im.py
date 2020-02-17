@@ -10,7 +10,22 @@ env = Env(cnf)
 # log = Logger.setup(cnf)
 # init models
 cnf.main.action_dim = 7
-win = GraphWindow(2, 2, lookback=500)
+win = GraphWindow(["fc 0 x",
+                   "fc 0 y",
+                   "fc 0 z",
+                   "fc 1 x",
+                   "fc 1 y",
+                   "fc 1 z",
+                   "fc 2 x",
+                   "fc 2 y",
+                   "fc 2 z",
+                   "fc 3 x",
+                   "fc 3 y",
+                   "fc 3 z",
+                   "fc 4 x",
+                   "fc 4 y",
+                   "fc 4 z"],
+                  lookback=500)
 action_dim = env.action_space.shape[0]
 action_dim = cnf.main.action_dim
 state_dim = env.observation_space.shape[0]
@@ -32,15 +47,12 @@ for i in range(50000):
     next_state, *_, info = env.step(env.action_space.sample())
     n_collisions += info["collided"]
     gripper_positions.append(env.get_tip_position())
-    # reward_pre = icmodule.train_forward(state.get(), next_state.get(), action)
-    # im_reward = icmodule._process_loss(reward_pre)
+    reward_pre = icmodule.train_forward(state.get(), next_state.get(), action)
+    im_reward = icmodule._process_loss(reward_pre)
     # memory.rewards.append(im_reward)
     # memory.is_terminals.append(False)
     state = next_state
-    # win.update([
-    #     im_reward, reward_pre, icmodule.loss_buffer.current_return,
-    #     icmodule.loss_buffer.get_std()
-    # ])
+    win.update(env.read_force_sensors_flat())
     # if timestep % 100 == -1:
     #     agent.update(memory)
     #     memory.clear_memory()

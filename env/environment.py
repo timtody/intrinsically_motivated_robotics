@@ -85,7 +85,19 @@ class Env(gym.Env):
 
     def read_force_sensors(self):
         force_sensors = [self._fs0, self._fs1, self._fs2, self._fs3, self._fs4]
-        return [sensor.read()[0] for sensor in force_sensors]
+        return [
+            list(map(self.gate,
+                     sensor.read()[0])) for sensor in force_sensors
+        ]
+
+    def gate(self, x, threshold=0.01):
+        if x < threshold:
+            return 0
+        return x
+
+    def read_force_sensors_flat(self):
+        readings = np.array(self.read_force_sensors())
+        return readings.flatten()
 
     def _set_vels(self, action):
         self._arm.set_joint_target_velocities(action)

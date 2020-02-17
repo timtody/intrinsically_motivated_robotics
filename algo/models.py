@@ -11,7 +11,7 @@ import torch.nn.functional as F
 
 from utils import LossBuffer
 
-torch.manual_seed(149)
+# torch.manual_seed(149)
 
 
 class ConvModule(nn.Module):
@@ -83,12 +83,12 @@ class InverseModule(nn.Module):
     """
     Module for learning the inverse mapping of state x next state -> action.
     """
-    def __init__(self, embedding_size, base, n_actions):
+    def __init__(self, embedding_size, action_dim, base):
         super(InverseModule, self).__init__()
         self.base = base
         # * 2 because we concatenate two states
         self.linear = nn.Linear(embedding_size * 2, 1024)
-        self.head = nn.Linear(1024, n_actions)
+        self.head = nn.Linear(1024, action_dim)
 
     def forward(self, x, y):
         x = self.base(x)
@@ -108,7 +108,7 @@ class ICModule(nn.Module):
         # self._conv_base = ConvModule()
         self.base = FCModule(state_dim, embedding_size)
         # define forward and inverse modules
-        self._inverse = InverseModule(embedding_size, self.base, action_dim)
+        self._inverse = InverseModule(embedding_size, action_dim, self.base)
         self._forward = ForwardModule(embedding_size, action_dim, self.base)
 
         self.opt = optim.RMSprop(self.parameters(),

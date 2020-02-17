@@ -3,7 +3,7 @@ main:
   train_each: 100
   train: True
   n_trials: 5
-  action_dim: 3
+  action_dim: 7
 
 wandb:
   use: False

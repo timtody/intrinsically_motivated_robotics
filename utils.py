@@ -304,32 +304,29 @@ class ReturnWindow:
 
 
 class GraphWindow:
-    def __init__(self, nrows, ncols, discount_factor=0.99, lookback=200):
+    def __init__(self, labels_list, lookback=200):
         sns.set()
         plt.tight_layout()
-        plt.autoscale(enable=True, axis='both', tight=None)
+        plt.autoscale(enable=True, axis='both')
+        nrows, ncols = self._get_layout(labels_list)
+        print("Initializing subplots with", nrows, "rows and", ncols, "columns.")
         self.fig, axes = plt.subplots(nrows=nrows, ncols=ncols)
-        if nrows == ncols == 1:
-            axes.set_ylim(-5, 5)
-            axes.set_xlim(-lookback, 0)
-            axes.set_xlabel("t")
-            axes.set_title("IM signal")
-            axes = [axes]
-        else:
-            try:
-                axes = axes.flatten()
-            except Exception:
-                raise
-            [ax.set_ylim(-5, 5) for ax in axes]
-            [ax.set_xlim(-lookback, 0) for ax in axes]
-            [ax.set_xlabel("t") for ax in axes]
-            axes[0].set_title("reward = loss / std(return)")
-            axes[1].set_title("forward loss")
-            axes[2].set_title("return")
-            axes[3].set_title("std(return)")
+        try:
+            axes = axes.flatten()
+        except Exception:
+            raise
+        [ax.set_ylim(-5, 5) for ax in axes]
+        [ax.set_xlim(-lookback, 0) for ax in axes]
+        [ax.set_xlabel("t") for ax in axes]
+        [ax.set_title(label) for ax, label in zip(axes, labels_list)]
 
         self.iaxes = [ForceIAX(ax) for ax in axes]
         self._fig_shown = False
+
+    def _get_layout(self, labels_list):
+        nrows = int(np.ceil(np.sqrt(len(labels_list))))
+        ncols = nrows + len(labels_list) - nrows**2
+        return nrows, ncols
 
     def close(self):
         plt.close(self.fig)
