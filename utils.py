@@ -304,12 +304,12 @@ class ReturnWindow:
 
 
 class GraphWindow:
-    def __init__(self, labels_list, lookback=200):
+    def __init__(self, labels_list, ncols, nrows, lookback=200):
         sns.set()
         plt.tight_layout()
         plt.autoscale(enable=True, axis='both')
-        nrows, ncols = self._get_layout(labels_list)
-        print("Initializing subplots with", nrows, "rows and", ncols, "columns.")
+        print("Initializing subplots with", nrows, "rows and", ncols,
+              "columns.")
         self.fig, axes = plt.subplots(nrows=nrows, ncols=ncols)
         try:
             axes = axes.flatten()
@@ -322,11 +322,6 @@ class GraphWindow:
 
         self.iaxes = [ForceIAX(ax) for ax in axes]
         self._fig_shown = False
-
-    def _get_layout(self, labels_list):
-        nrows = int(np.ceil(np.sqrt(len(labels_list))))
-        ncols = nrows + len(labels_list) - nrows**2
-        return nrows, ncols
 
     def close(self):
         plt.close(self.fig)

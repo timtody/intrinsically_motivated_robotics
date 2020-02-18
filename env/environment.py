@@ -51,6 +51,7 @@ class Env(gym.Env):
         self._gripper = PandaGripper()
         self._joint_start_positions = self._arm.get_joint_positions()
         self._gripper_start_positions = self._gripper.get_joint_positions()
+        self._gripper_last_position = self.get_tip_position()
 
     def _reset_robot(self):
         self._toggle_vel_control(False)
@@ -74,7 +75,13 @@ class Env(gym.Env):
     #     return self.target.get_position()
 
     def get_tip_position(self):
-        return self._gripper.get_position()
+        return np.array(self._gripper.get_position())
+
+    def _get_gripper_speed(self):
+        current = self.get_tip_position()
+        last = self._gripper_last_position
+        self._gripper_last_position = current
+        return np.linalg.norm(current - last)
 
     def _setup_force_sensors(self):
         self._fs0 = ForceSensor("force_sensor_0")
@@ -86,11 +93,11 @@ class Env(gym.Env):
     def read_force_sensors(self):
         force_sensors = [self._fs0, self._fs1, self._fs2, self._fs3, self._fs4]
         return [
-            list(map(self.gate,
+            list(map(self._gate,
                      sensor.read()[0])) for sensor in force_sensors
         ]
 
-    def gate(self, x, threshold=0.01):
+    def _gate(self, x, threshold=0.01):
         if x < threshold:
             return 0
         return x
@@ -116,7 +123,8 @@ class Env(gym.Env):
 
     def _get_info(self):
         # TODO: maybe implement (more feats)
-        info = dict(collided=self.check_collision(), )
+        info = dict(collided=self.check_collision(),
+                    gripper_speed=self._get_gripper_speed())
         return info
 
     def _get_observation(self):

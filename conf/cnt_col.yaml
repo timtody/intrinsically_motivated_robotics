@@ -30,7 +30,7 @@ log:
   name: ???
 
 mp:
-  n_procs: 3
+  n_procs: 6
 
 icm:
   embedding_size: 200
