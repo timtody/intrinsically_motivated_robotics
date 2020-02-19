@@ -82,7 +82,7 @@ if __name__ == "__main__":
     # get config setup
     cnf = get_conf("conf/cnt_col.yaml")
     results = []
-    state_modes = ["notrain", "notouch", "all"]
+    state_modes = ["notrain", "notouch", "nosound", "all"]
     for mode in state_modes:
         results.append(run_mode_mp(mode, cnf))
     results = np.array(results)

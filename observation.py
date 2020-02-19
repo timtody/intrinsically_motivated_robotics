@@ -17,6 +17,7 @@ class Observation:
                  wrist_left_forces,
                  wrist_right_forces,
                  knuckle_forces,
+                 sound,
                  vision=None,
                  state_size="all"):
         self.state_size = state_size
@@ -34,11 +35,12 @@ class Observation:
         self.wrist_left_forces_touch = wrist_left_forces
         self.wrist_right_forces_touch = wrist_right_forces
         self.kuckle_forces_touch = knuckle_forces
-        self.rgb_left = self._maybe_get_vision(vision, "left")
-        self.rgb_right = self._maybe_get_vision(vision, "right")
-        self.rgb_wrist = self._maybe_get_vision(vision, "wrist")
+        self.sound = sound
+        self.rgb_left = self._maybe_extract_vision(vision, "left")
+        self.rgb_right = self._maybe_extract_vision(vision, "right")
+        self.rgb_wrist = self._maybe_extract_vision(vision, "wrist")
 
-    def _maybe_get_vision(self, vision, name):
+    def _maybe_extract_vision(self, vision, name):
         if vision is not None:
             return vision[name]
         return None
@@ -50,10 +52,10 @@ class Observation:
                 obs.append(data)
         return np.concatenate(obs)
 
-    def get_no_touch(self):
+    def get_filtered(self, filter):
         obs = []
         for key, data in self.__dict__.items():
-            if data is not None and "touch" not in key and key != "state_size":
+            if data is not None and filter not in key and key != "state_size":
                 obs.append(data)
         return np.concatenate(obs)
 
@@ -61,7 +63,9 @@ class Observation:
         if self.state_size == "all":
             return self.get_all()
         if self.state_size == "notouch":
-            return self.get_no_touch()
+            return self.get_filtered("touch")
+        if self.state_size == "nosound":
+            return self.get_filtered("sound")
 
     def get_stereo_vision(self):
         pass

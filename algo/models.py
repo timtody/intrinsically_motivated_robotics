@@ -67,9 +67,6 @@ class ForwardModule(nn.Module):
         self.head = nn.Linear(128, embedding_size)
 
     def forward(self, x, a):
-        # we probably need to stop the gradient here because
-        # the embedding model could learn tuning down all weights to 0
-        # otherwise
         with torch.no_grad():
             x = self.base(x)
         x = torch.cat([x, a])
@@ -112,7 +109,7 @@ class ICModule(nn.Module):
         self._forward = ForwardModule(embedding_size, action_dim, self.base)
 
         self.opt = optim.RMSprop(self.parameters(),
-                                 lr=5e-5,
+                                 lr=1e-4,
                                  alpha=0.9,
                                  centered=True)
 
