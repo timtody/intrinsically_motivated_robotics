@@ -144,10 +144,6 @@ class Env(gym.Env):
         phi = np.arctan2(gripper_pos[1], gripper_pos[0])
         return [self.gripper_speed * 100, radius, theta, phi]
 
-    def _phi(self, x, y):
-        if x > 0:
-            return np.arctan
-
     def _gate(self, x, threshold=0.01):
         if x < threshold:
             return 0
@@ -198,11 +194,8 @@ class Env(gym.Env):
         self._set_vels(action)
         self.gripper_speed = self._get_gripper_speed()
         self._pr.step()
-        obs = self._get_observation()
-        reward = self._get_reward()
-        done = self._get_done()
-        info = self._get_info()
-        return obs, reward, done, info
+        return (self._get_observation(), self._get_reward(), self._get_done(),
+                self._get_info())
 
     def reset(self):
         """
