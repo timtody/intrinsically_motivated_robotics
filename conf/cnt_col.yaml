@@ -34,3 +34,12 @@ mp:
 
 icm:
   embedding_size: 200
+
+MMModel:
+  action_dim:
+  prop_dim:
+  tac_dim:
+  audio_dim:
+  latent_dim:
+  lstm_hidden_size:
+  lstm_layers:
