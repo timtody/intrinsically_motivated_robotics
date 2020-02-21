@@ -9,7 +9,7 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 
-# from ..utils import LossBuffer
+from utils import LossBuffer
 
 # torch.manual_seed(149)
 
@@ -164,20 +164,22 @@ class ICModule(nn.Module):
 
 
 class MultiModalModule(nn.Module):
-    def __init__(self, prop_dim, tac_dim, audio_dim, latent_dim,
-                 lstm_hidden_size, lstm_layers, action_dim):
+    def __init__(self, action_dim, prop_dim, tac_dim, audio_dim, latent_dim,
+                 lstm_hidden_size, lstm_layers):
         super().__init__()
-        n_states = 3
+        self.latent_dim = latent_dim
+        self.n_mods = 3
         self.tac_encoder = ModalityCoder(tac_dim, latent_dim)
         self.prop_encoder = ModalityCoder(prop_dim, latent_dim)
         self.audio_encoder = ModalityCoder(audio_dim, latent_dim)
         self.shared_encoding = nn.Linear(latent_dim + action_dim, latent_dim)
-        self.forward_lstm = RecurrentModalModule(latent_dim, lstm_hidden_size,
-                                                 lstm_layers)
-        self.tac_decoder = ModalityCoder(lstm_hidden_size * n_states, tac_dim)
-        self.prop_decoder = ModalityCoder(lstm_hidden_size * n_states,
+        self.lstm = RecurrentModalModule(latent_dim, lstm_hidden_size,
+                                         lstm_layers)
+        self.tac_decoder = ModalityCoder(lstm_hidden_size * self.n_mods,
+                                         tac_dim)
+        self.prop_decoder = ModalityCoder(lstm_hidden_size * self.n_mods,
                                           prop_dim)
-        self.audio_decoder = ModalityCoder(lstm_hidden_size * n_states,
+        self.audio_decoder = ModalityCoder(lstm_hidden_size * self.n_mods,
                                            audio_dim)
 
         self.opt = optim.Adam(self.parameters())
@@ -185,16 +187,18 @@ class MultiModalModule(nn.Module):
     def forward(self, this_state, next_state, action):
         action = torch.tensor(action).float()
         prop = self.prop_encoder(this_state[0])
-        tac = self.prop_encoder(this_state[1])
+        tac = self.tac_encoder(this_state[1])
         audio = self.audio_encoder(this_state[2])
+
         states = [prop, tac, audio]
         with_action = map(lambda x: torch.cat([x, action], dim=1), states)
         stacked = torch.cat(list(map(self.shared_encoding, with_action)))
-        lstm_out = self.forward_lstm(stacked.view(-1, 3,
-                                                  4)).flatten(start_dim=1)
+        lstm_out = self.lstm(stacked.view(
+            -1, self.n_mods, self.latent_dim)).flatten(start_dim=1)
+
         prop_decoded = self.prop_decoder(lstm_out)
-        tac_decoded = self.prop_decoder(lstm_out)
-        audio_decoded = self.prop_decoder(lstm_out)
+        tac_decoded = self.tac_decoder(lstm_out)
+        audio_decoded = self.audio_decoder(lstm_out)
         return prop_decoded, tac_decoded, audio_decoded
 
     def compute(self, this_state, next_state, action):
@@ -217,6 +221,7 @@ class ModalityCoder(nn.Module):
         self.fc2 = nn.Linear(latent_dim, latent_dim)
 
     def forward(self, x):
+        x = torch.tensor(x).float()
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         return x

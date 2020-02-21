@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 
 
 class Observation:
@@ -75,3 +76,15 @@ class Observation:
 
     def __repr__(self):
         return str(self.get_all())
+
+    def as_tensor_list(self):
+        prop = torch.tensor(
+            np.concatenate([
+                v for k, v in self.__dict__.items() if "joint" in k
+            ])).float().unsqueeze(0)
+        tac = torch.tensor(
+            np.concatenate(
+                ([v for k, v in self.__dict__.items()
+                  if "touch" in k]))).float().unsqueeze(0)
+        audio = torch.tensor(self.sound).float().unsqueeze(0)
+        return prop, tac, audio
