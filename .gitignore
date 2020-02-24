@@ -1,6 +1,7 @@
 __pycache__/
 .vscode/
 wandb/
+mlruns/
 data/
 vid/
 *.mp4
