@@ -1,0 +1,15 @@
+artifact_uri: file:///home/julius/projects/curious/mlruns/0/50e6cb4360c2495db71b0d004e6e7900/artifacts
+end_time: 1582320082512
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+name: ''
+run_id: 50e6cb4360c2495db71b0d004e6e7900
+run_uuid: 50e6cb4360c2495db71b0d004e6e7900
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1582320082496
+status: 3
+tags: []
+user_id: julius

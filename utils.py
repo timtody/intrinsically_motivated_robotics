@@ -8,6 +8,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from imageio import get_writer
 import seaborn as sns
+import random
+from collections import namedtuple
 
 
 def get_conf(path):
@@ -51,7 +53,7 @@ class PointCloud:
         return x, y, z
 
 
-class ReplayBuffer(object):
+class ReplayBuffer:
     def __init__(self, state_dim, action_dim, max_size=int(1e6)):
         self.max_size = max_size
         self.ptr = 0
@@ -341,6 +343,31 @@ class GraphWindow:
         w, h = self.fig.canvas.get_width_height()
         return np.fromstring(self.fig.canvas.tostring_rgb(),
                              dtype=np.uint8).reshape(h, w, 3)
+
+
+mm_transition = namedtuple(
+    'mm_transition',
+    ('prop', 'tac', 'audio', 'prop_next', 'tac_next', 'audio_next'))
+
+
+class MMBuffer:
+    def __init__(self, capacity):
+        self.capacity = capacity
+        self.memory = []
+        self.position = 0
+
+    def push(self, *args):
+        """Saves a transition."""
+        if len(self.memory) < self.capacity:
+            self.memory.append(None)
+        self.memory[self.position] = mm_transition(*args)
+        self.position = (self.position + 1) % self.capacity
+
+    def sample(self, batch_size):
+        return random.sample(self.memory, batch_size)
+
+    def __len__(self):
+        return len(self.memory)
 
 
 if __name__ == "__main__":
