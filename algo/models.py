@@ -1,5 +1,5 @@
 """
-Contains models to reproduce the findings from 
+Contains models to reproduce the findings from
 https://pathak22.github.io/noreward-rl/resources/icml17.pdf
 """
 from itertools import chain
@@ -12,6 +12,8 @@ import torch.nn.functional as F
 from utils import LossBuffer
 
 # torch.manual_seed(149)
+device = torch.device("cuda") if torch.cuda.is_available() else torch.device(
+    "cpu")
 
 
 class ConvModule(nn.Module):
@@ -184,18 +186,19 @@ class MultiModalModule(nn.Module):
 
         self.opt = optim.Adam(self.parameters())
 
-    def forward(self, this_state, next_state, action):
-        action = torch.tensor(action).float()
+    def forward(self, this_state, action):
+        action = torch.stack(action).float()
         prop = self.prop_encoder(this_state[0])
         tac = self.tac_encoder(this_state[1])
         audio = self.audio_encoder(this_state[2])
 
         states = [prop, tac, audio]
         with_action = map(lambda x: torch.cat([x, action], dim=1), states)
-        stacked = torch.cat(list(map(self.shared_encoding, with_action)))
-        lstm_out = self.lstm(stacked.view(
-            -1, self.n_mods, self.latent_dim)).flatten(start_dim=1)
-
+        shared_encoding = torch.cat(
+            list(map(self.shared_encoding, with_action)))
+        lstm_out = self.lstm(
+            shared_encoding.view(-1, self.n_mods,
+                                 self.latent_dim)).flatten(start_dim=1)
         prop_decoded = self.prop_decoder(lstm_out)
         tac_decoded = self.tac_decoder(lstm_out)
         audio_decoded = self.audio_decoder(lstm_out)
@@ -205,7 +208,9 @@ class MultiModalModule(nn.Module):
         """
         Pass input of the form state: [prop, tac, audio]
         """
-        predicted_states = self.forward(this_state, next_state, action)
+        this_state = list(map(torch.cat, this_state))
+        next_state = list(map(torch.cat, next_state))
+        predicted_states = self.forward(this_state, action)
         loss = 0
         for i, pred_s in enumerate(predicted_states):
             loss += F.mse_loss(pred_s, next_state[i])
@@ -221,7 +226,6 @@ class ModalityCoder(nn.Module):
         self.fc2 = nn.Linear(latent_dim, latent_dim)
 
     def forward(self, x):
-        x = torch.tensor(x).float()
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         return x
@@ -238,6 +242,54 @@ class RecurrentModalModule(nn.Module):
     def forward(self, x):
         lstm_out, _ = self.lstm(x)
         return lstm_out
+
+
+class MMAE(nn.Module):
+    def __init__(self, action_dim, prop_dim, tac_dim, audio_dim, latent_dim,
+                 lstm_hidden_size, lstm_layers):
+        super().__init__()
+        self.latent_dim = latent_dim
+        self.n_mods = 3
+        self.tac_encoder = ModalityCoder(tac_dim + action_dim, latent_dim)
+        self.prop_encoder = ModalityCoder(prop_dim + action_dim, latent_dim)
+        self.audio_encoder = ModalityCoder(audio_dim + action_dim, latent_dim)
+        self.shared_encoding = nn.Linear(latent_dim, latent_dim)
+        self.tac_decoder = ModalityCoder(latent_dim, tac_dim)
+        self.prop_decoder = ModalityCoder(latent_dim, prop_dim)
+        self.audio_decoder = ModalityCoder(latent_dim, audio_dim)
+
+        self.opt = optim.Adam(self.parameters())
+
+    def forward(self, this_state, action):
+        action = torch.stack(action).float().to(device)
+        this_state = list(map(lambda x: torch.cat([x, action], dim=1),
+                              this_state))
+        prop = self.prop_encoder(this_state[0])
+        tac = self.tac_encoder(this_state[1])
+        audio = self.audio_encoder(this_state[2])
+        states = [prop, tac, audio]
+        # with_action = list(map(lambda x: torch.cat([x, action], dim=1),
+        #                        states))
+        prop_decoded = self.prop_decoder(states[0])
+        tac_decoded = self.tac_decoder(states[1])
+        audio_decoded = self.audio_decoder(states[2])
+        return prop_decoded, tac_decoded, audio_decoded
+
+    def compute(self, this_state, next_state, action):
+        """
+        Pass input of the form state: [prop, tac, audio]
+        """
+        this_state = list(
+            map(lambda x: x.to(device), map(torch.cat, this_state)))
+        next_state = list(
+            map(lambda x: x.to(device), map(torch.cat, next_state)))
+        predicted_states = self.forward(this_state, action)
+        loss = 0
+        for i, pred_s in enumerate(predicted_states):
+            loss += F.mse_loss(pred_s, next_state[i])
+        loss.backward()
+        self.opt.step()
+        return loss
 
 
 if __name__ == "__main__":

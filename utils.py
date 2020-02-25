@@ -347,7 +347,7 @@ class GraphWindow:
 
 mm_transition = namedtuple(
     'mm_transition',
-    ('prop', 'tac', 'audio', 'prop_next', 'tac_next', 'audio_next'))
+    ('prop', 'tac', 'audio', 'prop_next', 'tac_next', 'audio_next', 'action'))
 
 
 class MMBuffer:

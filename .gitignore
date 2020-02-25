@@ -4,4 +4,5 @@ wandb/
 mlruns/
 data/
 vid/
+runs/
 *.mp4

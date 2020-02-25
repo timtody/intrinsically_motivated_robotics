@@ -36,7 +36,7 @@ MMModel:
   prop_dim: 21
   tac_dim: 15
   audio_dim: 4
-  latent_dim: 32
+  latent_dim: 200
   lstm_hidden_size: 20
   lstm_layers: 2
 
