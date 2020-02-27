@@ -20,7 +20,9 @@ class Env(gym.Env):
         self._set_collections()
         self._setup_force_sensors()
 
-        self.action_space = gym.spaces.Box(low=-1.0, high=1.0, shape=(7, ))
+        self.action_space = gym.spaces.Box(low=-1.0,
+                                           high=1.0,
+                                           shape=(self.cnf.action_dim, ))
         # TODO: need to be made more general for vision space
         obs = self._init_step()
         self.observation_space = gym.spaces.Box(low=-np.inf,
@@ -36,7 +38,7 @@ class Env(gym.Env):
         Not calling a step bevore reset would cause somee entries in obs
         to be None.
         """
-        self.step([0, 0, 0, 0, 0, 0, 0])
+        self.step(self.cnf.action_dim * [0])
         obs = self.reset()
         return obs
 
@@ -142,7 +144,7 @@ class Env(gym.Env):
         radius = np.linalg.norm(gripper_pos - head_pos)
         theta = np.arccos(gripper_pos[2] / radius)
         phi = np.arctan2(gripper_pos[1], gripper_pos[0])
-        return [self.gripper_speed * 100, radius, theta, phi]
+        return np.array([self.gripper_speed * 100, radius, theta, phi])
 
     def _gate(self, x, threshold=0.01):
         if x < threshold:
@@ -191,6 +193,7 @@ class Env(gym.Env):
         self._robot_collection = sim.simGetCollectionHandle("Panda_arm")
 
     def step(self, action):
+        action = [*action, *((7 - self.cnf.action_dim) * [0])]
         self._set_vels(action)
         self.gripper_speed = self._get_gripper_speed()
         self._pr.step()

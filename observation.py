@@ -24,7 +24,7 @@ class Observation:
         self.state_size = state_size
         self.joint_velocities = joint_velocities
         self.joint_positions = joint_positions
-        self.joint_forces = joint_forces
+        #self.joint_forces = joint_forces
         # self.gripper_open_amount = gripper_open_amount
         self.gripper_pose = gripper_pose
         # self.gripper_joint_positions = gripper_joint_positions
@@ -88,3 +88,16 @@ class Observation:
                   if "touch" in k]))).float().unsqueeze(0)
         audio = torch.tensor(self.sound).float().unsqueeze(0)
         return prop, tac, audio
+
+    def get_prop(self):
+        return np.concatenate(
+            [v for k, v in self.__dict__.items() if "joint" in k]
+        )
+
+    def get_tac(self):
+        return np.concatenate(
+            [v for k, v in self.__dict__.items() if "touch" in k]
+        )
+
+    def get_audio(self):
+        return self.sound

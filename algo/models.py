@@ -11,7 +11,7 @@ import torch.nn.functional as F
 
 from utils import LossBuffer
 
-# torch.manual_seed(149)
+torch.manual_seed(149)
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device(
     "cpu")
 
@@ -162,7 +162,7 @@ class ICModule(nn.Module):
     def _process_loss(self, loss):
         self.loss_buffer.push(loss)
         runinng_std = self.loss_buffer.get_std()
-        return loss / (runinng_std + 1e-2)
+        return loss / (runinng_std + 1e-5)
 
 
 class MultiModalModule(nn.Module):
@@ -275,10 +275,12 @@ class MMAE(nn.Module):
         audio_decoded = self.audio_decoder(states[2])
         return prop_decoded, tac_decoded, audio_decoded
 
-    def compute(self, this_state, next_state, action):
+    def compute(self, trans):
         """
         Pass input of the form state: [prop, tac, audio]
         """
+        this_state = [trans.prop, trans.tac, trans.audio]
+        next_state = [trans.prop_next, trans.tac_next, trans.audio_next]
         this_state = list(
             map(lambda x: x.to(device), map(torch.cat, this_state)))
         next_state = list(

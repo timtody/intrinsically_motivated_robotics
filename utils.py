@@ -322,13 +322,13 @@ class GraphWindow:
         [ax.set_xlabel("t") for ax in axes]
         [ax.set_title(label) for ax, label in zip(axes, labels_list)]
 
-        self.iaxes = [ForceIAX(ax) for ax in axes]
+        self.iaxes = [ForceIAX(ax, lookback=lookback) for ax in axes]
         self._fig_shown = False
 
     def close(self):
         plt.close(self.fig)
 
-    def update(self, values):
+    def update(self, *values):
         for value, ax in zip(values, self.iaxes):
             ax(value)
         if not self._fig_shown:
@@ -350,7 +350,7 @@ mm_transition = namedtuple(
     ('prop', 'tac', 'audio', 'prop_next', 'tac_next', 'audio_next', 'action'))
 
 
-class MMBuffer:
+class _MMBuffer:
     def __init__(self, capacity):
         self.capacity = capacity
         self.memory = []
@@ -368,6 +368,46 @@ class MMBuffer:
 
     def __len__(self):
         return len(self.memory)
+
+
+class MMBuffer:
+    def __init__(self, tac_dim, prop_dim, audio_dim, action_dim, capacity):
+        self.tac_this = np.empty((capacity, tac_dim))
+        self.prop_this = np.empty((capacity, prop_dim))
+        self.audio_this = np.empty((capacity, audio_dim))
+        self.tac_next = np.empty((capacity, tac_dim))
+        self.prop_next = np.empty((capacity, prop_dim))
+        self.audio_next = np.empty((capacity, audio_dim))
+        self.action = np.empty((capacity, action_dim))
+        self.pos = 0
+        self.cap = capacity
+        self.device = torch.device(
+            "cuda") if torch.cuda.is_available() else torch.device("cpu")
+
+    def _normalize(self, entry):
+        return (entry - entry.mean()) / (entry.std() + 1e-5)
+
+    def push(self, trans):
+        pos = self.pos
+        self.tac_this[pos] = trans.tac
+        self.prop_this[pos] = trans.prop
+        self.audio_this[pos] = trans.audio
+        self.tac_next[pos] = trans.tac_next
+        self.prop_next[pos] = trans.prop_next
+        self.audio_next[pos] = trans.audio_next
+        self.action[pos] = trans.action
+        self.pos = (pos + 1) % self.cap
+
+    def sample(self, bsize):
+        idx = np.random.randint(0, self.cap, size=bsize)
+        return mm_transition(
+            torch.tensor(self.prop_this[idx]).to(self.device),
+            torch.tensor(self.tac_this[idx]).to(self.device),
+            torch.tensor(self.audio_this[idx]).to(self.device),
+            torch.tensor(self.prop_next[idx]).to(self.device),
+            torch.tensor(self.tac_next[idx]).to(self.device),
+            torch.tensor(self.audio_next[idx]).to(self.device),
+            torch.tensor(self.action[idx]).to(self.device))
 
 
 if __name__ == "__main__":

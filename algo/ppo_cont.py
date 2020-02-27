@@ -80,7 +80,7 @@ class ActorCritic(nn.Module):
         memory.actions.append(action)
         memory.logprobs.append(action_logprob)
 
-        return action.detach()
+        return action.detach(), action_mean
 
     def evaluate(self, state, action):
         action_mean = self.actor(state)
@@ -123,7 +123,7 @@ class PPO:
         rewards = []
         discounted_reward = 0
         # TODO: bootstrap from value function
-        memory.rewards[-1] = self.policy_old.critic(memory.states[-1])
+        # memory.rewards[-1] = self.policy.critic(memory.states[-1])
 
         for reward, is_terminal in zip(reversed(memory.rewards),
                                        reversed(memory.is_terminals)):
@@ -157,7 +157,7 @@ class PPO:
                                 1 + self.eps_clip) * advantages
             value_loss = self.MseLoss(state_values, rewards)
             loss = -torch.min(surr1,
-                              surr2) + 0.5 * value_loss - 0.01 * dist_entropy
+                              surr2) + 0.5 * value_loss - 0.1 * dist_entropy
 
             # take gradient step
             self.optimizer.zero_grad()

@@ -12,7 +12,7 @@ wandb:
 
 ppo:
   n_latent_var: 1024
-  lr: 0.002
+  lr: 0.0001
   betas: [0.9, 0.999]
   K_epochs: 4
   eps_clip: 0.2
@@ -25,6 +25,7 @@ env:
   headless: True
   state: low
   state_size: all
+  action_dim: ${main.action_dim}
 
 log:
   name: ???
@@ -33,7 +34,7 @@ icm:
   embedding_size: 200
 
 MMModel:
-  prop_dim: 21
+  prop_dim: 14
   tac_dim: 15
   audio_dim: 4
   latent_dim: 200
