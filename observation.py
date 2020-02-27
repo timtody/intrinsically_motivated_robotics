@@ -63,10 +63,12 @@ class Observation:
     def get(self):
         if self.state_size == "all":
             return self.get_all()
-        if self.state_size == "notouch":
+        if self.state_size == "tac":
             return self.get_filtered("touch")
-        if self.state_size == "nosound":
+        if self.state_size == "prop":
             return self.get_filtered("sound")
+        if self.state_size == "audio":
+            return self.get_audio()
 
     def get_stereo_vision(self):
         pass

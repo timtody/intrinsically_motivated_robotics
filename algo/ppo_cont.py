@@ -80,6 +80,8 @@ class ActorCritic(nn.Module):
         memory.actions.append(action)
         memory.logprobs.append(action_logprob)
 
+        action += torch.randn(self.action_dim) * 0.2
+
         return action.detach(), action_mean
 
     def evaluate(self, state, action):
@@ -108,9 +110,7 @@ class PPO:
 
         self.policy = ActorCritic(action_dim, observation_dim, n_latent_var,
                                   max_action, action_std).to(device)
-        self.optimizer = torch.optim.Adam(self.policy.parameters(),
-                                          lr=lr,
-                                          betas=betas)
+        self.optimizer = torch.optim.Adadelta(self.policy.parameters(), lr=lr)
         self.policy_old = ActorCritic(action_dim, observation_dim,
                                       n_latent_var, max_action,
                                       action_std).to(device)
@@ -123,7 +123,7 @@ class PPO:
         rewards = []
         discounted_reward = 0
         # TODO: bootstrap from value function
-        # memory.rewards[-1] = self.policy.critic(memory.states[-1])
+        memory.rewards[-1] = self.policy.critic(memory.states[-1])
 
         for reward, is_terminal in zip(reversed(memory.rewards),
                                        reversed(memory.is_terminals)):
@@ -157,7 +157,7 @@ class PPO:
                                 1 + self.eps_clip) * advantages
             value_loss = self.MseLoss(state_values, rewards)
             loss = -torch.min(surr1,
-                              surr2) + 0.5 * value_loss - 0.1 * dist_entropy
+                              surr2) + 0.5 * value_loss - 0.25 * dist_entropy
 
             # take gradient step
             self.optimizer.zero_grad()

@@ -38,13 +38,13 @@ def run(rank, cnf, mode, results):
         timestep += 1
 
         if not cnf.main.train:
-            env_action = env.action_space.sample()
-            action = env_action[:cnf.main.action_dim]
+            action = env.action_space.sample()
+            # action = env_action[:cnf.main.action_dim]
         else:
-            action = agent.policy_old.act(state.get(), memory)
-            env_action = [*action, *[0 for _ in range(7 - cnf.main.action_dim)]]
+            action, action_mean = agent.policy_old.act(state.get(), memory)
+            # env_action = [*action, *[0 for _ in range(7 - cnf.main.action_dim)]]
 
-        next_state, _, done, info = env.step(env_action)
+        next_state, _, done, info = env.step(action)
         if cnf.main.train:
 
             im_loss = icmodule.train_forward(state.get(), next_state.get(),
