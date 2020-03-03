@@ -35,7 +35,7 @@ class Experiment:
         state = self.env.reset()
         results = {}
         for i in range(self.cnf.main.n_steps):
-            if log and i % 5000:
+            if log and i % 5000 == 0:
                 print("exp in mode", self.cnf.env.state_size, "at step", i)
             self.ppo_timestep += 1
             if not self.cnf.main.train:
