@@ -11,7 +11,7 @@ class Experiment:
         self.cnf = cnf
         # setup env
         env = Env(cnf)
-        skip_wrapper = SkipWrapper(cnf.main.skip)
+        skip_wrapper = SkipWrapper(cnf.env.skip)
         self.env = skip_wrapper(env)
 
         # setup agent
