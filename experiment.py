@@ -21,7 +21,7 @@ class Experiment:
         self.memory = Memory()
 
         # setup ICM
-        self.icm = ICModule(cnf.main.action_dim, state_dim, **cnf.icm)
+        self.icm = ICModule(cnf.env.action_dim, state_dim, **cnf.icm)
 
         # setup experiment variables
         self.global_step = 0
