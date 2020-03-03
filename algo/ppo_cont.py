@@ -82,7 +82,7 @@ class ActorCritic(nn.Module):
 
         action += torch.randn(self.action_dim) * 0.3
 
-        return action.detach(), action_mean
+        return action.detach()
 
     def evaluate(self, state, action):
         action_mean = self.actor(state)

@@ -1,16 +1,9 @@
 main:
-  max_timesteps: 35000
+  n_steps: 35000
   train_each: 100
-  action_dim: 4
-
-
-wandb:
-  use: False
-  project: collision
-  name: test
+  train: True
 
 ppo:
-  train: True
   n_latent_var: 128
   lr: 0.001
   betas: [0.9, 0.999]
@@ -25,8 +18,8 @@ env:
   headless: True
   state: low
   state_size: all
-  action_dim: ${main.action_dim}
   skip: 1
+  action_dim: 4
 
 log:
   name: ???
