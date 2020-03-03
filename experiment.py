@@ -15,7 +15,7 @@ class Experiment:
         self.env = skip_wrapper(env)
 
         # setup agent
-        action_dim = cnf.main.action_dim
+        action_dim = cnf.env.action_dim
         state_dim = env.observation_space.shape[0]
         self.agent = PPO(action_dim, state_dim, **cnf.ppo)
         self.memory = Memory()
