@@ -8,9 +8,12 @@ from utils import MMBuffer, GraphWindow
 import pickle
 from collections import namedtuple
 from torch.utils.tensorboard import SummaryWriter
+from utils import SkipWrapper
 
 cnf = get_conf("conf/cnt_col.yaml")
 env = Env(cnf)
+# skip_wrapper = SkipWrapper(1)
+# env = skip_wrapper(env)
 action_dim = env.action_space.shape[0]
 action_dim = cnf.main.action_dim
 state_dim = env.observation_space.shape[0]
@@ -36,7 +39,7 @@ while True:
     im_loss_processed = icmodule._process_loss(im_loss)
     memory.is_terminals.append(done)
     memory.rewards.append(im_loss_processed)
-    if timestep % 100 == 0:
+    if timestep % cnf.main.train_each == 0:
         value = agent.policy_old.critic(memory.states[-1])
         agent.update(memory)
         memory.clear_memory()
@@ -44,8 +47,10 @@ while True:
 
     writer.add_scalar("reward", im_loss_processed, i)
     writer.add_scalar("reward raw", im_loss, i)
-    writer.add_scalar("return std", icmodule.loss_buffer.get_std(), i)
+    writer.add_scalar("return std", icmodule.running_return_std, i)
     writer.add_scalar("value fn", value, i)
-    writer.add_histogram("action mean", action_mean, i)
+    # for key, value in icmodule.base.named_parameters():
+    #     writer.add_histogram(key, value, i)
+    # writer.add_histogram("action mean", action_mean, i)
     # win.update(im_loss_processed, im_loss, icmodule.loss_buffer.get_std(),
     #            value)

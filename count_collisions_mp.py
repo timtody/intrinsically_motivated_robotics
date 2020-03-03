@@ -1,11 +1,12 @@
-from env.environment import Env
-from algo.models import ICModule
-from conf import get_conf
-from algo.ppo_cont import PPO, Memory
 import pickle
 import plotly.graph_objects as go
 import numpy as np
 import torch
+from conf import get_conf
+from utils import SkipWrapper
+from env.environment import Env
+from algo.models import ICModule
+from algo.ppo_cont import PPO, Memory
 from multiprocessing import Array, Process
 
 
@@ -21,6 +22,8 @@ def run(rank, cnf, mode, results):
         cnf.env.state_size = mode
     # re-init random seed per process
     env = Env(cnf)
+    skip_wrapper = SkipWrapper(cnf.main.skip)
+    env = skip_wrapper(env)
     action_dim = cnf.main.action_dim
     state_dim = env.observation_space.shape[0]
     agent = PPO(action_dim, state_dim, **cnf.ppo)
@@ -39,17 +42,15 @@ def run(rank, cnf, mode, results):
 
         if not cnf.main.train:
             action = env.action_space.sample()
-            # action = env_action[:cnf.main.action_dim]
         else:
             action, action_mean = agent.policy_old.act(state.get(), memory)
-            # env_action = [*action, *[0 for _ in range(7 - cnf.main.action_dim)]]
 
         next_state, _, done, info = env.step(action)
         if cnf.main.train:
 
             im_loss = icmodule.train_forward(state.get(), next_state.get(),
                                              action)
-            im_loss_processed = icmodule._process_loss(im_loss)
+            im_loss_processed = icmodule._process_loss(im_loss) - 0.1
             memory.rewards.append(im_loss_processed)
             memory.is_terminals.append(done)
         state = next_state

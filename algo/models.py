@@ -11,7 +11,7 @@ import torch.nn.functional as F
 
 from utils import LossBuffer
 
-torch.manual_seed(149)
+torch.manual_seed(135)
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device(
     "cpu")
 
@@ -21,7 +21,7 @@ class ConvModule(nn.Module):
     Provides thes shared convolutional base for the inverse and forward model.
     """
     def __init__(self):
-        super(ConvModule, self).__init__()
+        super().__init__()
         self.conv1 = nn.Conv2d(1, 32, 3, stride=2, padding=1)
         self.conv2 = nn.Conv2d(32, 32, 3, stride=2, padding=1)
         self.conv3 = nn.Conv2d(32, 32, 3, stride=2, padding=1)
@@ -46,14 +46,17 @@ class FCModule(nn.Module):
     Docstring: todo
     """
     def __init__(self, state_dim, embedding_size):
-        super(FCModule, self).__init__()
+        super().__init__()
         self.fc1 = nn.Linear(state_dim, 128)
         self.fc2 = nn.Linear(128, embedding_size)
+        self.bnorm1 = nn.BatchNorm1d(128)
+        self.bnorm2 = nn.BatchNorm1d(embedding_size)
+        self.eval()
 
     def forward(self, x):
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        return x
+        x = self.bnorm1(F.relu(self.fc1(x)).unsqueeze(0))
+        x = self.bnorm2(F.relu(self.fc2(x)))
+        return x.squeeze()
 
 
 class ForwardModule(nn.Module):
@@ -61,7 +64,7 @@ class ForwardModule(nn.Module):
     Module for learning the forward mapping of state x action -> next state
     """
     def __init__(self, embedding_size, action_dim, base):
-        super(ForwardModule, self).__init__()
+        super().__init__()
         self.base = base
         # we add + 1 because of the concatenated action
         self.l1 = nn.Linear(embedding_size + action_dim, 128)
@@ -83,11 +86,11 @@ class InverseModule(nn.Module):
     Module for learning the inverse mapping of state x next state -> action.
     """
     def __init__(self, embedding_size, action_dim, base):
-        super(InverseModule, self).__init__()
+        super().__init__()
         self.base = base
         # * 2 because we concatenate two states
-        self.linear = nn.Linear(embedding_size * 2, 1024)
-        self.head = nn.Linear(1024, action_dim)
+        self.linear = nn.Linear(embedding_size * 2, 256)
+        self.head = nn.Linear(256, action_dim)
 
     def forward(self, x, y):
         x = self.base(x)
@@ -102,20 +105,18 @@ class ICModule(nn.Module):
     """
     Intrinsic curiosity module.
     """
-    def __init__(self, action_dim, state_dim, embedding_size):
-        super(ICModule, self).__init__()
+    def __init__(self, action_dim, state_dim, embedding_size, alpha=0.5):
+        super().__init__()
         # self._conv_base = ConvModule()
         self.base = FCModule(state_dim, embedding_size)
         # define forward and inverse modules
         self._inverse = InverseModule(embedding_size, action_dim, self.base)
         self._forward = ForwardModule(embedding_size, action_dim, self.base)
 
-        self.opt = optim.RMSprop(self.parameters(),
-                                 lr=1e-4,
-                                 alpha=0.9,
-                                 centered=True)
-
+        self.opt = optim.Adam(self.parameters(), lr=5e-5)
         self.loss_buffer = LossBuffer(100)
+        self.running_return_std = None
+        self.alpha = alpha
 
     def forward(self, x):
         raise NotImplementedError
@@ -126,7 +127,11 @@ class ICModule(nn.Module):
         from base network.
         """
         return set(
-            chain(self._inverse.parameters(), self._forward.parameters()))
+            chain(self._inverse.linear.parameters(),
+                  self._inverse.head.parameters(),
+                  self._forward.l1.parameters(),
+                  self._forward.l2.parameters(),
+                  self._forward.head.parameters()))
 
     def embed(self, state):
         """
@@ -161,8 +166,13 @@ class ICModule(nn.Module):
 
     def _process_loss(self, loss):
         self.loss_buffer.push(loss)
-        runinng_std = self.loss_buffer.get_std()
-        return loss / (runinng_std + 1e-5)
+        return_std = self.loss_buffer.get_std()
+        if self.running_return_std is not None:
+            self.running_return_std = self.alpha * return_std + (
+                1 - self.alpha) * self.running_return_std
+        else:
+            self.running_return_std = return_std
+        return loss / self.running_return_std
 
 
 class MultiModalModule(nn.Module):
@@ -262,8 +272,8 @@ class MMAE(nn.Module):
 
     def forward(self, this_state, action):
         action = torch.stack(action).float().to(device)
-        this_state = list(map(lambda x: torch.cat([x, action], dim=1),
-                              this_state))
+        this_state = list(
+            map(lambda x: torch.cat([x, action], dim=1), this_state))
         prop = self.prop_encoder(this_state[0])
         tac = self.tac_encoder(this_state[1])
         audio = self.audio_encoder(this_state[2])

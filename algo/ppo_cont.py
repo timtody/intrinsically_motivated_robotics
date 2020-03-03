@@ -80,7 +80,7 @@ class ActorCritic(nn.Module):
         memory.actions.append(action)
         memory.logprobs.append(action_logprob)
 
-        action += torch.randn(self.action_dim) * 0.2
+        action += torch.randn(self.action_dim) * 0.3
 
         return action.detach(), action_mean
 
@@ -110,7 +110,9 @@ class PPO:
 
         self.policy = ActorCritic(action_dim, observation_dim, n_latent_var,
                                   max_action, action_std).to(device)
-        self.optimizer = torch.optim.Adadelta(self.policy.parameters(), lr=lr)
+        self.optimizer = torch.optim.Adam(self.policy.parameters(),
+                                          lr=lr,
+                                          betas=betas)
         self.policy_old = ActorCritic(action_dim, observation_dim,
                                       n_latent_var, max_action,
                                       action_std).to(device)
@@ -134,7 +136,7 @@ class PPO:
 
         # Normalizing the rewards:
         rewards = torch.tensor(rewards).to(device)
-        rewards = (rewards - rewards.mean()) / (rewards.std() + 1e-5)
+        # rewards = (rewards - rewards.mean()) / (rewards.std() + 1e-5)
 
         # convert list to tensor
         old_states = torch.stack(memory.states).to(device).detach()
@@ -152,12 +154,14 @@ class PPO:
 
             # Finding Surrogate Loss:
             advantages = rewards - state_values.detach()
+            advantages = (advantages - advantages.mean()) / (advantages.std() +
+                                                             1e-5)
             surr1 = ratios * advantages
             surr2 = torch.clamp(ratios, 1 - self.eps_clip,
                                 1 + self.eps_clip) * advantages
             value_loss = self.MseLoss(state_values, rewards)
             loss = -torch.min(surr1,
-                              surr2) + 0.5 * value_loss - 0.25 * dist_entropy
+                              surr2) + 0.5 * value_loss - 0.35 * dist_entropy
 
             # take gradient step
             self.optimizer.zero_grad()

@@ -1,5 +1,6 @@
 import os
 import gym
+import math
 import numpy as np
 from pyrep import PyRep
 from pyrep.objects.force_sensor import ForceSensor
@@ -106,7 +107,7 @@ class Env(gym.Env):
             [self._fs0, self._fs1, self._fs2, self._fs3, self._fs4]
         ]
 
-    def get_sound_signal(self, threshold=0.035):
+    def get_sound_signal(self, threshold=0.025):
         # threshold = 0.035
         collided = self.check_collision()
         if not collided or self.gripper_speed < threshold:
@@ -143,6 +144,9 @@ class Env(gym.Env):
         head_pos = np.array(self.head.get_position())
         radius = np.linalg.norm(gripper_pos - head_pos)
         theta = np.arccos(gripper_pos[2] / radius)
+        if math.isnan(theta):
+            print("Theta set to 0")
+            theta = 0
         phi = np.arctan2(gripper_pos[1], gripper_pos[0])
         return np.array([self.gripper_speed * 100, radius, theta, phi])
 

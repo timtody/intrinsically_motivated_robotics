@@ -1,9 +1,10 @@
 main:
-  max_timesteps: 100000
+  max_timesteps: 35000
   train_each: 100
   train: True
   n_trials: 5
   action_dim: 4
+  skip: 1
 
 wandb:
   use: False
@@ -11,8 +12,8 @@ wandb:
   name: test
 
 ppo:
-  n_latent_var: 256
-  lr: 0.01
+  n_latent_var: 128
+  lr: 0.001
   betas: [0.9, 0.999]
   K_epochs: 4
   eps_clip: 0.3
@@ -43,3 +44,4 @@ MMModel:
 
 mp:
   n_procs: 6
+  
