@@ -33,7 +33,7 @@ class Logger:
     def _maybe_create_output_dir(self):
         if not os.path.exists("out"):
             print("Creating out dir")
-            os.mkdir("output")
+            os.mkdir("out")
 
     def _make_exp_dirs(self):
         os.mkdir("data")
