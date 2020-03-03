@@ -1,29 +1,32 @@
+import torch
+import pickle
+import numpy as np
 from env.environment import Env
 from algo.ppo_cont import PPO, Memory
-from utils import get_conf, prepare_wandb
 from algo.models import ICModule, MultiModalModule, MMAE
-import numpy as np
-import torch
+from utils import get_conf, SkipWrapper
 from utils import MMBuffer, GraphWindow
-import pickle
 from collections import namedtuple
 from torch.utils.tensorboard import SummaryWriter
-from utils import SkipWrapper
+from logger import Logger
 
-cnf = get_conf("conf/cnt_col.yaml")
+cnf = get_conf("conf/main.yaml")
+# init env before logger!
 env = Env(cnf)
+log = Logger(cnf)
+
 # skip_wrapper = SkipWrapper(1)
 # env = skip_wrapper(env)
 action_dim = env.action_space.shape[0]
-action_dim = cnf.main.action_dim
+action_dim = cnf.env.action_dim
 state_dim = env.observation_space.shape[0]
 agent = PPO(action_dim, state_dim, **cnf.ppo)
 memory = Memory()
-icmodule = ICModule(cnf.main.action_dim, state_dim, **cnf.icm)
+icmodule = ICModule(action_dim, state_dim, **cnf.icm)
 # win = GraphWindow(["reward", "reward raw", "return std", "value_fn"], 1, 4,
 #                   10000)
 # # tensorboard
-writer = SummaryWriter()
+writer = SummaryWriter("tb")
 
 timestep = 0
 state = env.reset()
@@ -32,7 +35,7 @@ while True:
     i += 1
     value = 0
     timestep += 1
-    action, action_mean = agent.policy_old.act(state.get(), memory)
+    action = agent.policy_old.act(state.get(), memory)
     next_state, reward, done, _ = env.step(action.numpy())
     # compute im reward
     im_loss = icmodule.train_forward(state.get(), next_state.get(), action)

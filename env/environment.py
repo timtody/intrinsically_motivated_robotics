@@ -1,7 +1,3 @@
-import os
-import gym
-import math
-import numpy as np
 from pyrep import PyRep
 from pyrep.objects.force_sensor import ForceSensor
 from pyrep.robots.arms.panda import Panda
@@ -9,11 +5,16 @@ from pyrep.robots.end_effectors.panda_gripper import PandaGripper
 from pyrep.objects.shape import Shape
 from pyrep.backend import sim
 from observation import Observation
+import os
+import gym
+import math
+import numpy as np
 
 
 class Env(gym.Env):
     def __init__(self, cnf):
         self.cnf = cnf.env
+        self.owd = cnf.owd
         self._launch()
         self._setup_robot()
         self._setup_shapes()
@@ -44,8 +45,7 @@ class Env(gym.Env):
         return obs
 
     def _launch(self):
-        scene_path = os.path.abspath(
-            os.path.join('scenes', self.cnf.scene_path))
+        scene_path = os.path.join(self.owd, 'scenes', self.cnf.scene_path)
         self._pr = PyRep()
         self._pr.launch(scene_path, headless=self.cnf.headless)
         self._pr.start()
@@ -145,7 +145,6 @@ class Env(gym.Env):
         radius = np.linalg.norm(gripper_pos - head_pos)
         theta = np.arccos(gripper_pos[2] / radius)
         if math.isnan(theta):
-            print("Theta set to 0")
             theta = 0
         phi = np.arctan2(gripper_pos[1], gripper_pos[0])
         return np.array([self.gripper_speed * 100, radius, theta, phi])

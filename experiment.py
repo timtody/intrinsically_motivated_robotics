@@ -1,9 +1,9 @@
+from env.environment import Env
 import torch
 import numpy as np
 from utils import SkipWrapper
 from algo.ppo_cont import PPO, Memory
 from algo.models import ICModule
-from env.environment import Env
 
 
 class Experiment:

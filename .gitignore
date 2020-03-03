@@ -5,4 +5,5 @@ mlruns/
 data/
 vid/
 runs/
+out/
 *.mp4

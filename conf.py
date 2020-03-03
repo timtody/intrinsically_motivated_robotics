@@ -6,5 +6,5 @@ def get_conf(path, struct=True, merge_cli=True):
     if merge_cli:
         cnf.merge_with_cli()
     if struct:
-        OmegaConf.set_struct(cnf, True)
+        OmegaConf.set_struct(cnf, False)
     return cnf

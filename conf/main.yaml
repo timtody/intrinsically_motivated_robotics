@@ -22,7 +22,7 @@ env:
   action_dim: 4
 
 log:
-  name: ???
+  name: ""
 
 icm:
   embedding_size: 200

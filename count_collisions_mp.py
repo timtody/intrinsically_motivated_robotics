@@ -1,14 +1,10 @@
-from env.environment import Env
+from experiment import Experiment
 import pickle
 import plotly.graph_objects as go
 import numpy as np
-import torch
 from conf import get_conf
-from utils import SkipWrapper
-from experiment import Experiment
-from algo.models import ICModule
-from algo.ppo_cont import PPO, Memory
 from multiprocessing import Array, Process
+from logger import Logger
 
 
 def run(rank, cnf, mode, results):
@@ -22,7 +18,8 @@ def run(rank, cnf, mode, results):
     # start the experiment
     if rank == 0:
         print("Starting mode", mode)
-    n_collisions, = exp.run([lambda x: x["collided"]])
+    n_collisions, = exp.run([lambda x: x["collided"]],
+                            log=True if rank == 0 else False)
     results[rank] = n_collisions
 
 
@@ -42,19 +39,19 @@ def run_mode_mp(mode, cnf):
 
 if __name__ == "__main__":
     # get config setup
-    print(1)
     cnf = get_conf("conf/main.yaml")
+    log = Logger(cnf)
     results = []
     state_modes = ["notrain", "tac", "prop", "audio", "all"]
     for mode in state_modes:
         results.append(run_mode_mp(mode, cnf))
     results = np.array(results)
-    with open(f"data/{cnf.log.name}_result.p", "wb") as f:
+    with open(f"data/{cnf.log.name}_n_collisions.p", "wb") as f:
         pickle.dump(results, f)
     fig = go.Figure([
         go.Bar(x=state_modes,
                y=np.mean(results, axis=1),
                error_y=dict(type='data', array=np.std(results, axis=1)))
     ])
-    fig.write_html(f"data/{cnf.log.name}_result_mp.html")
+    fig.write_html(f"data/{cnf.log.name}_n_collisions_plot.html")
     fig.show()
