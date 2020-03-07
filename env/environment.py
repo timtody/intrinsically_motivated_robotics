@@ -14,7 +14,7 @@ import numpy as np
 class Env(gym.Env):
     def __init__(self, cnf):
         self.cnf = cnf.env
-        self.owd = cnf.owd
+        self.owd = cnf.log.owd
         self._launch()
         self._setup_robot()
         self._setup_shapes()
@@ -47,7 +47,8 @@ class Env(gym.Env):
     def _launch(self):
         scene_path = os.path.join(self.owd, 'scenes', self.cnf.scene_path)
         self._pr = PyRep()
-        self._pr.launch(scene_path, headless=self.cnf.headless)
+        self._pr.launch(os.path.abspath(scene_path),
+                        headless=self.cnf.headless)
         self._pr.start()
 
     def _setup_robot(self):

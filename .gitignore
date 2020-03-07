@@ -6,4 +6,5 @@ data/
 vid/
 runs/
 out/
+tb/
 *.mp4

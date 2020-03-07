@@ -1,19 +1,14 @@
-import torch
-import pickle
-import numpy as np
 from env.environment import Env
 from algo.ppo_cont import PPO, Memory
-from algo.models import ICModule, MultiModalModule, MMAE
-from utils import get_conf, SkipWrapper
-from utils import MMBuffer, GraphWindow
-from collections import namedtuple
+from algo.models import ICModule
 from torch.utils.tensorboard import SummaryWriter
 from logger import Logger
+from utils import get_conf
 
 cnf = get_conf("conf/main.yaml")
 # init env before logger!
+# log = Logger(cnf)
 env = Env(cnf)
-log = Logger(cnf)
 
 # skip_wrapper = SkipWrapper(1)
 # env = skip_wrapper(env)
@@ -26,7 +21,7 @@ icmodule = ICModule(action_dim, state_dim, **cnf.icm)
 # win = GraphWindow(["reward", "reward raw", "return std", "value_fn"], 1, 4,
 #                   10000)
 # # tensorboard
-writer = SummaryWriter("tb")
+writer = SummaryWriter()
 
 timestep = 0
 state = env.reset()

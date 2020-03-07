@@ -1,4 +1,4 @@
-from experiment import Experiment
+from experiment import CountCollisions
 import pickle
 import plotly.graph_objects as go
 import numpy as np
@@ -13,7 +13,7 @@ def run(rank, cnf, mode, results):
     else:
         cnf.main.train = True
         cnf.env.state_size = mode
-    exp = Experiment(cnf)
+    exp = CountCollisions(cnf, rank=rank, mode=mode)
     n_collisions = 0
     # start the experiment
     if rank == 0:
@@ -46,12 +46,12 @@ if __name__ == "__main__":
     for mode in state_modes:
         results.append(run_mode_mp(mode, cnf))
     results = np.array(results)
-    with open(f"data/{cnf.log.name}_n_collisions.p", "wb") as f:
+    with open(f"data/n_collisions.p", "wb") as f:
         pickle.dump(results, f)
     fig = go.Figure([
         go.Bar(x=state_modes,
                y=np.mean(results, axis=1),
                error_y=dict(type='data', array=np.std(results, axis=1)))
     ])
-    fig.write_html(f"data/{cnf.log.name}_n_collisions_plot.html")
+    fig.write_html(f"data/n_collisions_plot.html")
     fig.show()

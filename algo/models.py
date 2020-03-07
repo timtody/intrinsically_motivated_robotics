@@ -11,7 +11,7 @@ import torch.nn.functional as F
 
 from utils import LossBuffer
 
-torch.manual_seed(135)
+torch.manual_seed(151)
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device(
     "cpu")
 
@@ -105,7 +105,7 @@ class ICModule(nn.Module):
     """
     Intrinsic curiosity module.
     """
-    def __init__(self, action_dim, state_dim, embedding_size, alpha=0.5):
+    def __init__(self, action_dim, state_dim, embedding_size, alpha=0.1):
         super().__init__()
         # self._conv_base = ConvModule()
         self.base = FCModule(state_dim, embedding_size)
@@ -129,8 +129,7 @@ class ICModule(nn.Module):
         return set(
             chain(self._inverse.linear.parameters(),
                   self._inverse.head.parameters(),
-                  self._forward.l1.parameters(),
-                  self._forward.l2.parameters(),
+                  self._forward.l1.parameters(), self._forward.l2.parameters(),
                   self._forward.head.parameters()))
 
     def embed(self, state):
