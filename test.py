@@ -22,7 +22,7 @@ icmodule = ICModule(action_dim, state_dim, **cnf.icm)
 #                   10000)
 # # tensorboard
 writer = SummaryWriter()
-window = ReturnWindow()
+window = ReturnWindow(discount_factor=0.001)
 
 timestep = 0
 state = env.reset()

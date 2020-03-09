@@ -306,9 +306,9 @@ class _ReturnWindow:
 
 
 class ReturnWindow:
-    def __init__(self):
+    def __init__(self, discount_factor=0.95):
         self.fig = plt.figure()
-        self.iax_return = ReturnIAX(self.fig.add_subplot(211))
+        self.iax_return = ReturnIAX(self.fig.add_subplot(211), discount_factor=discount_factor)
         self._fig_shown = False
 
     def close(self):
