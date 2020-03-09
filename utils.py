@@ -234,7 +234,7 @@ class Plotter3D:
 
 
 class ReturnIAX:
-    def __init__(self, ax, discount_factor, lookback=15):
+    def __init__(self, ax, discount_factor=0.95, lookback=500):
         self._ax = ax
         self._x = np.arange(-lookback + 1, 1)
         self._return_buffer = np.zeros(lookback)
@@ -277,7 +277,7 @@ class ForceIAX:
         self._curve.set_ydata(self._buffer)
 
 
-class ReturnWindow:
+class _ReturnWindow:
     def __init__(self, discount_factor=0.99, lookback=200):
         self.fig, axes = plt.subplots(nrows=5, ncols=3)
         [ax.set_ylim(-5, 5) for ax in axes.flatten()]
@@ -303,6 +303,31 @@ class ReturnWindow:
         w, h = self.fig.canvas.get_width_height()
         return np.fromstring(self.fig.canvas.tostring_rgb(),
                              dtype=np.uint8).reshape(h, w, 3)
+
+
+class ReturnWindow:
+    def __init__(self):
+        self.fig = plt.figure()
+        self.iax_return = ReturnIAX(self.fig.add_subplot(211))
+        self._fig_shown = False
+
+    def close(self):
+        plt.close(self.fig)
+
+    def update(self, reward, prediction):
+        self.iax_return(reward, prediction)
+        if self._fig_shown:
+            self.fig.canvas.draw()
+            self.fig.canvas.flush_events()
+        else:
+            self.fig.show()
+            self._fig_shown = True
+
+    # def _get_frame(self):
+    #     return np.fromstring(self.fig.canvas.tostring_argb(),
+    #                          dtype=np.uint8).reshape(height, width,
+    #                                                  4)[:, :,
+    #                                                     1:]  # discard alpha
 
 
 class GraphWindow:

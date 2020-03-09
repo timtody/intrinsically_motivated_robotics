@@ -65,7 +65,7 @@ class ActorCritic(nn.Module):
         raise NotImplementedError
 
     def get_value(self, state):
-        return self.value_layer(torch.tensor(state).float())
+        return self.critic(torch.tensor(state).float())
 
     def act(self, state, memory):
         state = torch.from_numpy(state).float().to(device)
@@ -119,6 +119,9 @@ class PPO:
         self.policy_old.load_state_dict(self.policy.state_dict())
 
         self.MseLoss = nn.MSELoss()
+
+    def get_value(self, state):
+        return self.policy_old.get_value(state).item()
 
     def update(self, memory):
         # Monte Carlo estimate of state rewards:

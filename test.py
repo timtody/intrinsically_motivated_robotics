@@ -3,7 +3,7 @@ from algo.ppo_cont import PPO, Memory
 from algo.models import ICModule
 from torch.utils.tensorboard import SummaryWriter
 from logger import Logger
-from utils import get_conf
+from utils import get_conf, ReturnWindow
 
 cnf = get_conf("conf/main.yaml")
 # init env before logger!
@@ -22,6 +22,7 @@ icmodule = ICModule(action_dim, state_dim, **cnf.icm)
 #                   10000)
 # # tensorboard
 writer = SummaryWriter()
+window = ReturnWindow()
 
 timestep = 0
 state = env.reset()
@@ -30,7 +31,7 @@ while True:
     i += 1
     value = 0
     timestep += 1
-    action = agent.policy_old.act(state.get(), memory)
+    action, _ = agent.policy_old.act(state.get(), memory)
     next_state, reward, done, _ = env.step(action.numpy())
     # compute im reward
     im_loss = icmodule.train_forward(state.get(), next_state.get(), action)
@@ -39,14 +40,14 @@ while True:
     memory.rewards.append(im_loss_processed)
     if timestep % cnf.main.train_each == 0:
         value = agent.policy_old.critic(memory.states[-1])
-        agent.update(memory)
+        ploss, vloss = agent.update(memory)
         memory.clear_memory()
         timestep = 0
+        print("policy loss:", ploss, "\nvalue loss:", vloss)
+    window.update(im_loss_processed.item(), agent.get_value(next_state.get()))
 
-    writer.add_scalar("reward", im_loss_processed, i)
-    writer.add_scalar("reward raw", im_loss, i)
-    writer.add_scalar("return std", icmodule.running_return_std, i)
-    writer.add_scalar("value fn", value, i)
+    state = next_state
+
     # for key, value in icmodule.base.named_parameters():
     #     writer.add_histogram(key, value, i)
     # writer.add_histogram("action mean", action_mean, i)
