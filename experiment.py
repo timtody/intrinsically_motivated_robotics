@@ -10,7 +10,7 @@ from abc import abstractmethod
 
 
 class Experiment:
-    def __init__(self, cnf, rank=0, mode=None):
+    def __init__(self, rank=0, cnf=None, name=None):
         self.cnf = cnf
         # setup env
         env = Env(cnf)
@@ -31,7 +31,7 @@ class Experiment:
         self.ppo_timestep = 0
 
         # setup tensorboard
-        self.writer = SummaryWriter(f"tb/rank:{rank}_mode:{mode}")
+        self.writer = SummaryWriter(f"tb/{name}/rank:{rank}")
 
         # setup logging metrics
         self.n_collisions = 0
@@ -41,7 +41,7 @@ class Experiment:
         torch.manual_seed(np.random.randint(9999))
 
     @abstractmethod
-    def run(self, callbacks, log=False):o
+    def run(self, callbacks, log=False):
         pass
 
 
@@ -51,7 +51,7 @@ class CountCollisions(Experiment):
         results = defaultdict(lambda: 0)
         for i in range(self.cnf.main.n_steps):
             if log and i % 5000 == 0:
-                print("exp in mode", self.cnf.env.o, "at step", i)
+                print("exp in mode", self.cnf.env.mode, "at step", i)
 
             self.ppo_timestep += 1
 
@@ -110,3 +110,57 @@ class GoalReach(Experiment):
     def run(self, callbacks, log=False):
         # run exp here
         pass
+
+
+class CheckActor(Experiment):
+    """ Experiment to investigate the 
+    critic's function"""
+
+    def run(self, callbacks, log=False):
+        state = self.env.reset()
+        results = defaultdict(lambda: 0)
+        mean_reward = 0
+        for i in range(self.cnf.main.n_steps):
+            if log and i % 5000 == 0:
+                print("exp in mode", self.cnf.env.mode, "at step", i)
+
+            self.ppo_timestep += 1
+
+            if not self.cnf.main.train:
+                action = self.env.action_space.sample()
+            else:
+                action, action_mean = self.agent.policy_old.act(
+                    state.get(), self.memory)
+
+            next_state, _, done, info = self.env.step(action)
+
+            if self.cnf.main.train:
+                im_loss = self.icm.train_forward(state.get(),
+                                                 next_state.get(), action)
+                self.memory.rewards.append(im_loss)
+                self.memory.is_terminals.append(done)
+                mean_reward += im_loss
+            state = next_state
+
+            if self.cnf.main.train:
+                if self.ppo_timestep % self.cnf.main.train_each == 0:
+                    self.agent.update(self.memory)
+                    self.memory.clear_memory()
+                    self.ppo_timestep = 0
+
+            # receive callback info
+            for i, cb in enumerate(callbacks):
+                results[i] += cb(info)
+
+            # retrieve metrics
+            self.n_collisions += info["collided"]
+
+            # log to tensorboard
+            if self.cnf.main.train:
+                self.writer.add_scalar("reward", im_loss, self.global_step)
+                self.writer.add_scalar(
+                    "mean reward", mean_reward / self.global_step, self.global_step)
+
+            self.global_step += 1
+        self.env.close()
+        return results.values()

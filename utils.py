@@ -110,6 +110,7 @@ def SkipWrapper(repeat_count):
             Generic common frame skipping wrapper
             Will perform action for `x` additional steps
         """
+
         def __init__(self, env):
             super(SkipWrapper, self).__init__(env)
             self.repeat_count = repeat_count
@@ -306,9 +307,10 @@ class _ReturnWindow:
 
 
 class ReturnWindow:
-    def __init__(self, discount_factor=0.95):
+    def __init__(self, discount_factor=0.95, lookback=200):
         self.fig = plt.figure()
-        self.iax_return = ReturnIAX(self.fig.add_subplot(211), discount_factor=discount_factor)
+        self.iax_return = ReturnIAX(self.fig.add_subplot(
+            211), discount_factor=discount_factor, lookback=lookback)
         self._fig_shown = False
 
     def close(self):
@@ -341,7 +343,7 @@ class GraphWindow:
         try:
             axes = axes.flatten()
         except Exception:
-            raise
+            axes = [axes]
         [ax.set_ylim(-5, 5) for ax in axes]
         [ax.set_xlim(-lookback, 0) for ax in axes]
         [ax.set_xlabel("t") for ax in axes]

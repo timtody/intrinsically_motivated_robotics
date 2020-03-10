@@ -204,12 +204,18 @@ class Env(gym.Env):
         return (self._get_observation(), self._get_reward(), self._get_done(),
                 self._get_info())
 
-    def reset(self):
+    def reset(self, random=False):
         """
         Not gym copliant reset function.
         """
-        self._gripper.set_joint_positions(self._gripper_start_positions)
-        self._arm.set_joint_positions(self._joint_start_positions)
+        if random:
+            joint_start_pos = np.random.uniform(-1, 1, size=7)
+            gripper_start_pos = np.random.uniform(-1, 1, size=2)
+            self._gripper.set_joint_positions(gripper_start_pos)
+            self._arm.set_joint_positions(joint_start_pos)
+        else:
+            self._gripper.set_joint_positions(self._gripper_start_positions)
+            self._arm.set_joint_positions(self._joint_start_positions)
         return self._get_observation()
 
     def render(self):

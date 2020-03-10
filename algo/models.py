@@ -11,7 +11,7 @@ import torch.nn.functional as F
 
 from utils import LossBuffer
 
-torch.manual_seed(151)
+# torch.manual_seed(153)
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device(
     "cpu")
 
@@ -105,7 +105,7 @@ class ICModule(nn.Module):
     """
     Intrinsic curiosity module.
     """
-    def __init__(self, action_dim, state_dim, embedding_size, alpha=0.1):
+    def __init__(self, action_dim, state_dim, embedding_size, alpha=0.001):
         super().__init__()
         # self._conv_base = ConvModule()
         self.base = FCModule(state_dim, embedding_size)
@@ -159,9 +159,9 @@ class ICModule(nn.Module):
 
         self.opt.zero_grad()
         loss = F.mse_loss(next_state_embed_pred, next_state_embed_true)
-        loss.backward()
-        self.opt.step()
-        return loss
+        # loss.backward()
+        # self.opt.step()
+        return loss / 0.02
 
     def _process_loss(self, loss):
         self.loss_buffer.push(loss)

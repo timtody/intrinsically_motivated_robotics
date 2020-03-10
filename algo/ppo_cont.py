@@ -5,7 +5,7 @@ from torch.distributions import MultivariateNormal
 
 # device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 device = torch.device("cpu")
-#torch.manual_seed(42)
+# torch.manual_seed(42)
 
 
 class Memory:
@@ -159,6 +159,7 @@ class PPO:
             advantages = rewards - state_values.detach()
             advantages = (advantages - advantages.mean()) / (advantages.std() +
                                                              1e-5)
+
             surr1 = ratios * advantages
             surr2 = torch.clamp(ratios, 1 - self.eps_clip,
                                 1 + self.eps_clip) * advantages
