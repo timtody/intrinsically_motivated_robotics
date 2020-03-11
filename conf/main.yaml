@@ -19,7 +19,7 @@ env:
   state: low
   state_size: all
   skip: 1
-  action_dim: 4
+  action_dim: 7
 
 log:
   name: ""

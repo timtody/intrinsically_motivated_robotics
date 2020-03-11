@@ -1,4 +1,4 @@
-embedding_sizefrom experiment import CountCollisions
+from experiment import CountCollisions
 import pickle
 import plotly.graph_objects as go
 import numpy as np
@@ -13,13 +13,15 @@ def run(rank, cnf, mode, results):
     else:
         cnf.main.train = True
         cnf.env.state_size = mode
-    exp = CountCollisions(cnf, rank=rank, mode=mode)
+    cnf.env.mode = mode
+    exp = CountCollisions(cnf, rank, mode)
     n_collisions = 0
     # start the experiment
     if rank == 0:
         print("Starting mode", mode)
-    n_collisions, = exp.run([lambda x: x["collided"]],
-                            log=True if rank == 0 else False)
+    n_collisions, n_sounds = exp.run([lambda x: x["collided"],
+                                      lambda x: x["sound"]],
+                                     log=True if rank == 0 else False)
     results[rank] = n_collisions
 
 

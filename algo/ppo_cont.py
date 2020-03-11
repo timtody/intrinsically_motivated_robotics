@@ -62,6 +62,7 @@ class ActorCritic(nn.Module):
         dist = MultivariateNormal(action_mean, cov_mat)
         action = dist.sample()
         action_logprob = dist.log_prob(action)
+        entropy = dist.entropy()
 
         memory.states.append(state)
         memory.actions.append(action)
@@ -69,7 +70,7 @@ class ActorCritic(nn.Module):
 
         action += torch.randn(self.action_dim) * 0.3
 
-        return action.detach(), action_mean.detach().numpy()
+        return action.detach(), action_mean.detach().numpy(), entropy.item()
 
     def evaluate(self, state, action):
         action_mean = self.actor(state)
@@ -148,7 +149,7 @@ class PPO:
                                 1 + self.eps_clip) * advantages
             value_loss = self.MseLoss(state_values, rewards)
             loss = -torch.min(surr1,
-                              surr2) + 0.5 * value_loss - 0.05 * dist_entropy
+                              surr2) + 0.5 * value_loss - 0.1 * dist_entropy
 
             # take gradient step
             self.optimizer.zero_grad()

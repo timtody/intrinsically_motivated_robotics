@@ -32,6 +32,7 @@ class Env(gym.Env):
                                                 shape=obs.get().shape)
         # properties
         self.gripper_speed = 0
+        self.sound_played = False
 
     def _init_step(self):
         """
@@ -112,7 +113,9 @@ class Env(gym.Env):
         # threshold = 0.035
         collided = self.check_collision()
         if not collided or self.gripper_speed < threshold:
+            self.sound_played = False
             return np.array([0, 0, 0, 0])
+        self.sound_played = True
         return self._compute_sound_signal2()
 
     def _compute_sound_signal(self):
@@ -171,8 +174,7 @@ class Env(gym.Env):
         return False
 
     def _get_info(self):
-        # TODO: maybe implement (more feats)
-        info = dict(collided=self.check_collision(), )
+        info = dict(collided=self.check_collision(), sound=self.sound_played)
         return info
 
     def _get_observation(self):

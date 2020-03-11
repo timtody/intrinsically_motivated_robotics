@@ -59,7 +59,7 @@ graph_win = GraphWindow(["app. ret"], 1, 1, lookback=10000)
 #                   10000)
 # # tensorboard
 writer = SummaryWriter("tb/test_rew_q")
-window = ReturnWindow(discount_factor=0.5, lookback=10000)
+window = ReturnWindow(discount_factor=0.6, lookback=10000)
 
 timestep = 0
 ret_sum = 0
@@ -72,7 +72,7 @@ while True:
     i += 1
     value = 0
     timestep += 1
-    action, _ = agent.policy_old.act(state.get(), memory)
+    action, *_ = agent.policy_old.act(state.get(), memory)
     next_state, reward, done, _ = env.step(action.numpy())
     # compute im reward
     im_loss = icmodule.train_forward(state.get(), next_state.get(), action)

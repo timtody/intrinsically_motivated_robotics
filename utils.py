@@ -110,7 +110,6 @@ def SkipWrapper(repeat_count):
             Generic common frame skipping wrapper
             Will perform action for `x` additional steps
         """
-
         def __init__(self, env):
             super(SkipWrapper, self).__init__(env)
             self.repeat_count = repeat_count
@@ -281,8 +280,9 @@ class ForceIAX:
 class ReturnWindow:
     def __init__(self, discount_factor=0.95, lookback=200):
         self.fig = plt.figure()
-        self.iax_return = ReturnIAX(self.fig.add_subplot(
-            211), discount_factor=discount_factor, lookback=lookback)
+        self.iax_return = ReturnIAX(self.fig.add_subplot(211),
+                                    discount_factor=discount_factor,
+                                    lookback=lookback)
         self._fig_shown = False
 
     def close(self):
@@ -407,6 +407,36 @@ class MMBuffer:
             torch.tensor(self.tac_next[idx]).to(self.device),
             torch.tensor(self.audio_next[idx]).to(self.device),
             torch.tensor(self.action[idx]).to(self.device))
+
+
+class RewardQueue:
+    def __init__(self, length, gamma):
+        self.Q = np.zeros(length)
+        self.len = length
+        self.gamma = gamma
+
+    def push(self, reward) -> None:
+        self.Q = np.roll(self.Q, -1)
+        self.Q[-1] = 0
+
+        for i, r in enumerate(range(self.len - 1, -1, -1)):
+            self.Q[i] += self.gamma**r * reward
+
+    def get(self) -> int:
+        return self.Q[0]
+
+
+class ValueQueue:
+    def __init__(self, length):
+        self.len = length
+        self.Q = np.zeros(length)
+
+    def push(self, elem) -> None:
+        self.Q[-1] = elem
+        self.Q = np.roll(self.Q, -1)
+
+    def get(self) -> int:
+        return self.Q[0]
 
 
 if __name__ == "__main__":

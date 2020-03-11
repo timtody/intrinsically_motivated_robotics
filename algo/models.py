@@ -54,7 +54,7 @@ class FCModule(nn.Module):
         self.eval()
 
     def forward(self, x):
-        x = F.relu(self.fc1(x))
+        x = self.fc1(x)
         # x = self.bnorm2(F.relu(self.fc2(x)))
         return x.squeeze()
 
