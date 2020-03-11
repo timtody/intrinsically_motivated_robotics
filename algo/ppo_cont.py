@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from torch.distributions import MultivariateNormal
 
 # device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -22,18 +21,6 @@ class Memory:
         del self.logprobs[:]
         del self.rewards[:]
         del self.is_terminals[:]
-
-
-class ContActionLayer(nn.Module):
-    def __init__(self, n_latent_var, action_dim):
-        super(ContActionLayer, self).__init__()
-        self.locs = nn.Linear(n_latent_var, action_dim)
-        self.stds = nn.Linear(n_latent_var, action_dim)
-
-    def forward(self, x):
-        locs = self.locs(x)
-        stds = F.softplus(self.stds(x))
-        return locs, stds
 
 
 class ActorCritic(nn.Module):

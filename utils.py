@@ -278,34 +278,6 @@ class ForceIAX:
         self._curve.set_ydata(self._buffer)
 
 
-class _ReturnWindow:
-    def __init__(self, discount_factor=0.99, lookback=200):
-        self.fig, axes = plt.subplots(nrows=5, ncols=3)
-        [ax.set_ylim(-5, 5) for ax in axes.flatten()]
-        [ax.set_xlim(-lookback, 0) for ax in axes.flatten()]
-        self.iaxes = [ForceIAX(ax) for ax in axes.flatten()]
-        self._fig_shown = False
-
-    def close(self):
-        plt.close(self.fig)
-
-    def update(self, values):
-        for value, ax in zip(values, self.iaxes):
-            ax(value)
-        if not self._fig_shown:
-            self.fig.canvas.draw()
-            self.fig.show()
-            self._fig_shown = True
-        else:
-            self.fig.canvas.draw()
-            self.fig.canvas.flush_events()
-
-    def get_frame(self):
-        w, h = self.fig.canvas.get_width_height()
-        return np.fromstring(self.fig.canvas.tostring_rgb(),
-                             dtype=np.uint8).reshape(h, w, 3)
-
-
 class ReturnWindow:
     def __init__(self, discount_factor=0.95, lookback=200):
         self.fig = plt.figure()
