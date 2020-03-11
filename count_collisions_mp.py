@@ -1,4 +1,4 @@
-from experiment import CountCollisions
+embedding_sizefrom experiment import CountCollisions
 import pickle
 import plotly.graph_objects as go
 import numpy as np

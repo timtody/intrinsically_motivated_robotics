@@ -1,24 +1,23 @@
-from multiprocessing import Array, Process
+from multiprocessing import Process, Array
 
 
 class Runner:
-    def __init__(self, exp, cnf, name):
+    def __init__(self, exp, cnf):
         self.exp = exp
         self.cnf = cnf
-        self.name = name
-    
+
     def run(self, n_procs):
+        results = Array('d', range(n_procs))
         processes = []
         for rank in range(n_procs):
             print("startinc proc")
-            p = Process(target=self._start_env, args=([], rank))
+            p = Process(target=self._start_env, args=([], rank, results))
             p.start()
             processes.append(p)
-        
+
         for p in processes:
             p.join()
-    
-    def _start_env(self, callbacks, rank):
-        env = self.exp(cnf=self.cnf, name=self.name, rank=rank)
-        env.run(callbacks)
-        
+
+    def _start_env(self, callbacks, rank, results):
+        env = self.exp(cnf=self.cnf, rank=rank)
+        results[rank] = env.run(callbacks)

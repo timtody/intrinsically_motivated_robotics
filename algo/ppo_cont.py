@@ -50,9 +50,9 @@ class ActorCritic(nn.Module):
                                    nn.Tanh())
         # critic
         self.critic = nn.Sequential(nn.Linear(state_dim, n_latent_var),
-                                    nn.Tanh(),
+                                    nn.ReLU(),
                                     nn.Linear(n_latent_var, n_latent_var),
-                                    nn.Tanh(), nn.Linear(n_latent_var, 1))
+                                    nn.ReLU(), nn.Linear(n_latent_var, 1))
         self.action_var = torch.full((action_dim, ),
                                      action_std * action_std).to(device)
 
@@ -110,9 +110,7 @@ class PPO:
 
         self.policy = ActorCritic(action_dim, observation_dim, n_latent_var,
                                   max_action, action_std).to(device)
-        self.optimizer = torch.optim.Adam(self.policy.parameters(),
-                                          lr=lr,
-                                          betas=betas)
+        self.optimizer = torch.optim.Adadelta(self.policy.parameters(), lr=lr)
         self.policy_old = ActorCritic(action_dim, observation_dim,
                                       n_latent_var, max_action,
                                       action_std).to(device)
@@ -126,9 +124,7 @@ class PPO:
     def update(self, memory):
         # Monte Carlo estimate of state rewards:
         rewards = []
-        discounted_reward = 0
-        # TODO: bootstrap from value function
-        memory.rewards[-1] = self.policy.critic(memory.states[-1])
+        discounted_reward = self.policy.critic(memory.states[-1])
 
         for reward, is_terminal in zip(reversed(memory.rewards),
                                        reversed(memory.is_terminals)):
@@ -165,7 +161,7 @@ class PPO:
                                 1 + self.eps_clip) * advantages
             value_loss = self.MseLoss(state_values, rewards)
             loss = -torch.min(surr1,
-                              surr2) + 0.5 * value_loss - 0.35 * dist_entropy
+                              surr2) + 0.5 * value_loss - 0.05 * dist_entropy
 
             # take gradient step
             self.optimizer.zero_grad()

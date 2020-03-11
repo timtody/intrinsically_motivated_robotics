@@ -22,8 +22,8 @@ graph_win = GraphWindow(["reward", "average reward"], 2, 1, lookback=10000)
 # win = GraphWindow(["reward", "reward raw", "return std", "value_fn"], 1, 4,
 #                   10000)
 # # tensorboard
-writer = SummaryWriter("runs/mean_reward")
-window = ReturnWindow(discount_factor=0.001, lookback=10000)
+# writer = SummaryWriter()
+window = ReturnWindow(discount_factor=0.5, lookback=10000)
 
 timestep = 0
 ret_sum = 0
@@ -46,17 +46,16 @@ while True:
         memory.clear_memory()
         timestep = 0
         print("policy loss:", ploss, "\nvalue loss:", vloss)
-    #window.update(im_loss.item(), agent.get_value(next_state.get()))
-    
+
+    window.update(im_loss.item(), agent.get_value(next_state.get()))
+
     ret_sum += im_loss
-    #graph_win.update(im_loss, ret_sum / i)
+    # graph_win.update(im_loss, ret_sum / i)
 
     state = next_state
-    writer.add_scalar("loss", im_loss, i)
-    writer.add_scalar("mean reward", ret_sum / i, i)
-    
-    
-    
+    # writer.add_scalar("loss", im_loss, i)
+    # writer.add_scalar("mean reward", ret_sum / i, i)
+
     if i % 250 == 0:
         env.reset()
 

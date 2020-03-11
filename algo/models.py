@@ -47,15 +47,15 @@ class FCModule(nn.Module):
     """
     def __init__(self, state_dim, embedding_size):
         super().__init__()
-        self.fc1 = nn.Linear(state_dim, 128)
-        self.fc2 = nn.Linear(128, embedding_size)
-        self.bnorm1 = nn.BatchNorm1d(128)
-        self.bnorm2 = nn.BatchNorm1d(embedding_size)
+        self.fc1 = nn.Linear(state_dim, embedding_size)
+        # self.fc2 = nn.Linear(128, embedding_size)
+        # self.bnorm1 = nn.BatchNorm1d(128)
+        # self.bnorm2 = nn.BatchNorm1d(embedding_size)
         self.eval()
 
     def forward(self, x):
-        x = self.bnorm1(F.relu(self.fc1(x)).unsqueeze(0))
-        x = self.bnorm2(F.relu(self.fc2(x)))
+        x = F.relu(self.fc1(x))
+        # x = self.bnorm2(F.relu(self.fc2(x)))
         return x.squeeze()
 
 
@@ -159,8 +159,8 @@ class ICModule(nn.Module):
 
         self.opt.zero_grad()
         loss = F.mse_loss(next_state_embed_pred, next_state_embed_true)
-        # loss.backward()
-        # self.opt.step()
+        loss.backward()
+        self.opt.step()
         return loss / 0.02
 
     def _process_loss(self, loss):

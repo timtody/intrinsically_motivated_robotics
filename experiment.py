@@ -10,7 +10,7 @@ from abc import abstractmethod
 
 
 class Experiment:
-    def __init__(self, rank=0, cnf=None, name=None):
+    def __init__(self, rank=0, cnf=None):
         self.cnf = cnf
         # setup env
         env = Env(cnf)
@@ -31,7 +31,7 @@ class Experiment:
         self.ppo_timestep = 0
 
         # setup tensorboard
-        self.writer = SummaryWriter(f"tb/{name}/rank:{rank}")
+        self.writer = SummaryWriter(f"tb/rank:{rank}")
 
         # setup logging metrics
         self.n_collisions = 0
@@ -73,9 +73,13 @@ class CountCollisions(Experiment):
 
             if self.cnf.main.train:
                 if self.ppo_timestep % self.cnf.main.train_each == 0:
-                    self.agent.update(self.memory)
+                    ploss, vloss = self.agent.update(self.memory)
                     self.memory.clear_memory()
                     self.ppo_timestep = 0
+                    self.writer.add_scalar("policy loss", ploss,
+                                           self.global_step)
+                    self.writer.add_scalar("value loss", vloss,
+                                           self.global_step)
 
             # receive callback info
             for i, cb in enumerate(callbacks):
@@ -115,7 +119,6 @@ class GoalReach(Experiment):
 class CheckActor(Experiment):
     """ Experiment to investigate the 
     critic's function"""
-
     def run(self, callbacks, log=False):
         state = self.env.reset()
         results = defaultdict(lambda: 0)
@@ -135,8 +138,8 @@ class CheckActor(Experiment):
             next_state, _, done, info = self.env.step(action)
 
             if self.cnf.main.train:
-                im_loss = self.icm.train_forward(state.get(),
-                                                 next_state.get(), action)
+                im_loss = self.icm.train_forward(state.get(), next_state.get(),
+                                                 action)
                 self.memory.rewards.append(im_loss)
                 self.memory.is_terminals.append(done)
                 mean_reward += im_loss
@@ -158,8 +161,9 @@ class CheckActor(Experiment):
             # log to tensorboard
             if self.cnf.main.train:
                 self.writer.add_scalar("reward", im_loss, self.global_step)
-                self.writer.add_scalar(
-                    "mean reward", mean_reward / self.global_step, self.global_step)
+                self.writer.add_scalar("mean reward",
+                                       mean_reward / self.global_step,
+                                       self.global_step)
 
             self.global_step += 1
         self.env.close()
