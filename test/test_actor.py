@@ -1,9 +1,11 @@
-from experiment import CheckActor
+from experiment import GoalReach
 from mp import Runner
 from utils import get_conf
 from logger import Logger
 
 cnf = get_conf("conf/main.yaml")
 logger = Logger(cnf)
-runner = Runner(CheckActor, cnf, "check_actor_ada_relu_big")
-runner.run(5)
+exp = GoalReach(cnf, 0)
+exp.run([])
+# runner = Runner(GoalReach, cnf)
+# runner.run(1)

@@ -18,15 +18,15 @@ class Observation:
                  wrist_left_forces,
                  wrist_right_forces,
                  knuckle_forces,
-                 sound,
+                 audio,
                  vision=None,
                  state_size="all"):
         self.state_size = state_size
-        self.joint_velocities = joint_velocities
-        self.joint_positions = joint_positions
-        #self.joint_forces = joint_forces
+        self.joint_velocities_prop = joint_velocities
+        self.joint_positions_prop = joint_positions
+        # self.joint_forces = joint_forces
         # self.gripper_open_amount = gripper_open_amount
-        self.gripper_pose = gripper_pose
+        # self.gripper_pose_prop = gripper_pose
         # self.gripper_joint_positions = gripper_joint_positions
         # self.gripper_touch_forces = [
         #     tf for sublist in gripper_touch_forces for tf in sublist
@@ -36,7 +36,7 @@ class Observation:
         self.wrist_left_forces_touch = wrist_left_forces
         self.wrist_right_forces_touch = wrist_right_forces
         self.kuckle_forces_touch = knuckle_forces
-        self.sound = sound
+        self.audio = np.array([*audio, *audio, *audio])
         self.rgb_left = self._maybe_extract_vision(vision, "left")
         self.rgb_right = self._maybe_extract_vision(vision, "right")
         self.rgb_wrist = self._maybe_extract_vision(vision, "wrist")
@@ -56,7 +56,7 @@ class Observation:
     def get_filtered(self, filter):
         obs = []
         for key, data in self.__dict__.items():
-            if data is not None and filter not in key and key != "state_size":
+            if data is not None and filter in key and key != "state_size":
                 obs.append(data)
         return np.concatenate(obs)
 
@@ -66,7 +66,7 @@ class Observation:
         if self.state_size == "tac":
             return self.get_filtered("touch")
         if self.state_size == "prop":
-            return self.get_filtered("sound")
+            return self.get_filtered("joint")
         if self.state_size == "audio":
             return self.get_audio()
 
@@ -79,27 +79,13 @@ class Observation:
     def __repr__(self):
         return str(self.get_all())
 
-    def as_tensor_list(self):
-        prop = torch.tensor(
-            np.concatenate([
-                v for k, v in self.__dict__.items() if "joint" in k
-            ])).float().unsqueeze(0)
-        tac = torch.tensor(
-            np.concatenate(
-                ([v for k, v in self.__dict__.items()
-                  if "touch" in k]))).float().unsqueeze(0)
-        audio = torch.tensor(self.sound).float().unsqueeze(0)
-        return prop, tac, audio
-
     def get_prop(self):
         return np.concatenate(
-            [v for k, v in self.__dict__.items() if "joint" in k]
-        )
+            [v for k, v in self.__dict__.items() if "joint" in k])
 
     def get_tac(self):
         return np.concatenate(
-            [v for k, v in self.__dict__.items() if "touch" in k]
-        )
+            [v for k, v in self.__dict__.items() if "touch" in k])
 
     def get_audio(self):
-        return self.sound
+        return self.audio

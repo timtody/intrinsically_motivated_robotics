@@ -42,13 +42,13 @@ for i in range(50000):
     # next_state, *_, info = env.step([0, 1, 0, 0, 0, 0, 0])
     next_state, *_, info = env.step(env.action_space.sample())
     n_collisions += info["collided"]
-    snd_intensity = next_state.sound[0]
+    snd_intensity = next_state.audio[0]
     if snd_intensity > 0:
         print("bruh")
-        theta = next_state.sound[2]
-        phi = next_state.sound[3]
+        theta = next_state.audio[2]
+        phi = next_state.audio[3]
         head_pos = env.head.get_position()
-        r = next_state.sound[1]
+        r = next_state.audio[1]
         x = r * np.sin(theta) * np.cos(phi) + head_pos[0]
         y = r * np.sin(theta) * np.sin(phi) + head_pos[1]
         z = r * np.cos(theta)  # + head_pos[2]

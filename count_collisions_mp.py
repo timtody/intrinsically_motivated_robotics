@@ -5,6 +5,7 @@ import numpy as np
 from conf import get_conf
 from multiprocessing import Array, Process
 from logger import Logger
+import multiprocessing as mp
 
 
 def run(rank, cnf, mode, results):
@@ -14,14 +15,13 @@ def run(rank, cnf, mode, results):
         cnf.main.train = True
         cnf.env.state_size = mode
     cnf.env.mode = mode
-    exp = CountCollisions(cnf, rank, mode)
+    exp = CountCollisions(cnf, rank, log=True if rank == 0 else False)
     n_collisions = 0
     # start the experiment
     if rank == 0:
         print("Starting mode", mode)
-    n_collisions, n_sounds = exp.run([lambda x: x["collided"],
-                                      lambda x: x["sound"]],
-                                     log=True if rank == 0 else False)
+    n_collisions, n_sounds = exp.run(
+        [lambda x: x["collided"], lambda x: x["sound"]])
     results[rank] = n_collisions
 
 
@@ -41,10 +41,12 @@ def run_mode_mp(mode, cnf):
 
 if __name__ == "__main__":
     # get config setup
+    mp.set_start_method('spawn')
     cnf = get_conf("conf/main.yaml")
     log = Logger(cnf)
     results = []
-    state_modes = ["notrain", "tac", "prop", "audio", "all"]
+    # state_modes = ["tac", "prop", "audio", "all"]
+    state_modes = ["tac"]
     for mode in state_modes:
         results.append(run_mode_mp(mode, cnf))
     results = np.array(results)

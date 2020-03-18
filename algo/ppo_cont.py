@@ -2,8 +2,8 @@ import torch
 import torch.nn as nn
 from torch.distributions import MultivariateNormal
 
-# device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-device = torch.device("cpu")
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+# device = torch.device("cpu")
 # torch.manual_seed(42)
 
 
@@ -19,7 +19,8 @@ class Memory:
         del self.actions[:]
         del self.states[:]
         del self.logprobs[:]
-        del self.rewards[:]
+        # del self.rewards[:]
+        self.rewards = []
         del self.is_terminals[:]
 
 
@@ -52,7 +53,7 @@ class ActorCritic(nn.Module):
         raise NotImplementedError
 
     def get_value(self, state):
-        return self.critic(torch.tensor(state).float())
+        return self.critic(torch.tensor(state).float().to(device))
 
     def act(self, state, memory):
         state = torch.from_numpy(state).float().to(device)
@@ -68,9 +69,10 @@ class ActorCritic(nn.Module):
         memory.actions.append(action)
         memory.logprobs.append(action_logprob)
 
-        action += torch.randn(self.action_dim) * 0.3
+        action  # += torch.randn(self.action_dim) * 0.1
 
-        return action.detach(), action_mean.detach().numpy(), entropy.item()
+        return (action.detach(), action_mean.detach().cpu().numpy(),
+                entropy.item())
 
     def evaluate(self, state, action):
         action_mean = self.actor(state)
@@ -98,7 +100,9 @@ class PPO:
 
         self.policy = ActorCritic(action_dim, observation_dim, n_latent_var,
                                   max_action, action_std).to(device)
-        self.optimizer = torch.optim.Adadelta(self.policy.parameters(), lr=lr)
+        self.optimizer = torch.optim.Adam(self.policy.parameters(),
+                                          lr=lr,
+                                          betas=betas)
         self.policy_old = ActorCritic(action_dim, observation_dim,
                                       n_latent_var, max_action,
                                       action_std).to(device)
@@ -141,15 +145,16 @@ class PPO:
 
             # Finding Surrogate Loss:
             advantages = rewards - state_values.detach()
-            advantages = (advantages - advantages.mean()) / (advantages.std() +
-                                                             1e-5)
+            # for now don't normalize advantages
+            # advantages = (advantages - advantages.mean()) / (advantages.std()+
+            #                                                  1e-5)
 
             surr1 = ratios * advantages
             surr2 = torch.clamp(ratios, 1 - self.eps_clip,
                                 1 + self.eps_clip) * advantages
             value_loss = self.MseLoss(state_values, rewards)
             loss = -torch.min(surr1,
-                              surr2) + 0.5 * value_loss - 0.1 * dist_entropy
+                              surr2) + 0.5 * value_loss  # - 1.0 * dist_entropy
 
             # take gradient step
             self.optimizer.zero_grad()

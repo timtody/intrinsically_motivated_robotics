@@ -19,5 +19,5 @@ class Runner:
             p.join()
 
     def _start_env(self, callbacks, rank, results):
-        env = self.exp(cnf=self.cnf, rank=rank)
+        env = self.exp(self.cnf, rank)
         results[rank] = env.run(callbacks)
