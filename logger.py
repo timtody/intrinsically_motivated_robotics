@@ -18,7 +18,7 @@ class Logger:
 
     def _save_conf(self):
         primitive = OmegaConf.to_container(self.cnf)
-        with open("cnf/config.json", 'w') as f:
+        with open("cnf/config.json", "w") as f:
             json.dump(primitive, f)
 
     def _get_path(self):
@@ -26,8 +26,7 @@ class Logger:
             name_affix = f"-{self.cnf.log.name}"
         else:
             name_affix = ""
-        path = os.path.join("out",
-                            time.strftime("%m-%d-%H-%M-%S") + name_affix)
+        path = os.path.join("out", time.strftime("%m-%d-%H-%M-%S") + name_affix)
         return path
 
     def _maybe_create_output_dir(self):
@@ -38,3 +37,4 @@ class Logger:
     def _make_exp_dirs(self):
         os.mkdir("data")
         os.mkdir("cnf")
+        os.mkdir("checkpoints")
