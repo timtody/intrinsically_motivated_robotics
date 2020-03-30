@@ -22,14 +22,14 @@ class Env(gym.Env):
         self._set_collections()
         self._setup_force_sensors()
 
-        self.action_space = gym.spaces.Box(low=-np.inf,
-                                           high=np.inf,
-                                           shape=(self.cnf.action_dim, ))
+        self.action_space = gym.spaces.Box(
+            low=-np.inf, high=np.inf, shape=(self.cnf.action_dim,)
+        )
         # TODO: need to be made more general for vision space
         obs = self._init_step()
-        self.observation_space = gym.spaces.Box(low=-np.inf,
-                                                high=np.inf,
-                                                shape=obs.get().shape)
+        self.observation_space = gym.spaces.Box(
+            low=-np.inf, high=np.inf, shape=obs.get().shape
+        )
         # properties
         self.gripper_speed = 0
         self.sound_played = False
@@ -46,10 +46,9 @@ class Env(gym.Env):
         return obs
 
     def _launch(self):
-        scene_path = os.path.join(self.owd, 'scenes', self.cnf.scene_path)
+        scene_path = os.path.join(self.owd, "scenes", self.cnf.scene_path)
         self._pr = PyRep()
-        self._pr.launch(os.path.abspath(scene_path),
-                        headless=self.cnf.headless)
+        self._pr.launch(os.path.abspath(scene_path), headless=self.cnf.headless)
         self._pr.start()
 
     def _setup_robot(self):
@@ -104,9 +103,8 @@ class Env(gym.Env):
         threshold to accomodate for motor noise.
         """
         return [
-            list(map(self._gate,
-                     sensor.read()[0])) for sensor in
-            [self._fs0, self._fs1, self._fs2, self._fs3, self._fs4]
+            list(map(self._gate, sensor.read()[0]))
+            for sensor in [self._fs0, self._fs1, self._fs2, self._fs3, self._fs4]
         ]
 
     def get_sound_signal(self, threshold=0.025):
@@ -179,13 +177,18 @@ class Env(gym.Env):
 
     def _get_observation(self):
         obs = Observation(
-            self._arm.get_joint_velocities(), self._arm.get_joint_positions(),
-            self._arm.get_joint_forces(), self._gripper.get_open_amount(),
-            self._gripper.get_pose(), self._gripper.get_joint_positions(),
+            self._arm.get_joint_velocities(),
+            self._arm.get_joint_positions(),
+            self._arm.get_joint_forces(),
+            self._gripper.get_open_amount(),
+            self._gripper.get_pose(),
+            self._gripper.get_joint_positions(),
             self._gripper.get_touch_sensor_forces(),
-            *self.read_force_sensors(), self.get_sound_signal(),
+            *self.read_force_sensors(),
+            self.get_sound_signal(),
             self._get_vision() if self.cnf.state == "vision" else None,
-            self.cnf.state_size)
+            self.cnf.state_size
+        )
         return obs
 
     def _set_objects_collidable(self):
@@ -194,8 +197,7 @@ class Env(gym.Env):
         self._table.set_collidable(True)
 
     def _set_collections(self):
-        self._collidables_collection = sim.simGetCollectionHandle(
-            "collidables")
+        self._collidables_collection = sim.simGetCollectionHandle("collidables")
         self._robot_collection = sim.simGetCollectionHandle("Panda_arm")
 
     def step(self, action):
@@ -203,8 +205,12 @@ class Env(gym.Env):
         self._set_vels(action)
         self.gripper_speed = self._get_gripper_speed()
         self._pr.step()
-        return (self._get_observation(), self._get_reward(), self._get_done(),
-                self._get_info())
+        return (
+            self._get_observation(),
+            self._get_reward(),
+            self._get_done(),
+            self._get_info(),
+        )
 
     def reset(self, random=False):
         """
@@ -229,20 +235,25 @@ class Env(gym.Env):
         self._pr.shutdown()
 
     def check_collision_with_table(self):
-        return self._table.check_collision_by_handle(
-            self._arm._collision_collection)
+        return self._table.check_collision_by_handle(self._arm._collision_collection)
 
     def check_collision_with_concrete(self):
-        return self.concrete.check_collision_by_handle(
-            self._arm._collision_collection)
+        return self.concrete.check_collision_by_handle(self._arm._collision_collection)
 
     def check_collision(self):
         # TODO: check for non trivial self collision
         """
         Checks whether the arm collides with the table or the slab.
         """
-        other = sim.simCheckCollision(self._collidables_collection,
-                                      self._robot_collection)
+        other = sim.simCheckCollision(
+            self._collidables_collection, self._robot_collection
+        )
         # handle = sim.simGetCollisionHandle("Panda")
         # slf = sim.simReadCollision(handle)
         return other
+
+    def save_state(self):
+        pass
+
+    def load_state(self):
+        pass
