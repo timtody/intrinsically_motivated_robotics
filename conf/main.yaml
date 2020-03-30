@@ -1,6 +1,6 @@
 main:
   n_steps: 35000
-  train_each: 100
+  train_each: 200
   train: True
 
 ppo:
@@ -31,7 +31,7 @@ icm:
 MMModel:
   prop_dim: 14
   tac_dim: 15
-  audio_dim: 4
+  audio_dim: 12
   latent_dim: 200
   lstm_hidden_size: 20
   lstm_layers: 2

@@ -22,8 +22,8 @@ class Env(gym.Env):
         self._set_collections()
         self._setup_force_sensors()
 
-        self.action_space = gym.spaces.Box(low=-1.0,
-                                           high=1.0,
+        self.action_space = gym.spaces.Box(low=-np.inf,
+                                           high=np.inf,
                                            shape=(self.cnf.action_dim, ))
         # TODO: need to be made more general for vision space
         obs = self._init_step()

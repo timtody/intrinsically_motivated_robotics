@@ -314,7 +314,7 @@ class GraphWindow:
         self.fig, axes = plt.subplots(nrows=nrows, ncols=ncols)
         try:
             axes = axes.flatten()
-        except Exception:
+        except:
             axes = [axes]
         [ax.set_ylim(-5, 5) for ax in axes]
         [ax.set_xlim(-lookback, 0) for ax in axes]

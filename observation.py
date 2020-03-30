@@ -1,6 +1,28 @@
 import numpy as np
 import torch
 
+tac_mean = 0.001428180024959147
+tac_std = 0.18175357580184937
+
+prop_mean = -0.3062898814678192
+prop_std = 26.55019760131836
+
+audio_mean = -0.00512049812823534
+audio_std = 0.4338988959789276
+
+"""
+tac:
+	mean:0.0001090915611712262
+	std:0.15071888267993927
+prop:
+	mean:-0.020761482417583466
+	std:1.0171984434127808
+audio:
+	mean:0.1427653431892395
+	std:1.0342168807983398
+
+"""
+
 
 class Observation:
     # TODO: needs to be made more general (prob. dict type)
@@ -22,9 +44,9 @@ class Observation:
                  vision=None,
                  state_size="all"):
         self.state_size = state_size
-        self.joint_velocities_prop = joint_velocities
-        self.joint_positions_prop = joint_positions
-        # self.joint_forces = joint_forces
+
+        self.joint_forces = joint_forces
+        self.joint_velocities = joint_velocities
         # self.gripper_open_amount = gripper_open_amount
         # self.gripper_pose_prop = gripper_pose
         # self.gripper_joint_positions = gripper_joint_positions
@@ -40,6 +62,21 @@ class Observation:
         self.rgb_left = self._maybe_extract_vision(vision, "left")
         self.rgb_right = self._maybe_extract_vision(vision, "right")
         self.rgb_wrist = self._maybe_extract_vision(vision, "wrist")
+
+        self._normalize()
+
+    def _normalize(self):
+        for key, data in self.__dict__.items():
+            if data is not None and key != "state_size":
+                data = np.array(data)
+                if "touch" in key:
+                    self.__setattr__(key, (data - tac_mean) / (tac_std + 1e-4))
+                if "joint" in key:
+                    self.__setattr__(key,
+                                     (data - prop_mean) / (prop_std + 1e-4))
+                if "audio" in key:
+                    self.__setattr__(key,
+                                     (data - audio_mean) / (audio_std + 1e-4))
 
     def _maybe_extract_vision(self, vision, name):
         if vision is not None:

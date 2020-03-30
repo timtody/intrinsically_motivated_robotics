@@ -11,7 +11,7 @@ import torch.nn.functional as F
 
 from utils import LossBuffer
 
-# torch.manual_seed(153)
+torch.manual_seed(157)
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device(
     "cpu")
 
@@ -55,8 +55,7 @@ class FCModule(nn.Module):
 
     def forward(self, x):
         x = self.fc1(x)
-        # x = self.bnorm2(F.relu(self.fc2(x)))
-        return x.squeeze()
+        return x.squeeze(0)
 
 
 class ForwardModule(nn.Module):
@@ -138,6 +137,14 @@ class ICModule(nn.Module):
         """
         return self.base(state)
 
+    def get_embedding(self, state):
+        """
+        Returns the state embedding from the shared convolutional base.
+        From numpy.
+        """
+        state = torch.tensor(state).float().to(device)
+        return self.base(state)
+
     def next_state(self, state, action):
         """
         Given state and action, predicts the next state in embedding space.
@@ -163,7 +170,7 @@ class ICModule(nn.Module):
                           reduction='none')
         loss.mean().backward()
         self.opt.step()
-        return loss.mean(dim=1).detach() / 0.02
+        return loss.mean(dim=1).detach() / 0.4065
 
     def _process_loss(self, loss):
         self.loss_buffer.push(loss)
@@ -174,3 +181,9 @@ class ICModule(nn.Module):
         else:
             self.running_return_std = return_std
         return loss / self.running_return_std
+
+    def save(self):
+        pass
+
+    def load(self):
+        pass

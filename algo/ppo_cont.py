@@ -110,6 +110,9 @@ class PPO:
 
         self.MseLoss = nn.MSELoss()
 
+    def load(self):
+        pass
+
     def get_value(self, state):
         return self.policy_old.get_value(state).item()
 

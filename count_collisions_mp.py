@@ -45,7 +45,7 @@ if __name__ == "__main__":
     cnf = get_conf("conf/main.yaml")
     log = Logger(cnf)
     results = []
-    state_modes = ["tac", "prop", "audio", "all"]
+    state_modes = ["all"]
     for mode in state_modes:
         results.append(run_mode_mp(mode, cnf))
     results = np.array(results)
