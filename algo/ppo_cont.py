@@ -124,18 +124,17 @@ class PPO:
         self.MseLoss = nn.MSELoss()
 
     def load(self, path):
-"""        self.policy.load_state_dict(
-            os.path.join(os.path.abspath(path), "models", "policy.pt")
-        )
-        self.optimizer.load_state_dict(
-            os.path.join(os.path.abspath(path), "models", "adam.pt")
-        )
+        self.policy.load_state_dict(os.path.join(os.path.abspath(path), "policy.pt"))
+        self.optimizer.load_state_dict(os.path.join(os.path.abspath(path), "opt.pt"))
         self.policy_old.load_state_dict(
-            os.path.join(os.path.abspath(path), "models", "policy_old.pt")
-        )"""
+            os.path.join(os.path.abspath(path), "policy_old.pt")
+        )
 
-    def save(self, path):
-        pass
+    def save(self, timestep):
+        path = os.path.join("checkpoints", str(timestep))
+        torch.save(self.policy.state_dict(), os.path.join(path, "policy.pt"))
+        torch.save(self.policy_old.state_dict(), os.path.join(path, "policy_old.pt"))
+        torch.save(self.optimizer.state_dict(), os.path.join(path, "opt.pt"))
 
     def get_value(self, state):
         return self.policy_old.get_value(state).item()
