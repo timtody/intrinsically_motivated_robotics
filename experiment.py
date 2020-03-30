@@ -3,6 +3,7 @@ import time
 import collections
 import numpy as np
 from env.environment import Env
+from agent import Agent
 from utils import RewardQueue, ValueQueue
 from algo.ppo_cont import PPO, Memory
 from algo.models import ICModule
@@ -22,8 +23,9 @@ class Experiment:
         self.env = env
 
         # pytorch device
-        self.device = torch.device(
-            "cuda") if torch.cuda.is_available() else torch.device("cpu")
+        self.device = (
+            torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+        )
         # setup agent
         self.action_dim = cnf.env.action_dim
         self.state_dim = env.observation_space.shape[0]
@@ -31,10 +33,12 @@ class Experiment:
         self.memory = Memory()
 
         # setup ICM
-        self.icm = ICModule(cnf.env.action_dim, self.state_dim,
-                            **cnf.icm).to(self.device)
+        self.icm = ICModule(cnf.env.action_dim, self.state_dim, **cnf.icm).to(
+            self.device
+        )
         self.icm_transition = collections.namedtuple(
-            "icm_trans", ["state", "next_state", "action"])
+            "icm_trans", ["state", "next_state", "action"]
+        )
         self.icm_buffer = []
 
         # setup experiment variables
@@ -45,8 +49,7 @@ class Experiment:
         if not cnf.main.train:
             self.writer = SummaryWriter(f"tb/mode:notrain_rank:{rank}")
         else:
-            self.writer = SummaryWriter(
-                f"tb/mode:{cnf.env.state_size}_rank:{rank}")
+            self.writer = SummaryWriter(f"tb/mode:{cnf.env.state_size}_rank:{rank}")
 
         # set random seeds
         np.random.seed()
@@ -55,6 +58,10 @@ class Experiment:
     @abstractmethod
     def run(self, callbacks, log=False):
         pass
+
+    def reset(self):
+        for _ in range(100):
+            self.env.step(self.env.action_space.sample() * 10)
 
 
 class CountCollisions(Experiment):
@@ -75,10 +82,6 @@ class CountCollisions(Experiment):
         # experiment parameters
         self.episode_len = 500
 
-    def reset(self):
-        for _ in range(100):
-            self.env.step(self.env.action_space.sample() * 10)
-
     def run(self, callbacks=[]):
         state = self.env.reset()
         results = defaultdict(lambda: 0)
@@ -88,21 +91,22 @@ class CountCollisions(Experiment):
 
             # env step
             if self.log and self.global_step % 5000 == 0:
-                print("exp in mode", self.cnf.env.mode, "at step",
-                      self.global_step)
+                print("exp in mode", self.cnf.env.mode, "at step", self.global_step)
 
             if not self.cnf.main.train:
                 action = self.env.action_space.sample()
             else:
                 action, action_mean, entropy = self.agent.policy_old.act(
-                    state.get(), self.memory)
+                    state.get(), self.memory
+                )
 
             next_state, _, done, info = self.env.step(action)
 
             # calculate intrinsic reward
             # make icm trans
-            trans = self.icm_transition(state.get(), next_state.get(),
-                                        torch.tensor(action))
+            trans = self.icm_transition(
+                state.get(), next_state.get(), torch.tensor(action)
+            )
             # append to buffer
             self.icm_buffer.append(trans)
 
@@ -121,12 +125,12 @@ class CountCollisions(Experiment):
             if self.ppo_timestep % self.cnf.main.train_each == 0:
 
                 # train agent
-                state_batch, next_state_batch, action_batch = zip(
-                    *self.icm_buffer)
+                state_batch, next_state_batch, action_batch = zip(*self.icm_buffer)
                 self.icm_buffer = []
 
-                im_loss = self.icm.train_forward(state_batch, next_state_batch,
-                                                 action_batch)
+                im_loss = self.icm.train_forward(
+                    state_batch, next_state_batch, action_batch
+                )
 
                 if self.cnf.main.train:
                     self.memory.rewards = im_loss.cpu().numpy()
@@ -135,18 +139,17 @@ class CountCollisions(Experiment):
                     self.memory.clear_memory()
                     self.ppo_timestep = 0
 
-                    self.writer.add_scalar("policy loss", ploss,
-                                           self.global_step)
-                    self.writer.add_scalar("value loss", vloss,
-                                           self.global_step)
+                    self.writer.add_scalar("policy loss", ploss, self.global_step)
+                    self.writer.add_scalar("value loss", vloss, self.global_step)
 
                 self.reward_sum += im_loss.mean()
 
-                self.writer.add_scalar("mean reward",
-                                       self.reward_sum / self.global_step,
-                                       self.global_step)
-                self.writer.add_scalar("cumulative reward", self.reward_sum,
-                                       self.global_step)
+                self.writer.add_scalar(
+                    "mean reward", self.reward_sum / self.global_step, self.global_step
+                )
+                self.writer.add_scalar(
+                    "cumulative reward", self.reward_sum, self.global_step
+                )
 
                 # for s in range(self.cnf.main.train_each):
                 #     self.reward_Q.push(im_loss[s])
@@ -175,15 +178,13 @@ class CountCollisions(Experiment):
             # log to tensorboard
             if self.cnf.main.train:
                 # training-only metrics
-                self.writer.add_histogram("action_mean", action_mean,
-                                          self.global_step)
+                self.writer.add_histogram("action_mean", action_mean, self.global_step)
                 self.writer.add_scalar("entropy", entropy, self.global_step)
 
             # rest of metrics
             # self.writer.add_scalar("reward", im_loss, self.global_step)
 
-            self.writer.add_scalar("n_collisions", self.n_collisions,
-                                   self.global_step)
+            self.writer.add_scalar("n_collisions", self.n_collisions, self.global_step)
             self.writer.add_scalar("n_sounds", self.n_sounds, self.global_step)
 
         self.env.close()
@@ -197,7 +198,7 @@ class GoalReach(Experiment):
         self.episode_len = 250
 
     def get_loss(self, state, goal):
-        return ((state - goal)**2).mean()
+        return ((state - goal) ** 2).mean()
 
     def run(self, callbacks, log=False):
         # get a goal
@@ -219,13 +220,13 @@ class GoalReach(Experiment):
                 episode_len += 1
                 if episode_len > self.episode_len:
                     done = True
-                action, *_ = self.agent.policy_old.act(state.get(),
-                                                       self.memory)
+                action, *_ = self.agent.policy_old.act(state.get(), self.memory)
                 next_state, *_ = self.env.step(action)
 
                 reward = -self.get_loss(
                     self.icm.get_embedding(next_state.get()),
-                    self.icm.get_embedding(goal.get()))
+                    self.icm.get_embedding(goal.get()),
+                )
                 if reward >= -0.001:
                     print("i've reached the goal")
                     reward += 1
@@ -244,15 +245,14 @@ class GoalReach(Experiment):
             self.agent.update(self.memory)
             self.memory.clear_memory()
 
-            self.writer.add_scalar("episode reward", episode_reward,
-                                   self.global_step)
-            self.writer.add_scalar("episode len", episode_len,
-                                   self.global_step)
+            self.writer.add_scalar("episode reward", episode_reward, self.global_step)
+            self.writer.add_scalar("episode len", episode_len, self.global_step)
 
 
 class CheckActor(Experiment):
     """ Experiment to investigate the
     critic's function"""
+
     def run(self, callbacks, log=False):
         state = self.env.reset()
         results = defaultdict(lambda: 0)
@@ -267,13 +267,13 @@ class CheckActor(Experiment):
                 action = self.env.action_space.sample()
             else:
                 action, action_mean, entropy = self.agent.policy_old.act(
-                    state.get(), self.memory)
+                    state.get(), self.memory
+                )
 
             next_state, _, done, info = self.env.step(action)
 
             if self.cnf.main.train:
-                im_loss = self.icm.train_forward(state.get(), next_state.get(),
-                                                 action)
+                im_loss = self.icm.train_forward(state.get(), next_state.get(), action)
                 self.memory.rewards.append(im_loss)
                 self.memory.is_terminals.append(done)
                 mean_reward += im_loss
@@ -295,9 +295,9 @@ class CheckActor(Experiment):
             # log to tensorboard
             if self.cnf.main.train:
                 self.writer.add_scalar("reward", im_loss, self.global_step)
-                self.writer.add_scalar("mean reward",
-                                       mean_reward / self.global_step,
-                                       self.global_step)
+                self.writer.add_scalar(
+                    "mean reward", mean_reward / self.global_step, self.global_step
+                )
 
             self.global_step += 1
         self.env.close()
@@ -332,14 +332,17 @@ class TestReward(Experiment):
         torch.manual_seed(self.cnf.torch.seed)
 
         from utils import GraphWindow
-        self.window = GraphWindow(["reward"] + [
-            "left_finger", "right_finger", "left_wrist", "right_wrist", "back"
-        ], 6, 1)
+
+        self.window = GraphWindow(
+            ["reward"]
+            + ["left_finger", "right_finger", "left_wrist", "right_wrist", "back"],
+            6,
+            1,
+        )
 
     def run(self):
         self.window.update(0, 0, 0, 0, 0, 0)
-        actions = [[0, 1, 0, 0, 0, 0, 0], [1, 0, 0, 0, 0, 0, 0],
-                   [0, -1, 0, 0, 0, 0, 0]]
+        actions = [[0, 1, 0, 0, 0, 0, 0], [1, 0, 0, 0, 0, 0, 0], [0, -1, 0, 0, 0, 0, 0]]
         actions = [torch.tensor(a) for a in actions]
         state = self.env.reset()
         reward_sum = 0
@@ -357,8 +360,9 @@ class TestReward(Experiment):
                 action = torch.tensor([0, 1, 0, 0, 0, 0, 0])
 
             next_state, *_ = self.env.step(action)
-            reward = self.icm.train_forward([[state.get()]],
-                                            [[next_state.get()]], [action])
+            reward = self.icm.train_forward(
+                [[state.get()]], [[next_state.get()]], [action]
+            )
             reward_sum += reward
             sensors = np.array(self.env.read_force_sensors()).sum(axis=1)
             state = next_state
@@ -376,15 +380,59 @@ class Behavior(Experiment):
             next_state, *_ = self.env.step(action)
 
             if self.cnf.main.train:
-                im_loss = self.icm.train_forward([[state.get()]],
-                                                 [[next_state.get()]],
-                                                 [action])
+                im_loss = self.icm.train_forward(
+                    [[state.get()]], [[next_state.get()]], [action]
+                )
                 self.memory.rewards.append(im_loss)
                 self.memory.is_terminals.append(False)
 
-            if self.ppo_timestep % self.cnf.main.train_each == 0 and self.cnf.main.train:
+            if (
+                self.ppo_timestep % self.cnf.main.train_each == 0
+                and self.cnf.main.train
+            ):
                 print("Training")
                 self.agent.update(self.memory)
                 self.memory.clear_memory()
+
+            state = next_state
+
+
+class GoalReachAgent(Experiment):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.agent = Agent(self.action_dim, self.state_dim, self.cnf, self.device)
+
+        # experiment parameters
+        self.episode_len = 500
+
+    def run(self):
+        state = self.env.reset()
+
+        for _ in range(self.cnf.main.n_steps):
+            self.ppo_timestep += 1
+            self.global_step += 1
+
+            # env step
+            action = self.agent.get_action(state.get())
+            next_state, _, done, info = self.env.step(action)
+
+            # append data relevant to PPO (reward gets set in .train())
+            self.agent.set_is_done(done)
+
+            # append data to agent relevant to ICM
+            self.agent.append_icm_transition(state.get(), next_state.get(), action)
+
+            # reset environment
+            if self.global_step % self.episode_len == 0:
+                done = True
+                if self.cnf.main.train:
+                    self.reset()
+
+            # train agent
+            if self.ppo_timestep % self.cnf.main.train_each == 0:
+                self.agent.train()
+
+            self.agent.save_state(999)
+            exit(1)
 
             state = next_state
