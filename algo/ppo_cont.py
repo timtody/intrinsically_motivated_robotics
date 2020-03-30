@@ -1,3 +1,4 @@
+import os
 import torch
 import torch.nn as nn
 from torch.distributions import MultivariateNormal
@@ -25,24 +26,27 @@ class Memory:
 
 
 class ActorCritic(nn.Module):
-    def __init__(self, action_dim, state_dim, n_latent_var, max_action,
-                 action_std):
+    def __init__(self, action_dim, state_dim, n_latent_var, max_action, action_std):
         super(ActorCritic, self).__init__()
         self.action_dim = action_dim
         self.max_action = max_action
-        self.actor = nn.Sequential(nn.Linear(state_dim, n_latent_var),
-                                   nn.Tanh(),
-                                   nn.Linear(n_latent_var, n_latent_var),
-                                   nn.Tanh(),
-                                   nn.Linear(n_latent_var, action_dim),
-                                   nn.Tanh())
+        self.actor = nn.Sequential(
+            nn.Linear(state_dim, n_latent_var),
+            nn.Tanh(),
+            nn.Linear(n_latent_var, n_latent_var),
+            nn.Tanh(),
+            nn.Linear(n_latent_var, action_dim),
+            nn.Tanh(),
+        )
         # critic
-        self.critic = nn.Sequential(nn.Linear(state_dim, n_latent_var),
-                                    nn.ReLU(),
-                                    nn.Linear(n_latent_var, n_latent_var),
-                                    nn.ReLU(), nn.Linear(n_latent_var, 1))
-        self.action_var = torch.full((action_dim, ),
-                                     action_std * action_std).to(device)
+        self.critic = nn.Sequential(
+            nn.Linear(state_dim, n_latent_var),
+            nn.ReLU(),
+            nn.Linear(n_latent_var, n_latent_var),
+            nn.ReLU(),
+            nn.Linear(n_latent_var, 1),
+        )
+        self.action_var = torch.full((action_dim,), action_std * action_std).to(device)
 
     def action_layer_cont(self, x):
         x = self.action_layer(x)
@@ -71,8 +75,7 @@ class ActorCritic(nn.Module):
 
         action  # += torch.randn(self.action_dim) * 0.1
 
-        return (action.detach(), action_mean.detach().cpu().numpy(),
-                entropy.item())
+        return (action.detach(), action_mean.detach().cpu().numpy(), entropy.item())
 
     def evaluate(self, state, action):
         action_mean = self.actor(state)
@@ -90,27 +93,48 @@ class ActorCritic(nn.Module):
 
 
 class PPO:
-    def __init__(self, action_dim, observation_dim, n_latent_var, lr, betas,
-                 gamma, K_epochs, eps_clip, max_action, action_std):
+    def __init__(
+        self,
+        action_dim,
+        observation_dim,
+        n_latent_var,
+        lr,
+        betas,
+        gamma,
+        K_epochs,
+        eps_clip,
+        max_action,
+        action_std,
+    ):
         self.lr = lr
         self.betas = betas
         self.gamma = gamma
         self.eps_clip = eps_clip
         self.K_epochs = K_epochs
 
-        self.policy = ActorCritic(action_dim, observation_dim, n_latent_var,
-                                  max_action, action_std).to(device)
-        self.optimizer = torch.optim.Adam(self.policy.parameters(),
-                                          lr=lr,
-                                          betas=betas)
-        self.policy_old = ActorCritic(action_dim, observation_dim,
-                                      n_latent_var, max_action,
-                                      action_std).to(device)
+        self.policy = ActorCritic(
+            action_dim, observation_dim, n_latent_var, max_action, action_std
+        ).to(device)
+        self.optimizer = torch.optim.Adam(self.policy.parameters(), lr=lr, betas=betas)
+        self.policy_old = ActorCritic(
+            action_dim, observation_dim, n_latent_var, max_action, action_std
+        ).to(device)
         self.policy_old.load_state_dict(self.policy.state_dict())
 
         self.MseLoss = nn.MSELoss()
 
-    def load(self):
+    def load(self, path):
+"""        self.policy.load_state_dict(
+            os.path.join(os.path.abspath(path), "models", "policy.pt")
+        )
+        self.optimizer.load_state_dict(
+            os.path.join(os.path.abspath(path), "models", "adam.pt")
+        )
+        self.policy_old.load_state_dict(
+            os.path.join(os.path.abspath(path), "models", "policy_old.pt")
+        )"""
+
+    def save(self, path):
         pass
 
     def get_value(self, state):
@@ -121,8 +145,9 @@ class PPO:
         rewards = []
         discounted_reward = self.policy.critic(memory.states[-1])
 
-        for reward, is_terminal in zip(reversed(memory.rewards),
-                                       reversed(memory.is_terminals)):
+        for reward, is_terminal in zip(
+            reversed(memory.rewards), reversed(memory.is_terminals)
+        ):
             if is_terminal:
                 discounted_reward = 0
             discounted_reward = reward + (self.gamma * discounted_reward)
@@ -141,7 +166,8 @@ class PPO:
         for _ in range(self.K_epochs):
             # Evaluating old actions and values :
             logprobs, state_values, dist_entropy = self.policy.evaluate(
-                old_states, old_actions)
+                old_states, old_actions
+            )
 
             # Finding the ratio (pi_theta / pi_theta__old):
             ratios = torch.exp(logprobs - old_logprobs.detach())
@@ -153,11 +179,11 @@ class PPO:
             #                                                  1e-5)
 
             surr1 = ratios * advantages
-            surr2 = torch.clamp(ratios, 1 - self.eps_clip,
-                                1 + self.eps_clip) * advantages
+            surr2 = (
+                torch.clamp(ratios, 1 - self.eps_clip, 1 + self.eps_clip) * advantages
+            )
             value_loss = self.MseLoss(state_values, rewards)
-            loss = -torch.min(surr1,
-                              surr2) + 0.5 * value_loss  # - 1.0 * dist_entropy
+            loss = -torch.min(surr1, surr2) + 0.5 * value_loss  # - 1.0 * dist_entropy
 
             # take gradient step
             self.optimizer.zero_grad()
