@@ -7,4 +7,5 @@ vid/
 runs/
 out/
 tb/
+.mypy_cache/
 *.mp4
