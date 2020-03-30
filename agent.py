@@ -1,3 +1,4 @@
+import os
 import torch
 import collections
 
@@ -6,13 +7,13 @@ from algo.models import ICModule
 
 
 class Agent:
-    def __init__(self, cnf):
+    def __init__(self, action_dim, state_dim, cnf, device):
         # PPO related stuff
-        self.ppo = PPO()
+        self.ppo = PPO(action_dim, state_dim, **cnf.ppo)
         self.ppo_mem = Memory()
 
         # ICM related stuff
-        self.icm = ICModule()
+        self.icm = ICModule(action_dim, state_dim, **cnf.icm).to(device)
         self.icm_transition = collections.namedtuple(
             "icm_trans", ["state", "next_state", "action"]
         )
@@ -24,8 +25,8 @@ class Agent:
     def set_is_done(self, is_done):
         self.ppo_mem.is_terminals.append(is_done)
 
-    def get_action(self, state) -> torch.tensor:
-        action, *_ = self.ppo.policy_old.act(state.get(), self.ppo_mem)
+    def get_action(self, state) -> torch.Tensor:
+        action, *_ = self.ppo.policy_old.act(state, self.ppo_mem)
         return action
 
     def train(self) -> None:
@@ -33,19 +34,21 @@ class Agent:
         # train icm
         state_batch, next_state_batch, action_batch = zip(*self.icm_buffer)
         im_loss_batch = self.icm.train_forward(
-            state_batch, next_state_batch_action_batch
+            state_batch, next_state_batch, action_batch
         )
         # train actor
         self.ppo_mem.rewards = im_loss_batch.cpu().numpy()
-        self.icm_buffer = []
         self.ppo.update(self.ppo_mem)
         self.ppo_mem.clear_memory()
+        self.icm_buffer = []
 
-    def save_state(self, path) -> None:
+    def save_state(self, timestep) -> None:
+        # make dir for iteration
+        os.mkdir(os.path.join("checkpoints", str(timestep)))
         # save icm
-        self.icm.save(path)
+        self.icm.save(timestep)
         # save ppo
-        self.ppo.save(path)
+        self.ppo.save(timestep)
 
     def load_state(self, path) -> None:
         # load icm
