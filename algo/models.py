@@ -2,24 +2,24 @@
 Contains models to reproduce the findings from
 https://pathak22.github.io/noreward-rl/resources/icml17.pdf
 """
-from itertools import chain
-
+import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
+from itertools import chain
 
 from utils import LossBuffer
 
 torch.manual_seed(157)
-device = torch.device("cuda") if torch.cuda.is_available() else torch.device(
-    "cpu")
+device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
 
 class ConvModule(nn.Module):
     """
     Provides thes shared convolutional base for the inverse and forward model.
     """
+
     def __init__(self):
         super().__init__()
         self.conv1 = nn.Conv2d(1, 32, 3, stride=2, padding=1)
@@ -45,6 +45,7 @@ class FCModule(nn.Module):
     """
     Docstring: todo
     """
+
     def __init__(self, state_dim, embedding_size):
         super().__init__()
         self.fc1 = nn.Linear(state_dim, embedding_size)
@@ -62,6 +63,7 @@ class ForwardModule(nn.Module):
     """
     Module for learning the forward mapping of state x action -> next state
     """
+
     def __init__(self, embedding_size, action_dim, base):
         super().__init__()
         self.base = base
@@ -84,6 +86,7 @@ class InverseModule(nn.Module):
     """
     Module for learning the inverse mapping of state x next state -> action.
     """
+
     def __init__(self, embedding_size, action_dim, base):
         super().__init__()
         self.base = base
@@ -104,6 +107,7 @@ class ICModule(nn.Module):
     """
     Intrinsic curiosity module.
     """
+
     def __init__(self, action_dim, state_dim, embedding_size, alpha=0.001):
         super().__init__()
         # self._conv_base = ConvModule()
@@ -126,10 +130,14 @@ class ICModule(nn.Module):
         from base network.
         """
         return set(
-            chain(self._inverse.linear.parameters(),
-                  self._inverse.head.parameters(),
-                  self._forward.l1.parameters(), self._forward.l2.parameters(),
-                  self._forward.head.parameters()))
+            chain(
+                self._inverse.linear.parameters(),
+                self._inverse.head.parameters(),
+                self._forward.l1.parameters(),
+                self._forward.l2.parameters(),
+                self._forward.head.parameters(),
+            )
+        )
 
     def embed(self, state):
         """
@@ -165,9 +173,9 @@ class ICModule(nn.Module):
         next_state_embed_true = self.embed(next_state)
 
         self.opt.zero_grad()
-        loss = F.mse_loss(next_state_embed_pred,
-                          next_state_embed_true,
-                          reduction='none')
+        loss = F.mse_loss(
+            next_state_embed_pred, next_state_embed_true, reduction="none"
+        )
         loss.mean().backward()
         self.opt.step()
         return loss.mean(dim=1).detach() / 0.4065
@@ -176,14 +184,17 @@ class ICModule(nn.Module):
         self.loss_buffer.push(loss)
         return_std = self.loss_buffer.get_std()
         if self.running_return_std is not None:
-            self.running_return_std = self.alpha * return_std + (
-                1 - self.alpha) * self.running_return_std
+            self.running_return_std = (
+                self.alpha * return_std + (1 - self.alpha) * self.running_return_std
+            )
         else:
             self.running_return_std = return_std
         return loss / self.running_return_std
 
-    def save(self):
-        pass
+    def save(self, path):
+        torch.save(self.state_dict(), f"{path}_{icm}.pt")
 
-    def load(self):
-        pass
+    def load(self, path):
+        self.load_state_dict(
+            torch.load(os.join(os.path.abspath(path), "models", "icm.pt"))
+        )
