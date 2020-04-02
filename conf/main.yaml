@@ -20,10 +20,13 @@ env:
   state_size: all
   skip: 1
   action_dim: 7
+  torch_seed: 0
+  np_seed: 0
 
 log:
   name: ""
   owd: ""
+  checkpoint: ""
 
 icm:
   embedding_size: 200

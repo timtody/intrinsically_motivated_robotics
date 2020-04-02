@@ -20,14 +20,13 @@ def run(rank, cnf, mode, results):
     # start the experiment
     if rank == 0:
         print("Starting mode", mode)
-    n_collisions, n_sounds = exp.run(
-        [lambda x: x["collided"], lambda x: x["sound"]])
+    n_collisions, n_sounds = exp.run([lambda x: x["collided"], lambda x: x["sound"]])
     results[rank] = n_collisions
 
 
 def run_mode_mp(mode, cnf):
     processes = []
-    results = Array('d', range(cnf.mp.n_procs))
+    results = Array("d", range(cnf.mp.n_procs))
     for rank in range(cnf.mp.n_procs):
         p = Process(target=run, args=(rank, cnf, mode, results))
         p.start()
@@ -41,7 +40,7 @@ def run_mode_mp(mode, cnf):
 
 if __name__ == "__main__":
     # get config setup
-    mp.set_start_method('spawn')
+    mp.set_start_method("spawn")
     cnf = get_conf("conf/main.yaml")
     log = Logger(cnf)
     results = []
@@ -51,10 +50,14 @@ if __name__ == "__main__":
     results = np.array(results)
     with open(f"data/n_collisions.p", "wb") as f:
         pickle.dump(results, f)
-    fig = go.Figure([
-        go.Bar(x=state_modes,
-               y=np.mean(results, axis=1),
-               error_y=dict(type='data', array=np.std(results, axis=1)))
-    ])
+    fig = go.Figure(
+        [
+            go.Bar(
+                x=state_modes,
+                y=np.mean(results, axis=1),
+                error_y=dict(type="data", array=np.std(results, axis=1)),
+            )
+        ]
+    )
     fig.write_html(f"data/n_collisions_plot.html")
     fig.show()

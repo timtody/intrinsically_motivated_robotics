@@ -10,6 +10,7 @@ class Logger:
         self._maybe_create_output_dir()
         path = self._get_path()
         self.owd = os.getcwd()
+        os.environ["owd"] = self.owd
         cnf.log.owd = self.owd
         os.mkdir(path)
         os.chdir(path)

@@ -1,7 +1,11 @@
+import os
 import torch
+import pickle
 import time
+import json
 import collections
 import numpy as np
+from observation import Observation
 from env.environment import Env
 from agent import Agent
 from utils import RewardQueue, ValueQueue
@@ -63,6 +67,61 @@ class Experiment:
         for _ in range(100):
             self.env.step(self.env.action_space.sample() * 10)
 
+    def save_state(self, step, additional_state={}):
+        path = os.path.join("checkpoints", str(step))
+        if not os.path.exists(path):
+            os.mkdir(path)
+        self._save_extra(step, additional_state)
+        self._save(step)
+        self.agent.save_state(step)
+        self.env.save_state(step)
+
+    def load_state(self, checkpoint, load_env=False) -> dict:
+        extra_state = {}  # self._load_extra(checkpoint)
+        self._load(checkpoint)
+        self.agent.load_state(checkpoint)
+        self.env.load_state(checkpoint)
+        return extra_state
+
+    def _save_extra(self, step, state) -> None:
+        save_path = os.path.join("checkpoints", str(step), "extra_state.p")
+        with open(save_path, "wb") as f:
+            pickle.dump(state, f)
+
+    def _load_extra(self, checkpoint) -> dict:
+        abspath = os.environ["owd"]
+        load_path = os.path.join(abspath, checkpoint, "exp_state.json")
+        with open(load_path, "rb") as f:
+            extra_state = pickle.load(f)
+        return extra_state
+
+    def _save(self, step) -> None:
+        save_path = os.path.join("checkpoints", str(step), "exp_state.json")
+        print("saving exp at", save_path)
+        state = dict(
+            global_step=self.global_step,
+            ppo_step=self.ppo_timestep,
+            icm_buffer=self.icm_buffer,
+            torch_seed=self.cnf.env.torch_seed,
+            np_seed=self.cnf.env.np_seed,
+        )
+        with open(save_path, "w") as f:
+            json.dump(state, f)
+
+    def _load(self, checkpoint) -> None:
+        # restores the state of the experiment
+        abspath = os.environ["owd"]
+        load_path = os.path.join(abspath, checkpoint, "exp_state.json")
+        print("loading exp state from", load_path)
+        with open(load_path, "r") as f:
+            state = json.load(f)
+        self.global_step = state["global_step"]
+        self.ppo_timestep = state["ppo_step"]
+        self.icm_buffer = state["icm_buffer"]
+        # set random seeds
+        torch.manual_seed(state["torch_seed"])
+        np.random.seed(state["np_seed"])
+
 
 class CountCollisions(Experiment):
     def __init__(self, *args, **kwargs):
@@ -97,16 +156,14 @@ class CountCollisions(Experiment):
                 action = self.env.action_space.sample()
             else:
                 action, action_mean, entropy = self.agent.policy_old.act(
-                    state.get(), self.memory
+                    state, self.memory
                 )
 
             next_state, _, done, info = self.env.step(action)
 
             # calculate intrinsic reward
             # make icm trans
-            trans = self.icm_transition(
-                state.get(), next_state.get(), torch.tensor(action)
-            )
+            trans = self.icm_transition(state, next_state, torch.tensor(action))
             # append to buffer
             self.icm_buffer.append(trans)
 
@@ -119,7 +176,7 @@ class CountCollisions(Experiment):
             if self.cnf.main.train:
                 self.memory.is_terminals.append(done)
 
-            self.value_buf.append(self.agent.get_value(next_state.get()))
+            self.value_buf.append(self.agent.get_value(next_state))
 
             # train agent
             if self.ppo_timestep % self.cnf.main.train_each == 0:
@@ -159,8 +216,8 @@ class CountCollisions(Experiment):
                 #         step = self.global_step - self.cnf.main.train_each + s
                 #         self.writer.add_scalars(
                 #             "ret_approx", {
-                #                 "true_ret": self.reward_Q.get(),
-                #                 "app_ret": self.value_Q.get()
+                #                 "true_ret": self.reward_Q,
+                #                 "app_ret": self.value_Q
                 #             }, step)
 
                 self.value_buf = []
@@ -220,12 +277,11 @@ class GoalReach(Experiment):
                 episode_len += 1
                 if episode_len > self.episode_len:
                     done = True
-                action, *_ = self.agent.policy_old.act(state.get(), self.memory)
+                action, *_ = self.agent.policy_old.act(state, self.memory)
                 next_state, *_ = self.env.step(action)
 
                 reward = -self.get_loss(
-                    self.icm.get_embedding(next_state.get()),
-                    self.icm.get_embedding(goal.get()),
+                    self.icm.get_embedding(next_state), self.icm.get_embedding(goal),
                 )
                 if reward >= -0.001:
                     print("i've reached the goal")
@@ -267,13 +323,13 @@ class CheckActor(Experiment):
                 action = self.env.action_space.sample()
             else:
                 action, action_mean, entropy = self.agent.policy_old.act(
-                    state.get(), self.memory
+                    state, self.memory
                 )
 
             next_state, _, done, info = self.env.step(action)
 
             if self.cnf.main.train:
-                im_loss = self.icm.train_forward(state.get(), next_state.get(), action)
+                im_loss = self.icm.train_forward(state, next_state, action)
                 self.memory.rewards.append(im_loss)
                 self.memory.is_terminals.append(done)
                 mean_reward += im_loss
@@ -348,7 +404,7 @@ class TestReward(Experiment):
         reward_sum = 0
         for i in range(10000):
             print(i)
-            self.agent.policy_old.act(state.get(), self.memory)
+            self.agent.policy_old.act(state, self.memory)
             action = actions[0]
             if i > 50:
                 action = actions[1]
@@ -360,9 +416,7 @@ class TestReward(Experiment):
                 action = torch.tensor([0, 1, 0, 0, 0, 0, 0])
 
             next_state, *_ = self.env.step(action)
-            reward = self.icm.train_forward(
-                [[state.get()]], [[next_state.get()]], [action]
-            )
+            reward = self.icm.train_forward([[state]], [[next_state]], [action])
             reward_sum += reward
             sensors = np.array(self.env.read_force_sensors()).sum(axis=1)
             state = next_state
@@ -376,13 +430,11 @@ class Behavior(Experiment):
         for i in range(10000):
             self.ppo_timestep += 1
 
-            action, *_ = self.agent.policy_old.act(state.get(), self.memory)
+            action, *_ = self.agent.policy_old.act(state, self.memory)
             next_state, *_ = self.env.step(action)
 
             if self.cnf.main.train:
-                im_loss = self.icm.train_forward(
-                    [[state.get()]], [[next_state.get()]], [action]
-                )
+                im_loss = self.icm.train_forward([[state]], [[next_state]], [action])
                 self.memory.rewards.append(im_loss)
                 self.memory.is_terminals.append(False)
 
@@ -403,36 +455,60 @@ class GoalReachAgent(Experiment):
         self.agent = Agent(self.action_dim, self.state_dim, self.cnf, self.device)
 
         # experiment parameters
-        self.episode_len = 500
+        self.episode_len = 250
+
+    def get_loss(self, state, goal):
+        return ((state - goal) ** 2).mean()
 
     def run(self):
         state = self.env.reset()
 
-        for _ in range(self.cnf.main.n_steps):
-            self.ppo_timestep += 1
+        print("generating goal")
+        for i in range(100):
+            goal, *_ = self.env.step([1] * self.cnf.env.action_dim)
+        print("done.")
+
+        checkpoint = self.cnf.log.checkpoint
+        if checkpoint:
+            print("loading exp checkpoint")
+            self.load_state(checkpoint)
+
+        for i in range(self.global_step, 1000):
             self.global_step += 1
 
-            # env step
-            action = self.agent.get_action(state.get())
-            next_state, _, done, info = self.env.step(action)
+            state = self.env.reset()
+            done = False
+            episode_len = 0
+            episode_reward = 0
+            while not done:
+                episode_len += 1
+                if episode_len > self.episode_len:
+                    done = True
+                action = self.agent.get_action(state)
+                next_state, *_ = self.env.step(action)
 
-            # append data relevant to PPO (reward gets set in .train())
-            self.agent.set_is_done(done)
+                reward = -self.get_loss(
+                    self.icm.get_embedding(next_state), self.icm.get_embedding(goal),
+                )
+                if reward >= -0.001:
+                    print("i've reached the goal")
+                    reward += 1
+                    done = True
 
-            # append data to agent relevant to ICM
-            self.agent.append_icm_transition(state.get(), next_state.get(), action)
+                episode_reward += reward
 
-            # reset environment
-            if self.global_step % self.episode_len == 0:
-                done = True
-                if self.cnf.main.train:
-                    self.reset()
+                self.agent.set_reward(reward)
+                self.agent.set_is_done(done)
 
-            # train agent
-            if self.ppo_timestep % self.cnf.main.train_each == 0:
-                self.agent.train()
+                state = next_state
 
-            self.agent.save_state(999)
-            exit(1)
+            self.agent.ppo.update(self.agent.ppo_mem)
+            self.agent.ppo_mem.clear_memory()
 
-            state = next_state
+            self.writer.add_scalar("episode reward", episode_reward, self.global_step)
+            self.writer.add_scalar("episode len", episode_len, self.global_step)
+
+            if i % 100 == 0:
+                self.save_state(i)
+
+        print("saving")

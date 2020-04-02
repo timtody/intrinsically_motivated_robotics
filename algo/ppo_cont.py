@@ -73,7 +73,7 @@ class ActorCritic(nn.Module):
         memory.actions.append(action)
         memory.logprobs.append(action_logprob)
 
-        action  # += torch.randn(self.action_dim) * 0.1
+        # action += torch.randn(self.action_dim) * 0.1
 
         return (action.detach(), action_mean.detach().cpu().numpy(), entropy.item())
 
@@ -123,14 +123,21 @@ class PPO:
 
         self.MseLoss = nn.MSELoss()
 
-    def load(self, path):
-        self.policy.load_state_dict(os.path.join(os.path.abspath(path), "policy.pt"))
-        self.optimizer.load_state_dict(os.path.join(os.path.abspath(path), "opt.pt"))
+    def load_state(self, path):
+        abspath = os.path.abspath(os.environ["owd"])
+        checkpoint_path = os.path.join(abspath, path)
+        print("loading ppo from path", checkpoint_path)
+        self.policy.load_state_dict(
+            torch.load(os.path.join(checkpoint_path, "policy.pt"))
+        )
+        self.optimizer.load_state_dict(
+            torch.load(os.path.join(checkpoint_path, "opt.pt"))
+        )
         self.policy_old.load_state_dict(
-            os.path.join(os.path.abspath(path), "policy_old.pt")
+            torch.load(os.path.join(checkpoint_path, "policy_old.pt"))
         )
 
-    def save(self, timestep):
+    def save_state(self, timestep):
         path = os.path.join("checkpoints", str(timestep))
         torch.save(self.policy.state_dict(), os.path.join(path, "policy.pt"))
         torch.save(self.policy_old.state_dict(), os.path.join(path, "policy_old.pt"))

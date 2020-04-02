@@ -8,6 +8,7 @@ from observation import Observation
 import os
 import gym
 import math
+import json
 import numpy as np
 
 
@@ -28,7 +29,7 @@ class Env(gym.Env):
         # TODO: need to be made more general for vision space
         obs = self._init_step()
         self.observation_space = gym.spaces.Box(
-            low=-np.inf, high=np.inf, shape=obs.get().shape
+            low=-np.inf, high=np.inf, shape=obs.shape
         )
         # properties
         self.gripper_speed = 0
@@ -189,7 +190,7 @@ class Env(gym.Env):
             self._get_vision() if self.cnf.state == "vision" else None,
             self.cnf.state_size
         )
-        return obs
+        return obs.get()
 
     def _set_objects_collidable(self):
         self._arm.set_collidable(True)
@@ -252,8 +253,39 @@ class Env(gym.Env):
         # slf = sim.simReadCollision(handle)
         return other
 
-    def save_state(self):
-        pass
+    def save_state(self, timestep):
+        path = os.path.join("checkpoints", str(timestep))
+        if not os.path.exists(path):
+            os.mkdir(path)
+        state = dict(
+            joint_positions=self._arm.get_joint_positions(),
+            gripper_positions=self._gripper.get_joint_positions(),
+            joint_start_positions=self._joint_start_positions,
+            gripper_start_position=self._gripper_start_positions,
+            gripper_last_position=list(self._gripper_last_position),
+            sound_played=self.sound_played,
+            gripper_speed=self.gripper_speed,
+            joint_target_velocities=self._arm.get_joint_target_velocities(),
+            gripper_target_velocities=self._gripper.get_joint_target_velocities(),
+        )
+        with open(
+            os.path.join("checkpoints", str(timestep), "env_state.json"), "w"
+        ) as f:
+            json.dump(state, f)
 
-    def load_state(self):
-        pass
+    def load_state(self, path):
+        print("loading env state")
+        abspath = os.path.abspath(os.environ["owd"])
+        with open(os.path.join(abspath, path, "env_state.json"), "r") as f:
+            state = json.load(f)
+        self._toggle_vel_control(False)
+        self._arm.set_joint_positions(state["joint_positions"])
+        self._gripper.set_joint_positions(state["gripper_positions"])
+        self._toggle_vel_control(True)
+        self._joint_start_positions = state["joint_start_positions"]
+        self._gripper_start_positions = state["gripper_start_position"]
+        self._gripper_last_position = state["gripper_last_position"]
+        self.sound_played = state["sound_played"]
+        self.gripper_speed = state["gripper_speed"]
+        self._arm.set_joint_target_velocities(state["joint_target_velocities"])
+        self._gripper.set_joint_target_velocities(state["gripper_target_velocities"])

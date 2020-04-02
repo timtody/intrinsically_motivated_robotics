@@ -9,6 +9,7 @@ from algo.models import ICModule
 class Agent:
     def __init__(self, action_dim, state_dim, cnf, device):
         # PPO related stuff
+        print(action_dim)
         self.ppo = PPO(action_dim, state_dim, **cnf.ppo)
         self.ppo_mem = Memory()
 
@@ -24,6 +25,9 @@ class Agent:
 
     def set_is_done(self, is_done):
         self.ppo_mem.is_terminals.append(is_done)
+
+    def set_reward(self, reward):
+        self.ppo_mem.rewards.append(reward)
 
     def get_action(self, state) -> torch.Tensor:
         action, *_ = self.ppo.policy_old.act(state, self.ppo_mem)
@@ -43,15 +47,13 @@ class Agent:
         self.icm_buffer = []
 
     def save_state(self, timestep) -> None:
-        # make dir for iteration
-        os.mkdir(os.path.join("checkpoints", str(timestep)))
         # save icm
-        self.icm.save(timestep)
+        self.icm.save_state(timestep)
         # save ppo
-        self.ppo.save(timestep)
+        self.ppo.save_state(timestep)
 
     def load_state(self, path) -> None:
         # load icm
-        self.icm.load(path)
+        self.icm.load_state(path)
         # load ppo
-        self.ppo.load(path)
+        self.ppo.load_state(path)
