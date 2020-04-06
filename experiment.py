@@ -15,11 +15,19 @@ from torch.utils.tensorboard import SummaryWriter
 from collections import defaultdict
 from abc import abstractmethod
 
+# TODO: remove
+from matplotlib import pyplot as plt
+
 
 class Experiment:
     def __init__(self, cnf, rank, log=False):
         self.cnf = cnf
         self.log = log
+
+        # set random seeds
+        np.random.seed(cnf.env.np_seed)
+        torch.manual_seed(cnf.env.torch_seed)
+
         # setup env
         env = Env(cnf)
         # skip_wrapper = SkipWrapper(cnf.env.skip)
@@ -54,10 +62,6 @@ class Experiment:
             self.writer = SummaryWriter(f"tb/mode:notrain_rank:{rank}")
         else:
             self.writer = SummaryWriter(f"tb/mode:{cnf.env.state_size}_rank:{rank}")
-
-        # set random seeds
-        np.random.seed()
-        torch.manual_seed(np.random.randint(9999))
 
     @abstractmethod
     def run(self, callbacks, log=False):
@@ -257,7 +261,7 @@ class GoalReach(Experiment):
     def get_loss(self, state, goal):
         return ((state - goal) ** 2).mean()
 
-    def run(self, callbacks, log=False):
+    def run(self, log=False):
         # get a goal
         # goals = []
         print("generating goal")
@@ -453,9 +457,11 @@ class GoalReachAgent(Experiment):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.agent = Agent(self.action_dim, self.state_dim, self.cnf, self.device)
+        from utils import GraphWindow
 
         # experiment parameters
         self.episode_len = 250
+        # self.win = GraphWindow(["reward"], 1, 1)
 
     def get_loss(self, state, goal):
         return ((state - goal) ** 2).mean()
@@ -464,8 +470,10 @@ class GoalReachAgent(Experiment):
         state = self.env.reset()
 
         print("generating goal")
+        action = [1]
         for i in range(100):
             goal, *_ = self.env.step([1] * self.cnf.env.action_dim)
+            # goal, *_ = self.env.step(action)
         print("done.")
 
         checkpoint = self.cnf.log.checkpoint
@@ -473,7 +481,7 @@ class GoalReachAgent(Experiment):
             print("loading exp checkpoint")
             self.load_state(checkpoint)
 
-        for i in range(self.global_step, 1000):
+        for i in range(1000):
             self.global_step += 1
 
             state = self.env.reset()
@@ -486,10 +494,10 @@ class GoalReachAgent(Experiment):
                     done = True
                 action = self.agent.get_action(state)
                 next_state, *_ = self.env.step(action)
-
                 reward = -self.get_loss(
                     self.icm.get_embedding(next_state), self.icm.get_embedding(goal),
                 )
+                # self.win.update(reward.item())
                 if reward >= -0.001:
                     print("i've reached the goal")
                     reward += 1

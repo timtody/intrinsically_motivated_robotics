@@ -11,7 +11,7 @@ from itertools import chain
 
 from utils import LossBuffer
 
-torch.manual_seed(157)
+torch.manual_seed(1)
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
 
@@ -48,15 +48,15 @@ class FCModule(nn.Module):
 
     def __init__(self, state_dim, embedding_size):
         super().__init__()
-        self.fc1 = nn.Linear(state_dim, embedding_size)
-        # self.fc2 = nn.Linear(128, embedding_size)
+        self.fc1 = nn.Linear(state_dim, 128)
+        self.fc2 = nn.Linear(128, embedding_size)
         # self.bnorm1 = nn.BatchNorm1d(128)
         # self.bnorm2 = nn.BatchNorm1d(embedding_size)
         self.eval()
 
     def forward(self, x):
-        x = self.fc1(x)
-        return x.squeeze(0)
+        # x = self.fc1(x)
+        return x  # .squeeze(0)
 
 
 class ForwardModule(nn.Module):

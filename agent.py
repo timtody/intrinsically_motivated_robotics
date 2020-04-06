@@ -9,7 +9,6 @@ from algo.models import ICModule
 class Agent:
     def __init__(self, action_dim, state_dim, cnf, device):
         # PPO related stuff
-        print(action_dim)
         self.ppo = PPO(action_dim, state_dim, **cnf.ppo)
         self.ppo_mem = Memory()
 
