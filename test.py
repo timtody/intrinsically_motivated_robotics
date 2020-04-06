@@ -1,6 +1,6 @@
-from experiment import GoalReachAgent
+from experiment import GoalReach
 from utils import get_conf
-from logger import Logger
+from logging import Logger
 
 cnf = get_conf("conf/main.yaml")
 Logger(cnf)
