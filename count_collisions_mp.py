@@ -1,11 +1,19 @@
-from experiment import CountCollisions
-import pickle
-import plotly.graph_objects as go
-import numpy as np
-from conf import get_conf
-from multiprocessing import Array, Process
 from logger import Logger
+from conf import get_conf
+from experiment import CountCollisions
+
+
+import pickle
+import numpy as np
+import pandas as pd
+import seaborn as sns
 import multiprocessing as mp
+import plotly.graph_objects as go
+from multiprocessing import Array, Process
+from matplotlib import pyplot as plt
+
+
+sns.set()
 
 
 def run(rank, cnf, mode, results):
@@ -43,21 +51,20 @@ if __name__ == "__main__":
     mp.set_start_method("spawn")
     cnf = get_conf("conf/main.yaml")
     log = Logger(cnf)
-    results = []
-    state_modes = ["all"]
+    results = {}
+    state_modes = ["audio", "all"]
+
     for mode in state_modes:
-        results.append(run_mode_mp(mode, cnf))
+        results[mode] = run_mode_mp(mode, cnf)
+
+    results_df = pd.DataFrame(data=results)
+
     results = np.array(results)
     with open(f"data/n_collisions.p", "wb") as f:
         pickle.dump(results, f)
-    fig = go.Figure(
-        [
-            go.Bar(
-                x=state_modes,
-                y=np.mean(results, axis=1),
-                error_y=dict(type="data", array=np.std(results, axis=1)),
-            )
-        ]
+
+    results_df.mean(axis=0).plot.bar(yerr=results_df.std(axis=0)).set_title(
+        "n collisions"
     )
-    fig.write_html(f"data/n_collisions_plot.html")
-    fig.show()
+    plt.savefig("data/n_collisions.png")
+    plt.show()

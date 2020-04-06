@@ -3,6 +3,7 @@ import torch
 import pickle
 import time
 import json
+import wandb
 import collections
 import numpy as np
 from observation import Observation
@@ -14,9 +15,6 @@ from algo.models import ICModule
 from torch.utils.tensorboard import SummaryWriter
 from collections import defaultdict
 from abc import abstractmethod
-
-# TODO: remove
-from matplotlib import pyplot as plt
 
 
 class Experiment:
