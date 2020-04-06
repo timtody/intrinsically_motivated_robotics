@@ -1,7 +1,6 @@
 import numpy as np
 import torch
 import gym
-import wandb
 import plotly.graph_objects as go
 from omegaconf import OmegaConf
 import numpy as np
