@@ -2,13 +2,11 @@ from logger import Logger
 from conf import get_conf
 from experiment import CountCollisions
 
-
 import pickle
 import numpy as np
 import pandas as pd
 import seaborn as sns
 import multiprocessing as mp
-import plotly.graph_objects as go
 from multiprocessing import Array, Process
 from matplotlib import pyplot as plt
 
