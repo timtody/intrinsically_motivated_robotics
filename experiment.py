@@ -452,6 +452,9 @@ class Behavior(Experiment):
             state = next_state
 
 
+from matplotlib import pyplot as plt
+
+
 class GoalReachAgent(Experiment):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -469,7 +472,7 @@ class GoalReachAgent(Experiment):
         state = self.env.reset()
 
         print("generating goal")
-        action = [1]
+        action = [1, 1]
         for i in range(100):
             goal, *_ = self.env.step([1] * self.cnf.env.action_dim)
             # goal, *_ = self.env.step(action)
@@ -480,7 +483,7 @@ class GoalReachAgent(Experiment):
             print("loading exp checkpoint")
             self.load_state(checkpoint)
 
-        for i in range(1000):
+        for i in range(10000):
             self.global_step += 1
 
             state = self.env.reset()
@@ -493,10 +496,10 @@ class GoalReachAgent(Experiment):
                     done = True
                 action = self.agent.get_action(state)
                 next_state, *_ = self.env.step(action)
+
                 reward = -self.get_loss(
                     self.icm.get_embedding(next_state), self.icm.get_embedding(goal),
                 )
-                # self.win.update(reward.item())
                 if reward >= -0.001:
                     print("i've reached the goal")
                     reward += 1

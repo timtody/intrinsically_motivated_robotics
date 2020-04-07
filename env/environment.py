@@ -54,19 +54,23 @@ class Env(gym.Env):
 
     def _setup_robot(self):
         self._arm = Panda()
-        self._toggle_vel_control(True)
+        self._set_vel_control(True)
         self._gripper = PandaGripper()
         self._joint_start_positions = self._arm.get_joint_positions()
         self._gripper_start_positions = self._gripper.get_joint_positions()
         self._gripper_last_position = self.get_tip_position()
+        self._initial_robot_state = (
+            self._arm.get_configuration_tree(),
+            self._gripper.get_configuration_tree(),
+        )
 
     def _reset_robot(self):
-        self._toggle_vel_control(False)
+        self._set_vel_control(False)
         self._arm.set_joint_positions(self._joint_start_positions)
         self._gripper.set_joint_positions(self._gripper_start_positions)
-        self._toggle_vel_control(True)
+        self._set_vel_control(True)
 
-    def _toggle_vel_control(self, is_velocity):
+    def _set_vel_control(self, is_velocity):
         """
         Changes velocity control to *is_velocity*
         """
@@ -214,17 +218,17 @@ class Env(gym.Env):
         )
 
     def reset(self, random=False):
-        """
-        Not gym copliant reset function.
-        """
-        if random:
-            joint_start_pos = np.random.uniform(-1, 1, size=7)
-            gripper_start_pos = np.random.uniform(-1, 1, size=2)
-            self._gripper.set_joint_positions(gripper_start_pos)
-            self._arm.set_joint_positions(joint_start_pos)
-        else:
-            self._gripper.set_joint_positions(self._gripper_start_positions)
-            self._arm.set_joint_positions(self._joint_start_positions)
+        """Resets the joint angles. """
+        self._gripper.release()
+        arm, gripper = self._initial_robot_state
+
+        self._pr.set_configuration_tree(arm)
+        self._pr.set_configuration_tree(gripper)
+        self._arm.set_joint_positions(self._joint_start_positions)
+        self._arm.set_joint_target_velocities([0] * len(self._arm.joints))
+        self._gripper.set_joint_positions(self._gripper_start_positions)
+        self._gripper.set_joint_target_velocities([0] * len(self._gripper.joints))
+
         return self._get_observation()
 
     def render(self):
@@ -278,10 +282,10 @@ class Env(gym.Env):
         abspath = os.path.abspath(os.environ["owd"])
         with open(os.path.join(abspath, path, "env_state.json"), "r") as f:
             state = json.load(f)
-        self._toggle_vel_control(False)
+        self._set_vel_control(False)
         self._arm.set_joint_positions(state["joint_positions"])
         self._gripper.set_joint_positions(state["gripper_positions"])
-        self._toggle_vel_control(True)
+        self._set_vel_control(True)
         self._joint_start_positions = state["joint_start_positions"]
         self._gripper_start_positions = state["gripper_start_position"]
         self._gripper_last_position = state["gripper_last_position"]
