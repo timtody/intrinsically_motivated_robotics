@@ -483,7 +483,7 @@ class GoalReachAgent(Experiment):
             print("loading exp checkpoint")
             self.load_state(checkpoint)
 
-        for i in range(10000):
+        for i in range(1000):
             self.global_step += 1
 
             state = self.env.reset()

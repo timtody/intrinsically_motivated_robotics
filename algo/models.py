@@ -49,13 +49,14 @@ class FCModule(nn.Module):
     def __init__(self, state_dim, embedding_size):
         super().__init__()
         self.fc1 = nn.Linear(state_dim, embedding_size)
-        self.fc2 = nn.Linear(128, embedding_size)
+        self.fc2 = nn.Linear(embedding_size, 128)
         # self.bnorm1 = nn.BatchNorm1d(128)
         # self.bnorm2 = nn.BatchNorm1d(embedding_size)
         self.eval()
 
     def forward(self, x):
         x = self.fc1(x)
+        x = self.fc2(x)
         return x.squeeze(0)
 
 
