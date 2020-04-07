@@ -578,7 +578,7 @@ class CountCollisionsAgent(Experiment):
 
             # retrieve metrics
             self.n_collisions += info["collided"]
-            self.n_sounds += info["sound"]pip install wandb --upgrade
+            self.n_sounds += info["sound"]
 
             # train agent
             if (
