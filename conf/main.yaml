@@ -28,6 +28,10 @@ log:
   owd: ""
   checkpoint: ""
 
+wandb:
+  project: test
+  name: testname
+
 icm:
   embedding_size: 200
 

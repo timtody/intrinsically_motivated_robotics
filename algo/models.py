@@ -49,7 +49,7 @@ class FCModule(nn.Module):
     def __init__(self, state_dim, embedding_size):
         super().__init__()
         self.fc1 = nn.Linear(state_dim, embedding_size)
-        self.fc2 = nn.Linear(embedding_size, 128)
+        self.fc2 = nn.Linear(embedding_size, embedding_size)
         # self.bnorm1 = nn.BatchNorm1d(128)
         # self.bnorm2 = nn.BatchNorm1d(embedding_size)
         self.eval()

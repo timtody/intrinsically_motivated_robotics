@@ -18,7 +18,7 @@ from abc import abstractmethod
 
 
 class Experiment:
-    def __init__(self, cnf, rank, log=False, tb=True):
+    def __init__(self, cnf, rank, log=False, tb=True, mode=None):
         self.cnf = cnf
         self.log = log
 
@@ -530,6 +530,15 @@ class CountCollisionsAgent(Experiment):
 
         import wandb
 
+        self.wandb = wandb
+
+        self.wandb.init(
+            config=self.cnf,
+            project=self.cnf.wandb.project,
+            name=f"{self.cnf.wandb.name}_{kwargs['mode']}_rank{args[1]}",
+            group=kwargs["mode"],
+        )
+
         self.agent = Agent(self.action_dim, self.state_dim, self.cnf, self.device)
 
         # setup logging metrics
@@ -540,7 +549,7 @@ class CountCollisionsAgent(Experiment):
         # experiment parameters
         self.episode_len = 500
 
-    def run(self):
+    def run(self, callbacks):
         state = self.env.reset()
         for i in range(self.cnf.main.n_steps):
             self.ppo_timestep += 1
@@ -569,19 +578,21 @@ class CountCollisionsAgent(Experiment):
 
             # retrieve metrics
             self.n_collisions += info["collided"]
-            self.n_sounds += info["sound"]
+            self.n_sounds += info["sound"]pip install wandb --upgrade
 
             # train agent
-            if self.ppo_timestep % self.cnf.main.train_each == 0 and self.cnf.train:
+            if (
+                self.ppo_timestep % self.cnf.main.train_each == 0
+                and self.cnf.main.train
+            ):
                 train_results = self.agent.train()
 
                 self.reward_sum += train_results["imloss"].sum().item()
-
-                wandb.log(
+                self.wandb.log(
                     {
                         "cum reward": self.reward_sum,
                         "policy loss": train_results["ploss"],
-                        "value loss": train_results["value loss"],
+                        "value loss": train_results["vloss"],
                         "n collisions": self.n_collisions,
                         "n sounds": self.n_sounds,
                     },
@@ -591,4 +602,4 @@ class CountCollisionsAgent(Experiment):
             state = next_state
 
         self.env.close()
-        return self.n_collisions, self.n_sounds
+        return self.n_collisions, self.reward_sum
