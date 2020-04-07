@@ -47,8 +47,9 @@ class Observation:
     ):
         self.state_size = state_size
 
-        self.joint_forces = joint_forces
         self.joint_velocities = joint_velocities
+        self.joint_positions = joint_positions
+        # self.joint_forces = joint_forces
         # self.gripper_open_amount = gripper_open_amount
         # self.gripper_pose_prop = gripper_pose
         # self.gripper_joint_positions = gripper_joint_positions
