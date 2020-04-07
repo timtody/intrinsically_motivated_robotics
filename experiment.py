@@ -18,7 +18,7 @@ from abc import abstractmethod
 
 
 class Experiment:
-    def __init__(self, cnf, rank, log=False):
+    def __init__(self, cnf, rank, log=False, tb=True):
         self.cnf = cnf
         self.log = log
 
@@ -56,10 +56,11 @@ class Experiment:
         self.ppo_timestep = 0
 
         # setup tensorboard
-        if not cnf.main.train:
-            self.writer = SummaryWriter(f"tb/mode:notrain_rank:{rank}")
-        else:
-            self.writer = SummaryWriter(f"tb/mode:{cnf.env.state_size}_rank:{rank}")
+        if tb:
+            if not cnf.main.train:
+                self.writer = SummaryWriter(f"tb/mode:notrain_rank:{rank}")
+            else:
+                self.writer = SummaryWriter(f"tb/mode:{cnf.env.state_size}_rank:{rank}")
 
     @abstractmethod
     def run(self, callbacks, log=False):
@@ -518,3 +519,73 @@ class GoalReachAgent(Experiment):
                 self.save_state(i)
 
         print("saving")
+
+
+class CountCollisionsAgent(Experiment):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        import wandb
+
+        self.agent = Agent(self.action_dim, self.state_dim, self.cnf, self.device)
+
+        # setup logging metrics
+        self.n_collisions = 0
+        self.n_sounds = 0
+        self.reward_sum = 0
+
+        # experiment parameters
+        self.episode_len = 500
+
+    def run(self):
+        state = self.env.reset()
+        for i in range(self.cnf.main.n_steps):
+            self.ppo_timestep += 1
+            self.global_step += 1
+
+            # env step
+            if self.log and self.global_step % 5000 == 0:
+                print("exp in mode", self.cnf.env.mode, "at step", self.global_step)
+
+            if not self.cnf.main.train:
+                action = self.env.action_space.sample()
+            else:
+                action = self.agent.get_action(state)
+
+            next_state, _, done, info = self.env.step(action)
+
+            self.agent.append_icm_transition(state, next_state, torch.tensor(action))
+
+            # reset environment
+            if self.global_step % self.episode_len == 0:
+                done = True
+                if self.cnf.main.train:
+                    self.reset()
+
+            self.agent.set_is_done(done)
+
+            # retrieve metrics
+            self.n_collisions += info["collided"]
+            self.n_sounds += info["sound"]
+
+            # train agent
+            if self.ppo_timestep % self.cnf.main.train_each == 0 and self.cnf.train:
+                train_results = self.agent.train()
+
+                self.reward_sum += train_results["imloss"].sum().item()
+
+                wandb.log(
+                    {
+                        "cum reward": self.reward_sum,
+                        "policy loss": train_results["ploss"],
+                        "value loss": train_results["value loss"],
+                        "n collisions": self.n_collisions,
+                        "n sounds": self.n_sounds,
+                    },
+                    step=self.global_step,
+                )
+
+            state = next_state
+
+        self.env.close()
+        return self.n_collisions, self.n_sounds
