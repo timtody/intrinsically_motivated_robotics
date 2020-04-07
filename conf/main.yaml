@@ -29,7 +29,7 @@ log:
   checkpoint: ""
 
 icm:
-  embedding_size: 41
+  embedding_size: 200
 
 MMModel:
   prop_dim: 14

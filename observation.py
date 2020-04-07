@@ -27,22 +27,24 @@ audio:
 class Observation:
     # TODO: needs to be made more general (prob. dict type)
     # for when vision is introduced
-    def __init__(self,
-                 joint_velocities,
-                 joint_positions,
-                 joint_forces,
-                 gripper_open_amount,
-                 gripper_pose,
-                 gripper_joint_positions,
-                 gripper_touch_forces,
-                 finger_left_forces,
-                 finger_right_forces,
-                 wrist_left_forces,
-                 wrist_right_forces,
-                 knuckle_forces,
-                 audio,
-                 vision=None,
-                 state_size="all"):
+    def __init__(
+        self,
+        joint_velocities,
+        joint_positions,
+        joint_forces,
+        gripper_open_amount,
+        gripper_pose,
+        gripper_joint_positions,
+        gripper_touch_forces,
+        finger_left_forces,
+        finger_right_forces,
+        wrist_left_forces,
+        wrist_right_forces,
+        knuckle_forces,
+        audio,
+        vision=None,
+        state_size="all",
+    ):
         self.state_size = state_size
 
         self.joint_forces = joint_forces
@@ -63,7 +65,7 @@ class Observation:
         self.rgb_right = self._maybe_extract_vision(vision, "right")
         self.rgb_wrist = self._maybe_extract_vision(vision, "wrist")
 
-        self._normalize()
+        # self._normalize()
 
     def _normalize(self):
         for key, data in self.__dict__.items():
@@ -72,11 +74,9 @@ class Observation:
                 if "touch" in key:
                     self.__setattr__(key, (data - tac_mean) / (tac_std + 1e-4))
                 if "joint" in key:
-                    self.__setattr__(key,
-                                     (data - prop_mean) / (prop_std + 1e-4))
+                    self.__setattr__(key, (data - prop_mean) / (prop_std + 1e-4))
                 if "audio" in key:
-                    self.__setattr__(key,
-                                     (data - audio_mean) / (audio_std + 1e-4))
+                    self.__setattr__(key, (data - audio_mean) / (audio_std + 1e-4))
 
     def _maybe_extract_vision(self, vision, name):
         if vision is not None:
@@ -117,12 +117,10 @@ class Observation:
         return str(self.get_all())
 
     def get_prop(self):
-        return np.concatenate(
-            [v for k, v in self.__dict__.items() if "joint" in k])
+        return np.concatenate([v for k, v in self.__dict__.items() if "joint" in k])
 
     def get_tac(self):
-        return np.concatenate(
-            [v for k, v in self.__dict__.items() if "touch" in k])
+        return np.concatenate([v for k, v in self.__dict__.items() if "touch" in k])
 
     def get_audio(self):
         return self.audio
