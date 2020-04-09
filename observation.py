@@ -10,19 +10,6 @@ prop_std = 26.55019760131836
 audio_mean = -0.00512049812823534
 audio_std = 0.4338988959789276
 
-"""
-tac:
-	mean:0.0001090915611712262
-	std:0.15071888267993927
-prop:
-	mean:-0.020761482417583466
-	std:1.0171984434127808
-audio:
-	mean:0.1427653431892395
-	std:1.0342168807983398
-
-"""
-
 
 class Observation:
     # TODO: needs to be made more general (prob. dict type)
