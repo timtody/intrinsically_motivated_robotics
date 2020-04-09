@@ -9,3 +9,6 @@ out/
 tb/
 .mypy_cache/
 *.mp4
+.VSCodeCounter/
+data/
+img/
