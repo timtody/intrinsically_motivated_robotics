@@ -3,6 +3,7 @@ from pyrep.objects.force_sensor import ForceSensor
 from pyrep.robots.arms.panda import Panda
 from pyrep.robots.end_effectors.panda_gripper import PandaGripper
 from pyrep.objects.shape import Shape
+from pyrep.objects.joint import Joint
 from pyrep.backend import sim
 from observation import Observation
 import os
@@ -101,6 +102,11 @@ class Env(gym.Env):
         self._fs3 = ForceSensor("force_sensor_3")
         self._fs4 = ForceSensor("force_sensor_4")
 
+    def _setup_mobile(self):
+        self._mobile_joint_0 = Joint("Spherical_joint")
+        self._mobile_joint_1 = Joint("Spherical_joint0")
+        self._mobile_joint_2 = Joint("Spherical_joint1")
+
     def read_force_sensors(self):
         """
         Reads XYZ-forces from the force sensors attached to the robot
@@ -120,31 +126,6 @@ class Env(gym.Env):
             return np.array([0, 0, 0, 0])
         self.sound_played = True
         return self._compute_sound_signal2()
-
-    def _compute_sound_signal(self):
-        """
-        Computes a sound vec of the form
-        [loudness, distance, horizontal angle, vertical angle]
-        where the angles are relative to the head position of the robot
-        and the position where the collision creating the sound occured.
-        """
-        gripper_pos = self.get_tip_position()
-        head_pos = np.array(self.head.get_position())
-        # compute adjacent side
-        adj = np.linalg.norm(gripper_pos[1] - head_pos[1])
-        # compute opposite side
-        opp = np.linalg.norm(gripper_pos[0] - head_pos[0])
-        # compute the horizontal angle
-        alpha = np.arctan(opp / adj)
-        # compute adjacent side
-        adj = opp
-        # compute opposite side
-        opp = np.linalg.norm(gripper_pos[2] - head_pos[2])
-        # compute the vertical angle
-        beta = np.arctan(opp / adj)
-        # get the distance
-        distance = np.linalg.norm(gripper_pos - head_pos)
-        return [self.gripper_speed * 100, distance, alpha, beta]
 
     def _compute_sound_signal2(self):
         gripper_pos = self.get_tip_position()
