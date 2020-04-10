@@ -72,7 +72,7 @@ if __name__ == "__main__":
     plt.clf()
 
     cum_reward_df.mean(axis=0).plot.bar(yerr=cum_reward_df.std(axis=0)).set_title(
-        "n collisions"
+        "cumulative reward"
     )
     plt.savefig("data/cum_reward.png")
     plt.clf()
