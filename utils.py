@@ -29,17 +29,12 @@ def prepare_wandb(cnf, *args):
 class PointCloud:
     def get_outer(self):
         radius = 0.9285090706636693
-        origin = [
-            -0.2678461927495279, -0.006510627535040618, 1.0827146125969983
-        ]
+        origin = [-0.2678461927495279, -0.006510627535040618, 1.0827146125969983]
         theta = np.linspace(0, np.pi, 20)
         phi = np.linspace(0, 2 * np.pi, 20)
-        x0 = origin[0] + radius * np.outer(np.sin(theta),
-                                           np.cos(phi)).flatten()
-        y0 = origin[1] + radius * np.outer(np.sin(theta),
-                                           np.sin(phi)).flatten()
-        z0 = origin[2] + radius * np.outer(np.cos(theta),
-                                           np.ones_like(theta)).flatten()
+        x0 = origin[0] + radius * np.outer(np.sin(theta), np.cos(phi)).flatten()
+        y0 = origin[1] + radius * np.outer(np.sin(theta), np.sin(phi)).flatten()
+        z0 = origin[2] + radius * np.outer(np.cos(theta), np.ones_like(theta)).flatten()
         x = []
         y = []
         z = []
@@ -64,15 +59,14 @@ class ReplayBuffer:
         self.reward = np.zeros((max_size, 1))
         self.not_done = np.zeros((max_size, 1))
 
-        self.device = torch.device(
-            "cuda" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     def add(self, state, action, next_state, reward, done):
         self.state[self.ptr] = state
         self.action[self.ptr] = action
         self.next_state[self.ptr] = next_state
         self.reward[self.ptr] = reward
-        self.not_done[self.ptr] = 1. - done
+        self.not_done[self.ptr] = 1.0 - done
 
         self.ptr = (self.ptr + 1) % self.max_size
         self.size = min(self.size + 1, self.max_size)
@@ -80,11 +74,13 @@ class ReplayBuffer:
     def sample(self, batch_size):
         ind = np.random.randint(0, self.size, size=batch_size)
 
-        return (torch.FloatTensor(self.state[ind]).to(self.device),
-                torch.FloatTensor(self.action[ind]).to(self.device),
-                torch.FloatTensor(self.next_state[ind]).to(self.device),
-                torch.FloatTensor(self.reward[ind]).to(self.device),
-                torch.FloatTensor(self.not_done[ind]).to(self.device))
+        return (
+            torch.FloatTensor(self.state[ind]).to(self.device),
+            torch.FloatTensor(self.action[ind]).to(self.device),
+            torch.FloatTensor(self.next_state[ind]).to(self.device),
+            torch.FloatTensor(self.reward[ind]).to(self.device),
+            torch.FloatTensor(self.not_done[ind]).to(self.device),
+        )
 
 
 class StateBuffer:
@@ -109,6 +105,7 @@ def SkipWrapper(repeat_count):
             Generic common frame skipping wrapper
             Will perform action for `x` additional steps
         """
+
         def __init__(self, env):
             super(SkipWrapper, self).__init__(env)
             self.repeat_count = repeat_count
@@ -123,11 +120,12 @@ def SkipWrapper(repeat_count):
                 obs, reward, done, info = self.env.step(action)
                 total_reward += reward
                 current_step += 1
-            if 'skip.stepcount' in info:
+            if "skip.stepcount" in info:
                 raise gym.error.Error(
                     'Key "skip.stepcount" already in info. Make sure you are not stacking '
-                    'the SkipWrapper wrappers.')
-            info['skip.stepcount'] = self.stepcount
+                    "the SkipWrapper wrappers."
+                )
+            info["skip.stepcount"] = self.stepcount
             return obs, total_reward, done, info
 
         def reset(self):
@@ -183,43 +181,47 @@ class Plotter3D:
                 x=x,
                 y=y,
                 z=z,
-                mode='markers',
+                mode="markers",
                 marker=dict(
                     size=2,
                     color=1,
-                    colorscale='Viridis',  # choose a colorscale
-                    opacity=0.2)))
+                    colorscale="Viridis",  # choose a colorscale
+                    opacity=0.2,
+                ),
+            )
+        )
 
     def plot_3d_data(self, data):
         x, y, z = zip(*data)
         self.fig.add_trace(
-            go.Scatter3d(visible=True,
-                         x=x,
-                         y=y,
-                         z=z,
-                         marker=dict(size=2,
-                                     color=np.arange(len(x)),
-                                     colorscale="Viridis",
-                                     opacity=0.8),
-                         line=dict(color="lightblue", width=1)))
+            go.Scatter3d(
+                visible=True,
+                x=x,
+                y=y,
+                z=z,
+                marker=dict(
+                    size=2, color=np.arange(len(x)), colorscale="Viridis", opacity=0.8
+                ),
+                line=dict(color="lightblue", width=1),
+            )
+        )
 
     def add_slider(self):
         steps = []
         n_traces = len(self.fig.data)
         for i in range(n_traces):
-            step = dict(
-                method="restyle",
-                args=["visible", [False] * n_traces],
-            )
+            step = dict(method="restyle", args=["visible", [False] * n_traces],)
             step["args"][1][i] = True
             step["args"][1][0] = True
             steps.append(step)
 
         sliders = [
-            dict(active=0,
-                 currentvalue={"prefix": "Frequency: "},
-                 pad={"t": 50},
-                 steps=steps)
+            dict(
+                active=0,
+                currentvalue={"prefix": "Frequency: "},
+                pad={"t": 50},
+                steps=steps,
+            )
         ]
 
         self.fig.update_layout(sliders=sliders)
@@ -240,15 +242,14 @@ class ReturnIAX:
         self._prediction_buffer = np.zeros(lookback)
         self._target_buffer = np.zeros(lookback)
         self._prediction_part = np.zeros(lookback)
-        self._gammas = np.cumprod(np.full(
-            lookback, discount_factor))[::-1] / discount_factor
+        self._gammas = (
+            np.cumprod(np.full(lookback, discount_factor))[::-1] / discount_factor
+        )
         self._discount_factor = discount_factor
-        self._return_curve, = self._ax.plot(self._x,
-                                            self._return_buffer,
-                                            color="b")
-        self._prediction_curve, = self._ax.plot(self._x,
-                                                self._prediction_buffer,
-                                                color="r")
+        (self._return_curve,) = self._ax.plot(self._x, self._return_buffer, color="b")
+        (self._prediction_curve,) = self._ax.plot(
+            self._x, self._prediction_buffer, color="r"
+        )
 
     def __call__(self, reward, prediction):
         self._prediction_buffer[:-1] = self._prediction_buffer[1:]
@@ -279,9 +280,11 @@ class ForceIAX:
 class ReturnWindow:
     def __init__(self, discount_factor=0.95, lookback=200):
         self.fig = plt.figure()
-        self.iax_return = ReturnIAX(self.fig.add_subplot(211),
-                                    discount_factor=discount_factor,
-                                    lookback=lookback)
+        self.iax_return = ReturnIAX(
+            self.fig.add_subplot(211),
+            discount_factor=discount_factor,
+            lookback=lookback,
+        )
         self._fig_shown = False
 
     def close(self):
@@ -304,18 +307,25 @@ class ReturnWindow:
 
 
 class GraphWindow:
-    def __init__(self, labels_list, ncols, nrows, lookback=200):
+    def __init__(
+        self,
+        labels_list,
+        ncols=1,
+        nrows=1,
+        lookback=200,
+        ylims=[-1, 1],
+        autoscale=False,
+    ):
         sns.set()
         plt.tight_layout()
-        plt.autoscale(enable=True, axis='both')
-        print("Initializing subplots with", nrows, "rows and", ncols,
-              "columns.")
+        plt.autoscale(enable=autoscale, axis="both")
+        print("Initializing subplots with", nrows, "rows and", ncols, "columns.")
         self.fig, axes = plt.subplots(nrows=nrows, ncols=ncols)
         try:
             axes = axes.flatten()
         except:
             axes = [axes]
-        [ax.set_ylim(-5, 5) for ax in axes]
+        [ax.set_ylim(*ylims) for ax in axes]
         [ax.set_xlim(-lookback, 0) for ax in axes]
         [ax.set_xlabel("t") for ax in axes]
         [ax.set_title(label) for ax, label in zip(axes, labels_list)]
@@ -339,13 +349,15 @@ class GraphWindow:
 
     def get_frame(self):
         w, h = self.fig.canvas.get_width_height()
-        return np.fromstring(self.fig.canvas.tostring_rgb(),
-                             dtype=np.uint8).reshape(h, w, 3)
+        return np.fromstring(self.fig.canvas.tostring_rgb(), dtype=np.uint8).reshape(
+            h, w, 3
+        )
 
 
 mm_transition = namedtuple(
-    'mm_transition',
-    ('prop', 'tac', 'audio', 'prop_next', 'tac_next', 'audio_next', 'action'))
+    "mm_transition",
+    ("prop", "tac", "audio", "prop_next", "tac_next", "audio_next", "action"),
+)
 
 
 class _MMBuffer:
@@ -379,8 +391,9 @@ class MMBuffer:
         self.action = np.empty((capacity, action_dim))
         self.pos = 0
         self.cap = capacity
-        self.device = torch.device(
-            "cuda") if torch.cuda.is_available() else torch.device("cpu")
+        self.device = (
+            torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+        )
 
     def _normalize(self, entry):
         return (entry - entry.mean()) / (entry.std() + 1e-5)
@@ -405,7 +418,8 @@ class MMBuffer:
             torch.tensor(self.prop_next[idx]).to(self.device),
             torch.tensor(self.tac_next[idx]).to(self.device),
             torch.tensor(self.audio_next[idx]).to(self.device),
-            torch.tensor(self.action[idx]).to(self.device))
+            torch.tensor(self.action[idx]).to(self.device),
+        )
 
 
 class RewardQueue:
@@ -419,7 +433,7 @@ class RewardQueue:
         self.Q[-1] = 0
 
         for i, r in enumerate(range(self.len - 1, -1, -1)):
-            self.Q[i] += self.gamma**r * reward
+            self.Q[i] += self.gamma ** r * reward
 
     def get(self) -> int:
         return self.Q[0]

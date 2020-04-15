@@ -23,6 +23,7 @@ class Env(gym.Env):
         self._set_objects_collidable()
         self._set_collections()
         self._setup_force_sensors()
+        self._setup_mobile()
 
         self.action_space = gym.spaces.Box(
             low=-np.inf, high=np.inf, shape=(self.cnf.action_dim,)
@@ -103,9 +104,26 @@ class Env(gym.Env):
         self._fs4 = ForceSensor("force_sensor_4")
 
     def _setup_mobile(self):
-        self._mobile_joint_0 = Joint("Spherical_joint")
-        self._mobile_joint_1 = Joint("Spherical_joint0")
-        self._mobile_joint_2 = Joint("Spherical_joint1")
+        """
+        Sets up the joints of the robot mobile which consists of three
+        spherical joints measuring rotation around XYZ-axis.
+        """
+        self._mobile_0_joint_0 = Joint("revolute_beta")
+        self._mobile_0_joint_1 = Joint("revolute_gamma")
+        self._mobile_1_joint_0 = Joint("revolute_beta#0")
+        self._mobile_1_joint_1 = Joint("revolute_gamma#0")
+        self._mobile_2_joint_0 = Joint("revolute_beta#1")
+        self._mobile_2_joint_1 = Joint("revolute_gamma#1")
+
+    def get_mobile_positions(self):
+        return (
+            self._mobile_0_joint_0.get_joint_velocity(),
+            self._mobile_0_joint_1.get_joint_velocity(),
+            self._mobile_1_joint_0.get_joint_velocity(),
+            self._mobile_1_joint_1.get_joint_velocity(),
+            self._mobile_2_joint_0.get_joint_velocity(),
+            self._mobile_2_joint_1.get_joint_velocity(),
+        )
 
     def read_force_sensors(self):
         """
