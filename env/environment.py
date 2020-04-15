@@ -258,6 +258,16 @@ class Env(gym.Env):
             self._robot_collection_hand, self._robot_collection_rest
         )
 
+    def check_collision_with_other(self):
+        """
+        Check if the robot collided with something other than itself.
+        Fits better with the notation of the check_collision_with_self method.
+        """
+
+        return sim.simCheckCollision(
+            self._collidables_collection, self._robot_collection
+        )
+
     def check_collision(self):
         # TODO: check for non trivial self collision
         """
