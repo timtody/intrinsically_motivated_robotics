@@ -203,6 +203,8 @@ class Env(gym.Env):
     def _set_collections(self):
         self._collidables_collection = sim.simGetCollectionHandle("collidables")
         self._robot_collection = sim.simGetCollectionHandle("Panda_arm")
+        self._robot_collection_hand = sim.simGetCollectionHandle("collection_hand")
+        self._robot_collection_rest = sim.simGetCollectionHandle("collection_rest")
 
     def step(self, action):
         action = [*action, *((7 - self.cnf.action_dim) * [0])]
@@ -243,6 +245,18 @@ class Env(gym.Env):
 
     def check_collision_with_concrete(self):
         return self.concrete.check_collision_by_handle(self._arm._collision_collection)
+
+    def check_collision_with_self(self):
+        """
+        Checks if robot collides with itself. This is done by comparing
+        the collection "hand" with the collection "rest".
+        
+        Needed, because checking collision with itself always yields true
+        when acting on the whole robot collection.
+        """
+        return sim.simCheckCollision(
+            self._robot_collection_hand, self._robot_collection_rest
+        )
 
     def check_collision(self):
         # TODO: check for non trivial self collision
