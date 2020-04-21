@@ -147,7 +147,7 @@ class Env(gym.Env):
 
     def _compute_sound_signal(self):
         gripper_pos = self.get_tip_position()
-        head_pos = np.array(self.head.get_position())
+        head_pos = np.array(self._head.get_position())
         radius = np.linalg.norm(gripper_pos - head_pos)
         theta = np.arccos(gripper_pos[2] / radius)
         if math.isnan(theta):
@@ -176,10 +176,17 @@ class Env(gym.Env):
         return False
 
     def _get_info(self):
-        info = dict(collided=self.check_collision(), sound=self.sound_played)
+        info = dict(
+            collided_other=self.check_collision(),
+            collided_self=self.check_collision_with_self(),
+            collided_dyn=self.check_collision_with_dynamic(),
+            sound=self.sound_played,
+        )
         return info
 
     def _get_observation(self):
+        # TODO: only compute modalities when they are actually needed
+        # and pass them vias kwargs instead of args
         obs = Observation(
             self._arm.get_joint_velocities(),
             self._arm.get_joint_positions(),
@@ -205,6 +212,9 @@ class Env(gym.Env):
         self._robot_collection = sim.simGetCollectionHandle("Panda_arm")
         self._robot_collection_hand = sim.simGetCollectionHandle("collection_hand")
         self._robot_collection_rest = sim.simGetCollectionHandle("collection_rest")
+        self._collidables_dynamic_collection = sim.simGetCollectionHandle(
+            "collection_dynamic"
+        )
 
     def step(self, action):
         action = [*action, *((7 - self.cnf.action_dim) * [0])]
@@ -254,6 +264,7 @@ class Env(gym.Env):
         Needed, because checking collision with itself always yields true
         when acting on the whole robot collection.
         """
+
         return sim.simCheckCollision(
             self._robot_collection_hand, self._robot_collection_rest
         )
@@ -268,11 +279,23 @@ class Env(gym.Env):
             self._collidables_collection, self._robot_collection
         )
 
+    def check_collision_with_dynamic(self):
+        """
+        Check if the robot collides with dynamic objects in the scence. So far
+        these dynamic objects are the pendulums but could be other interactable
+        objects like balls etc.
+        """
+
+        return sim.simCheckCollision(
+            self._collidables_dynamic_collection, self._robot_collection
+        )
+
     def check_collision(self):
         # TODO: check for non trivial self collision
         """
         Checks whether the arm collides with the table or the slab.
         """
+
         other = sim.simCheckCollision(
             self._collidables_collection, self._robot_collection
         )

@@ -10,8 +10,9 @@ class Exp(Experiment):
             self.env.step([0, 1, 0, -1, 0, 0, 0])
             self_collision = self.env.check_collision_with_self()
             other_collision = self.env.check_collision()
+            dynamic_collision = self.env.check_collision_with_dynamic()
             print(
-                f"self collision: {self_collision}\nother collision: {other_collision}"
+                f"self collision: {self_collision}\nother collision: {other_collision}\ndynamic collision: {dynamic_collision}"
             )
 
 

@@ -21,6 +21,9 @@ def run(rank, cnf, mode, results):
         cnf.main.train = True
         cnf.env.state_size = mode
     cnf.env.mode = mode
+    # set seeds
+    cnf.env.torch_seed = np.random.randint(9999)
+    cnf.env.np_seed = np.random.randint(9999)
     exp = CountCollisionsAgent(cnf, rank, log=True if rank == 0 else False, mode=mode)
     n_collisions = 0
     # start the experiment
@@ -52,7 +55,7 @@ if __name__ == "__main__":
     log = Logger(cnf)
     n_collisions = {}
     cum_reward = {}
-    state_modes = ["audio", "all"]
+    state_modes = ["prop", "tac"]
 
     for mode in state_modes:
         ncol, cumrew = run_mode_mp(mode, cnf)

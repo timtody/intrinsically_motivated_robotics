@@ -164,7 +164,7 @@ class CountCollisions(Experiment):
 
             next_state, _, done, info = self.env.step(action)
 
-            # calculate intrinsic reward
+            # _headculate intrinsic reward
             # make icm trans
             trans = self.icm_transition(state, next_state, torch.tensor(action))
             # append to buffer
@@ -542,7 +542,9 @@ class CountCollisionsAgent(Experiment):
         self.agent = Agent(self.action_dim, self.state_dim, self.cnf, self.device)
 
         # setup logging metrics
-        self.n_collisions = 0
+        self.n_collisions_self = 0
+        self.n_collisions_other = 0
+        self.n_collisions_dynamic = 0
         self.n_sounds = 0
         self.reward_sum = 0
 
@@ -577,7 +579,10 @@ class CountCollisionsAgent(Experiment):
             self.agent.set_is_done(done)
 
             # retrieve metrics
-            self.n_collisions += info["collided"]
+            self.n_collisions_self += info["collided_self"]
+            self.n_collisions_other += info["collided_other"]
+            self.n_collisions_dynamic += info["collided_dyn"]
+
             self.n_sounds += info["sound"]
 
             # train agent
@@ -593,7 +598,12 @@ class CountCollisionsAgent(Experiment):
                         "cum reward": self.reward_sum,
                         "policy loss": train_results["ploss"],
                         "value loss": train_results["vloss"],
-                        "n collisions": self.n_collisions,
+                        "n collisions self": self.n_collisions_self,
+                        "n collisions other": self.n_collisions_other,
+                        "n collisions dyn": self.n_collisions_dynamic,
+                        "col rate self": self.n_collisions_self / self.global_step,
+                        "col rate other": self.n_collisions_other / self.global_step,
+                        "col rate dyn": self.n_collisions_dynamic / self.global_step,
                         "n sounds": self.n_sounds,
                     },
                     step=self.global_step,
@@ -602,4 +612,4 @@ class CountCollisionsAgent(Experiment):
             state = next_state
 
         self.env.close()
-        return self.n_collisions, self.reward_sum
+        return self.n_collisions_self, self.reward_sum
