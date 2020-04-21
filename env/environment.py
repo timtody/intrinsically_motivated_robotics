@@ -143,9 +143,9 @@ class Env(gym.Env):
             self.sound_played = False
             return np.array([0, 0, 0, 0])
         self.sound_played = True
-        return self._compute_sound_signal2()
+        return self._compute_sound_signal()
 
-    def _compute_sound_signal2(self):
+    def _compute_sound_signal(self):
         gripper_pos = self.get_tip_position()
         head_pos = np.array(self.head.get_position())
         radius = np.linalg.norm(gripper_pos - head_pos)
