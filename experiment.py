@@ -572,7 +572,7 @@ class CountCollisionsAgent(Experiment):
             if self.global_step % self.episode_len == 0:
                 done = True
                 if self.cnf.main.train:
-                    self.reset()
+                    self.env.reset()
 
             self.agent.set_is_done(done)
 

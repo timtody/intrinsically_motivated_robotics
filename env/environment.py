@@ -81,8 +81,8 @@ class Env(gym.Env):
 
     def _setup_shapes(self):
         self._table = Shape("diningTable_visible")
-        self.concrete = Shape("Concrete")
-        self.head = Shape("Head")
+        self._concrete = Shape("Concrete")
+        self._head = Shape("Head")
 
     # def get_target_position(self):
     #     return self.target.get_position()
@@ -244,7 +244,7 @@ class Env(gym.Env):
         return self._table.check_collision_by_handle(self._arm._collision_collection)
 
     def check_collision_with_concrete(self):
-        return self.concrete.check_collision_by_handle(self._arm._collision_collection)
+        return self._concrete.check_collision_by_handle(self._arm._collision_collection)
 
     def check_collision_with_self(self):
         """
