@@ -29,6 +29,7 @@ class Observation:
         wrist_right_forces,
         knuckle_forces,
         audio,
+        mobile_state=None,
         vision=None,
         state_size="all",
     ):
@@ -43,6 +44,8 @@ class Observation:
         # self.gripper_touch_forces = [
         #     tf for sublist in gripper_touch_forces for tf in sublist
         # ]
+
+        self.mobile_joint_velocities = mobile_state
         self.finger_left_forces_touch = finger_left_forces
         self.finger_right_forces_touch = finger_right_forces
         self.wrist_left_forces_touch = wrist_left_forces

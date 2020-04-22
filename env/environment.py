@@ -103,6 +103,10 @@ class Env(gym.Env):
         self._fs3 = ForceSensor("force_sensor_3")
         self._fs4 = ForceSensor("force_sensor_4")
 
+    def _enable_vel_control(self, joint):
+        joint.set_control_loop_enabled(False)
+        joint.set_motor_locked_at_zero_velocity(True)
+
     def _setup_mobile(self):
         """
         Sets up the joints of the robot mobile which consists of three
@@ -115,7 +119,28 @@ class Env(gym.Env):
         self._mobile_2_joint_0 = Joint("revolute_beta#1")
         self._mobile_2_joint_1 = Joint("revolute_gamma#1")
 
+        self._mobile_collection = [
+            self._mobile_0_joint_0,
+            self._mobile_0_joint_1,
+            self._mobile_1_joint_0,
+            self._mobile_1_joint_1,
+            self._mobile_2_joint_0,
+            self._mobile_2_joint_1,
+        ]
+
+        #  [self._enable_vel_control(joint) for joint in self._mobile_collection]
+
     def get_mobile_positions(self):
+        return (
+            self._mobile_0_joint_0.get_joint_position(),
+            self._mobile_0_joint_1.get_joint_position(),
+            self._mobile_1_joint_0.get_joint_position(),
+            self._mobile_1_joint_1.get_joint_position(),
+            self._mobile_2_joint_0.get_joint_position(),
+            self._mobile_2_joint_1.get_joint_position(),
+        )
+
+    def get_mobile_velocities(self):
         return (
             self._mobile_0_joint_0.get_joint_velocity(),
             self._mobile_0_joint_1.get_joint_velocity(),
@@ -124,6 +149,19 @@ class Env(gym.Env):
             self._mobile_2_joint_0.get_joint_velocity(),
             self._mobile_2_joint_1.get_joint_velocity(),
         )
+
+    def get_mobile_forces(self):
+        return (
+            self._mobile_0_joint_0.get_joint_force(),
+            self._mobile_0_joint_1.get_joint_force(),
+            self._mobile_1_joint_0.get_joint_force(),
+            self._mobile_1_joint_1.get_joint_force(),
+            self._mobile_2_joint_0.get_joint_force(),
+            self._mobile_2_joint_1.get_joint_force(),
+        )
+
+    def apply_joint_frictions(self, coef=0.6):
+        [joint.set_joint_target_velocity(0) for joint in self._mobile_collection]
 
     def read_force_sensors(self):
         """
@@ -197,8 +235,9 @@ class Env(gym.Env):
             self._gripper.get_touch_sensor_forces(),
             *self.read_force_sensors(),
             self.get_sound_signal(),
-            self._get_vision() if self.cnf.state == "vision" else None,
-            self.cnf.state_size
+            vision=self._get_vision() if self.cnf.state == "vision" else None,
+            state_size=self.cnf.state_size,
+            mobile_state=self.get_mobile_velocities(),
         )
         return obs.get()
 
@@ -221,6 +260,7 @@ class Env(gym.Env):
         self._set_vels(action)
         self.gripper_speed = self._get_gripper_speed()
         self._pr.step()
+        self.apply_joint_frictions()
         return (
             self._get_observation(),
             self._get_reward(),
