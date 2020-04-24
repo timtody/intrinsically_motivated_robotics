@@ -55,7 +55,10 @@ if __name__ == "__main__":
     log = Logger(cnf)
     n_collisions = {}
     cum_reward = {}
-    state_modes = ["notrain", "tac"]
+    state_modes = [
+        "tac",
+        "notrain",
+    ]
 
     for mode in state_modes:
         ncol, cumrew = run_mode_mp(mode, cnf)
