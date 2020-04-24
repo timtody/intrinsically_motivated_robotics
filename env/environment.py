@@ -147,7 +147,8 @@ class Env(gym.Env):
         self._skin_sensor_base_3 = ForceSensor("force_sensor_2#11")
         self.skin_base = [
             self._skin_sensor_base_0,
-            self._skin_sensor_base_1.self._skin_sensor_base_2,
+            self._skin_sensor_base_1,
+            self._skin_sensor_base_2,
             self._skin_sensor_base_3,
         ]
 
@@ -196,7 +197,9 @@ class Env(gym.Env):
         Retrieves the XYZ-forces of the skin sensors. Since the read method
         returns a tuple of forces and torques, we index into the first element.
         """
-        return [skin_sensor.read()[0] for skin_sensor in self.skin]
+
+        # nested list comprehension flattens list
+        return [e for skin_sensor in self.skin for e in skin_sensor.read()[0]]
 
     def get_mobile_positions(self):
         return (
@@ -258,7 +261,7 @@ class Env(gym.Env):
         phi = np.arctan2(gripper_pos[1], gripper_pos[0])
         return np.array([self.gripper_speed * 100, radius, theta, phi])
 
-    def _gate(self, x, threshold=0.01):
+    def _gate(self, x, threshold=0.0):
         if x < threshold:
             return 0
         return x
@@ -303,6 +306,7 @@ class Env(gym.Env):
             vision=self._get_vision() if self.cnf.state == "vision" else None,
             state_size=self.cnf.state_size,
             mobile_state=self.get_mobile_velocities(),
+            skin_state=self.get_skin_info()
         )
         return obs.get()
 

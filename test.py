@@ -11,13 +11,15 @@ class Exp(Experiment):
         start = time.time()
         for i in range(1000):
             # input()
-            obs, *_ = self.env.step([0, 0.1, 0, -0.5, 0, -0.5, 0])
-            # obs, *_ = self.env.step(self.env.action_space.sample())
+            # obs, *_ = self.env.step([0, 0.1, 0, -0.5, 0, -0.5, 0])
+            obs, *_ = self.env.step(self.env.action_space.sample())
+            print(obs)
+            print(len(obs))
+            exit(1)
             self_collision = self.env.check_collision_with_self()
             other_collision = self.env.check_collision()
             dynamic_collision = self.env.check_collision_with_dynamic()
 
-            win.update(*self.env.skin_sensor_test.read()[0])
         end = time.time()
         print("took", end - start, "s")
 

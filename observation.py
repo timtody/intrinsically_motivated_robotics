@@ -32,6 +32,7 @@ class Observation:
         mobile_state=None,
         vision=None,
         state_size="all",
+        skin_state=None,
     ):
         self.state_size = state_size
 
@@ -45,6 +46,7 @@ class Observation:
         #     tf for sublist in gripper_touch_forces for tf in sublist
         # ]
 
+        self.skin_sensors_touch = skin_state
         self.mobile_joint_velocities = mobile_state
         self.finger_left_forces_touch = finger_left_forces
         self.finger_right_forces_touch = finger_right_forces
@@ -85,6 +87,7 @@ class Observation:
         obs = []
         for key, data in self.__dict__.items():
             if data is not None and filter in key and key != "state_size":
+                print("were taking that one:", key)
                 obs.append(data)
         return np.concatenate(obs)
 
