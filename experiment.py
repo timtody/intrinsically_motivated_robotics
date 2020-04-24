@@ -536,7 +536,7 @@ class CountCollisionsAgent(Experiment):
             config=self.cnf,
             project=self.cnf.wandb.project,
             name=f"{self.cnf.wandb.name}_{kwargs['mode']}_rank{args[1]}",
-            group=kwargs["mode"],
+            group=f"{self.cnf.wandb.name}_{kwargs['mode']}",
         )
 
         self.agent = Agent(self.action_dim, self.state_dim, self.cnf, self.device)
