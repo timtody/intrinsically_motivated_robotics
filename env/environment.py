@@ -24,6 +24,7 @@ class Env(gym.Env):
         self._set_collections()
         self._setup_force_sensors()
         self._setup_mobile()
+        self._setup_skin()
 
         self.action_space = gym.spaces.Box(
             low=-np.inf, high=np.inf, shape=(self.cnf.action_dim,)
@@ -108,6 +109,7 @@ class Env(gym.Env):
         joint.set_motor_locked_at_zero_velocity(True)
 
     def _setup_mobile(self):
+
         """
         Sets up the joints of the robot mobile which consists of three
         spherical joints measuring rotation around XYZ-axis.
@@ -128,7 +130,60 @@ class Env(gym.Env):
             self._mobile_2_joint_1,
         ]
 
-        #  [self._enable_vel_control(joint) for joint in self._mobile_collection]
+    def _setup_skin(self):
+        # base of arm
+        self._skin_sensor_base_0 = ForceSensor("force_sensor_2#8")
+        self._skin_sensor_base_1 = ForceSensor("force_sensor_2#9")
+        self._skin_sensor_base_2 = ForceSensor("force_sensor_2#10")
+        self._skin_sensor_base_3 = ForceSensor("force_sensor_2#11")
+        self.skin_base = [
+            self._skin_sensor_base_0,
+            self._skin_sensor_base_1.self._skin_sensor_base_2,
+            self._skin_sensor_base_3,
+        ]
+
+        # upper arm
+        self._skin_sensor_upper_0 = ForceSensor("force_sensor_2#0")
+        self._skin_sensor_upper_1 = ForceSensor("force_sensor_2#1")
+        self._skin_sensor_upper_2 = ForceSensor("force_sensor_2#2")
+        self._skin_sensor_upper_3 = ForceSensor("force_sensor_2#3")
+        self._skin_sensor_upper_4 = ForceSensor("force_sensor_2#4")
+        self._skin_sensor_upper_5 = ForceSensor("force_sensor_2#5")
+        self._skin_sensor_upper_6 = ForceSensor("force_sensor_2#6")
+        self._skin_sensor_upper_7 = ForceSensor("force_sensor_2#7")
+        self.skin_upper = [
+            self._skin_sensor_upper_0,
+            self._skin_sensor_upper_1,
+            self._skin_sensor_upper_2,
+            self._skin_sensor_upper_3,
+            self._skin_sensor_upper_4,
+            self._skin_sensor_upper_5,
+            self._skin_sensor_upper_6,
+            self._skin_sensor_upper_7,
+        ]
+
+        # forearm
+        self._skin_sensor_forearm_0 = ForceSensor("force_sensor_2#12")
+        self._skin_sensor_forearm_1 = ForceSensor("force_sensor_2#13")
+        self._skin_sensor_forearm_2 = ForceSensor("force_sensor_2#14")
+        self._skin_sensor_forearm_3 = ForceSensor("force_sensor_2#15")
+        self._skin_sensor_forearm_4 = ForceSensor("force_sensor_2#16")
+        self._skin_sensor_forearm_5 = ForceSensor("force_sensor_2#17")
+        self._skin_sensor_forearm_6 = ForceSensor("force_sensor_2#18")
+        self.skin_forearm = [
+            self._skin_sensor_forearm_0,
+            self._skin_sensor_forearm_1,
+            self._skin_sensor_forearm_2,
+            self._skin_sensor_forearm_3,
+            self._skin_sensor_forearm_4,
+            self._skin_sensor_forearm_5,
+            self._skin_sensor_forearm_6,
+        ]
+
+        self.skin = [*self.skin_base, *self.skin_upper, *self.skin_forearm]
+
+    def get_skin_info(self):
+        return [skin_sensor.read()[0] for skin_sensor in self.skin]
 
     def get_mobile_positions(self):
         return (
@@ -159,9 +214,6 @@ class Env(gym.Env):
             self._mobile_2_joint_0.get_joint_force(),
             self._mobile_2_joint_1.get_joint_force(),
         )
-
-    def apply_joint_frictions(self, coef=0.6):
-        [joint.set_joint_target_velocity(0) for joint in self._mobile_collection]
 
     def read_force_sensors(self):
         """
@@ -260,7 +312,6 @@ class Env(gym.Env):
         self._set_vels(action)
         self.gripper_speed = self._get_gripper_speed()
         self._pr.step()
-        self.apply_joint_frictions()
         return (
             self._get_observation(),
             self._get_reward(),

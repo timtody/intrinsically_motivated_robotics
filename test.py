@@ -6,39 +6,18 @@ import time
 
 class Exp(Experiment):
     def run(self):
-        win = GraphWindow(
-            [
-                "mobile_0_alpha",
-                "mobile_0_gamma",
-                "mobile_1_alpha",
-                "mobile_1_gamma",
-                "mobile_2_alpha",
-                "mobile_2_gamma",
-            ],
-            2,
-            3,
-        )
+        win = GraphWindow(["skin x", "skin y", "skin z",], 3, 1, autoscale=True,)
 
         start = time.time()
         for i in range(1000):
-            # self.env._mobile_2_joint_0.set_joint_target_velocity(0)
-            # self.env._mobile_2_joint_1.set_joint_target_velocity(0)
-            # self.env._mobile_1_joint_0.set_joint_target_velocity(0)
-            # self.env._mobile_1_joint_1.set_joint_target_velocity(0)
-            # self.env._mobile_0_joint_0.set_joint_target_velocity(0)
-            # self.env._mobile_0_joint_1.set_joint_target_velocity(0)
-            obs, *_ = self.env.step([0, 1, 0, -1, 0, 0, 0])
-            print(obs)
-            print(len(obs))
-            exit(1)
+            # input()
+            obs, *_ = self.env.step([0, 0.1, 0, -0.5, 0, -0.5, 0])
+            # obs, *_ = self.env.step(self.env.action_space.sample())
             self_collision = self.env.check_collision_with_self()
             other_collision = self.env.check_collision()
             dynamic_collision = self.env.check_collision_with_dynamic()
 
-            # win.update(*self.env.get_mobile_velocities())
-            # print(
-            #     f"self collision: {self_collision}\nother collision: {other_collision}\ndynamic collision: {dynamic_collision}"
-            # )
+            win.update(*self.env.skin_sensor_test.read()[0])
         end = time.time()
         print("took", end - start, "s")
 
