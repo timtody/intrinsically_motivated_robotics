@@ -131,6 +131,15 @@ class Env(gym.Env):
         ]
 
     def _setup_skin(self):
+        """
+        Sets up the skin sensors of the robot which are force sensors
+        measuring forces in XYZ-direction. The skin is separated into three
+        different groups (base, upper arm, forearm) to investigate
+        how the preference of the agent for different parts may differ.
+        This is also the place where we would hook in the idea that different
+        parts may have different sensory density and will be preferred / neglected.
+        """
+
         # base of arm
         self._skin_sensor_base_0 = ForceSensor("force_sensor_2#8")
         self._skin_sensor_base_1 = ForceSensor("force_sensor_2#9")
@@ -183,6 +192,10 @@ class Env(gym.Env):
         self.skin = [*self.skin_base, *self.skin_upper, *self.skin_forearm]
 
     def get_skin_info(self):
+        """
+        Retrieves the XYZ-forces of the skin sensors. Since the read method
+        returns a tuple of forces and torques, we index into the first element.
+        """
         return [skin_sensor.read()[0] for skin_sensor in self.skin]
 
     def get_mobile_positions(self):
