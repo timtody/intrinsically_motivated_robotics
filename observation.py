@@ -87,7 +87,6 @@ class Observation:
         obs = []
         for key, data in self.__dict__.items():
             if data is not None and filter in key and key != "state_size":
-                print("were taking that one:", key)
                 obs.append(data)
         return np.concatenate(obs)
 
