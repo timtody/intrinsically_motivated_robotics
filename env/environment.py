@@ -144,7 +144,7 @@ class Env(gym.Env):
         self._skin_sensor_base_0 = ForceSensor("force_sensor_2#8")
         self._skin_sensor_base_1 = ForceSensor("force_sensor_2#9")
         self._skin_sensor_base_2 = ForceSensor("force_sensor_2#10")
-        self._skin_sensor_base_3 = ForceSensor("force_sensor_2#11")
+        self._skin_sensor_base_3 = ForceSensor("force_sensor_2#18")
         self.skin_base = [
             self._skin_sensor_base_0,
             self._skin_sensor_base_1,
@@ -190,7 +190,24 @@ class Env(gym.Env):
             self._skin_sensor_forearm_6,
         ]
 
-        self.skin = [*self.skin_base, *self.skin_upper, *self.skin_forearm]
+        # wrist
+        self._skin_sensor_wrist_0 = ForceSensor("force_sensor_2#19")
+        self._skin_sensor_wrist_1 = ForceSensor("force_sensor_2#23")
+        self._skin_sensor_wrist_2 = ForceSensor("force_sensor_2#24")
+        self._skin_sensor_wrist_3 = ForceSensor("force_sensor_2#25")
+        self.skin_wrist = [
+            self._skin_sensor_wrist_0,
+            self._skin_sensor_wrist_1,
+            self._skin_sensor_wrist_2,
+            self._skin_sensor_wrist_3,
+        ]
+
+        self.skin = [
+            *self.skin_base,
+            *self.skin_upper,
+            *self.skin_forearm,
+            *self.skin_wrist,
+        ]
 
     def get_skin_info(self):
         """

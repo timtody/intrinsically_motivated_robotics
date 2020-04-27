@@ -551,7 +551,7 @@ class CountCollisionsAgent(Experiment):
         # experiment parameters
         self.episode_len = 500
 
-    def run(self, callbacks):
+    def run(self):
         state = self.env.reset()
         for i in range(self.cnf.main.n_steps):
             self.ppo_timestep += 1

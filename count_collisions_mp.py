@@ -29,7 +29,7 @@ def run(rank, cnf, mode, results):
     # start the experiment
     if rank == 0:
         print("Starting mode", mode)
-    n_collisions, cum_reward = exp.run([lambda x: x["collided"], lambda x: x["sound"]])
+    n_collisions, cum_reward = exp.run()
     results[rank] = n_collisions
     results[rank + len(results) // 2] = cum_reward
 
