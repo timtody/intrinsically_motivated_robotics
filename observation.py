@@ -53,6 +53,7 @@ class Observation:
         self.wrist_left_forces_touch = wrist_left_forces
         self.wrist_right_forces_touch = wrist_right_forces
         self.kuckle_forces_touch = knuckle_forces
+
         self.audio = np.array([*audio, *audio, *audio])
         self.rgb_left = self._maybe_extract_vision(vision, "left")
         self.rgb_right = self._maybe_extract_vision(vision, "right")
