@@ -16,8 +16,7 @@ ppo:
 env:
   scene_path: base.ttt
   headless: True
-  state: low
-  state_size: all
+  state: prop,tac
   skip: 1
   action_dim: 7
   torch_seed: 0

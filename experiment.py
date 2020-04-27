@@ -60,7 +60,7 @@ class Experiment:
             if not cnf.main.train:
                 self.writer = SummaryWriter(f"tb/mode:notrain_rank:{rank}")
             else:
-                self.writer = SummaryWriter(f"tb/mode:{cnf.env.state_size}_rank:{rank}")
+                self.writer = SummaryWriter(f"tb/mode:{cnf.env.state}_rank:{rank}")
 
     @abstractmethod
     def run(self, callbacks, log=False):
@@ -421,7 +421,7 @@ class TestReward(Experiment):
             next_state, *_ = self.env.step(action)
             reward = self.icm.train_forward([[state]], [[next_state]], [action])
             reward_sum += reward
-            sensors = np.array(self.env.read_force_sensors()).sum(axis=1)
+            sensors = np.array(self.env.read_force_sensors_hand()).sum(axis=1)
             state = next_state
             self.window.update(reward, *sensors)
         print(reward_sum / 10000)

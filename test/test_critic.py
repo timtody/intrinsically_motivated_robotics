@@ -18,7 +18,7 @@ class RewardQueue:
         self.Q[-1] = 0
 
         for i, r in enumerate(range(self.len - 1, -1, -1)):
-            self.Q[i] += self.gamma**r * reward
+            self.Q[i] += self.gamma ** r * reward
 
     def get(self) -> int:
         return self.Q[0]
@@ -44,7 +44,7 @@ val_Q = ValueQueue(Q_LEN)
 cnf = get_conf("conf/main.yaml")
 # init env before logger!
 # log = Logger(cnf)
-cnf.env.state_size = "prop"
+cnf.env.state = "prop"
 env = Env(cnf)
 
 # skip_wrapper = SkipWrapper(1)
@@ -83,7 +83,7 @@ while True:
         prev_state = next_state.get().copy()
     if j == 99:
         print(next_state.get())
-        print(((prev_state - next_state.get())**2).mean())
+        print(((prev_state - next_state.get()) ** 2).mean())
         exit(1)
     # compute im reward
     im_loss = icmodule.train_forward(state.get(), next_state.get(), action)
@@ -94,10 +94,11 @@ while True:
     ret_Q.push(im_loss)
     val_Q.push(agent.get_value(next_state.get()))
     if i >= Q_LEN:
-        writer.add_scalars("return approximation", {
-            "approx_ret": val_Q.get(),
-            "true_ret": ret_Q.get()
-        }, i - Q_LEN)
+        writer.add_scalars(
+            "return approximation",
+            {"approx_ret": val_Q.get(), "true_ret": ret_Q.get()},
+            i - Q_LEN,
+        )
 
     if timestep % cnf.main.train_each == 0:
         value = agent.policy_old.critic(memory.states[-1])

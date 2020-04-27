@@ -19,7 +19,7 @@ def run(rank, cnf, mode, results):
         cnf.main.train = False
     else:
         cnf.main.train = True
-        cnf.env.state_size = mode
+        cnf.env.state = mode
     cnf.env.mode = mode
     # set seeds
     cnf.env.torch_seed = np.random.randint(9999)

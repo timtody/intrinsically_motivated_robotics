@@ -22,7 +22,7 @@ class Env(gym.Env):
         self._setup_shapes()
         self._set_objects_collidable()
         self._set_collections()
-        self._setup_force_sensors()
+        self._setup_force_sensors_hand()
         self._setup_mobile()
         self._setup_skin()
 
@@ -34,6 +34,7 @@ class Env(gym.Env):
         self.observation_space = gym.spaces.Box(
             low=-np.inf, high=np.inf, shape=obs.shape
         )
+
         # properties
         self.gripper_speed = 0
         self.sound_played = False
@@ -85,9 +86,6 @@ class Env(gym.Env):
         self._concrete = Shape("Concrete")
         self._head = Shape("Head")
 
-    # def get_target_position(self):
-    #     return self.target.get_position()
-
     def get_tip_position(self):
         return np.array(self._gripper.get_position())
 
@@ -97,12 +95,20 @@ class Env(gym.Env):
         self._gripper_last_position = current
         return np.linalg.norm(current - last)
 
-    def _setup_force_sensors(self):
+    def _setup_force_sensors_hand(self):
         self._fs0 = ForceSensor("force_sensor_0")
         self._fs1 = ForceSensor("force_sensor_1")
         self._fs2 = ForceSensor("force_sensor_2")
         self._fs3 = ForceSensor("force_sensor_3")
         self._fs4 = ForceSensor("force_sensor_4")
+
+        self.touch_sensors_hand = [
+            self._fs0,
+            self._fs1,
+            self._fs2,
+            self._fs3,
+            self._fs4,
+        ]
 
     def _enable_vel_control(self, joint):
         joint.set_control_loop_enabled(False)
@@ -248,16 +254,13 @@ class Env(gym.Env):
             self._mobile_2_joint_1.get_joint_force(),
         )
 
-    def read_force_sensors(self):
+    def read_force_sensors_hand(self):
         """
         Reads XYZ-forces from the force sensors attached to the robot
         arm. The gate function simply filters out values below a certain
         threshold to accomodate for motor noise.
         """
-        return [
-            list(map(self._gate, sensor.read()[0]))
-            for sensor in [self._fs0, self._fs1, self._fs2, self._fs3, self._fs4]
-        ]
+        return [e for sensor in self.touch_sensors_hand for e in sensor.read()[0]]
 
     def get_sound_signal(self, threshold=0.025):
         # threshold = 0.035
@@ -303,29 +306,31 @@ class Env(gym.Env):
             collided_other=self.check_collision(),
             collided_self=self.check_collision_with_self(),
             collided_dyn=self.check_collision_with_dynamic(),
-            sound=self.sound_played,
+            # TODO: find real solution for handling get_info status
+            # sound=self.sound_played,
         )
         return info
 
     def _get_observation(self):
-        # TODO: only compute modalities when they are actually needed
-        # and pass them vias kwargs instead of args
-        obs = Observation(
-            self._arm.get_joint_velocities(),
-            self._arm.get_joint_positions(),
-            self._arm.get_joint_forces(),
-            self._gripper.get_open_amount(),
-            self._gripper.get_pose(),
-            self._gripper.get_joint_positions(),
-            self._gripper.get_touch_sensor_forces(),
-            *self.read_force_sensors(),
-            self.get_sound_signal(),
-            vision=self._get_vision() if self.cnf.state == "vision" else None,
-            state_size=self.cnf.state_size,
-            mobile_state=self.get_mobile_velocities(),
-            skin_state=self.get_skin_info()
-        )
-        return obs.get()
+        obs = []
+        if "prop" in self.cnf.state:
+            [obs.append(vel) for vel in self._arm.get_joint_velocities()]
+            [obs.append(pos) for pos in self._arm.get_joint_positions()]
+            [obs.append(pos) for pos in self._gripper.get_joint_positions()]
+            [obs.append(open_amount) for open_amount in self._gripper.get_open_amount()]
+
+        if "tac" in self.cnf.state:
+            [obs.append(reading) for reading in self.read_force_sensors_hand()]
+            [obs.append(skin_reading) for skin_reading in self.get_skin_info()]
+
+        if "mobile" in self.cnf.state:
+            [obs.append(mob_vel) for mob_vel in self.get_mobile_velocities()]
+
+        if "audio" in self.cnf.state:
+            # TODO: implement this
+            pass
+
+        return np.array(obs)
 
     def _set_objects_collidable(self):
         self._arm.set_collidable(True)
