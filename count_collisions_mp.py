@@ -56,6 +56,7 @@ if __name__ == "__main__":
     n_collisions = {}
     cum_reward = {}
     state_modes = [
+        "tac",
         "notrain",
     ]
 
