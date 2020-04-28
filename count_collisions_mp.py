@@ -62,8 +62,8 @@ if __name__ == "__main__":
 
     for mode in state_modes:
         ncol, cumrew = run_mode_mp(mode, cnf)
-        n_collisions[mode] = ncol
-        cum_reward[mode] = cumrew
+        n_collisions[str(mode)] = ncol
+        cum_reward[str(mode)] = cumrew
 
     n_collisions_df = pd.DataFrame(data=n_collisions)
     cum_reward_df = pd.DataFrame(data=cum_reward)
@@ -88,5 +88,5 @@ if __name__ == "__main__":
         pickle.dump(n_collisions, f)
 
     cumrew = np.array(cumrew)
-    with open(f"data/cumrew.p", "wb") as f:
+    with open(f"data/cum_reward.p", "wb") as f:
         pickle.dump(cumrew, f)
