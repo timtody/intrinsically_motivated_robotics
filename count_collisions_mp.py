@@ -70,16 +70,16 @@ if __name__ == "__main__":
 
     wandb.init(config=cnf, project=cnf.wandb.project, name="master")
 
-    n_collisions_df.mean(axis=0).plot.bar(yerr=n_collisions_df.std(axis=0)).set_title(
-        "n collisions"
-    )
+    n_collisions_df.mean(axis=0).plot.bar(
+        yerr=n_collisions_df.std(axis=0), rot=0
+    ).set_title("n collisions")
 
     plt.savefig("data/n_collisions.png")
     plt.clf()
 
-    cum_reward_df.mean(axis=0).plot.bar(yerr=cum_reward_df.std(axis=0)).set_title(
-        "cumulative reward"
-    )
+    cum_reward_df.mean(axis=0).plot.bar(
+        yerr=cum_reward_df.std(axis=0), rot=0
+    ).set_title("cumulative reward")
     plt.savefig("data/cum_reward.png")
     plt.clf()
 
