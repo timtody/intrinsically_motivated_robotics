@@ -650,3 +650,10 @@ class MeasureForgetting(Experiment):
 
         # experiment parameters
         self.episode_len = 500
+        
+        self.burnin_len = 50000
+
+    def run(self):
+        # burnin period
+        state = self.env.reset()
+        
