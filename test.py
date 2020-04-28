@@ -1,12 +1,15 @@
-from experiment import Experiment, CountCollisionsAgent
-from utils import get_conf, GraphWindow
-from logger import Logger
 import time
 import os
 import numpy as np
+from logger import Logger
+from utils import get_conf, GraphWindow
+from experiment import Experiment, CountCollisionsAgent
+
 
 np.set_printoptions(suppress=True)
+
 os.environ["WANDB_MODE"] = "dryrun"
+os.environ["WANDB_DISABLE_CODE"] = "true"
 
 
 class Exp(Experiment):
@@ -50,5 +53,5 @@ class Exp(Experiment):
 
 cnf = get_conf("conf/main.yaml")
 Logger(cnf)
-exp = Exp(cnf, 0, mode="bruh")
+exp = CountCollisionsAgent(cnf, 0, mode="bruh")
 exp.run()

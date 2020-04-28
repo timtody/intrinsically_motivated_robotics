@@ -583,7 +583,8 @@ class CountCollisionsAgent(Experiment):
             self.n_collisions_other += info["collided_other"]
             self.n_collisions_dynamic += info["collided_dyn"]
 
-            self.n_sounds += info["sound"]
+            # TODO: reintroduce this
+            # self.n_sounds += info["sound"]
 
             # train agent
             if self.ppo_timestep % self.cnf.main.train_each == 0:
@@ -611,7 +612,8 @@ class CountCollisionsAgent(Experiment):
                         "col rate other": self.n_collisions_other / self.global_step,
                         "col rate dyn": self.n_collisions_dynamic / self.global_step,
                         "n sounds": self.n_sounds,
-                    }
+                    },
+                    step=self.global_step,
                 )
 
             state = next_state
