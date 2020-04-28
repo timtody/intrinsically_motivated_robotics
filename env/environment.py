@@ -330,6 +330,13 @@ class Env(gym.Env):
             # TODO: implement this
             pass
 
+        if "notrain" in self.cnf.state:
+            # this is done to prevent pytorch from dividing by 0 in PPO
+            # which will be the case because PPO accesses state.length
+            # which would be 0 elsewise. During the notrain regime this
+            # state is not used anyways so we can append stuff here.
+            obs.append(1)
+
         return np.array(obs)
 
     def _set_objects_collidable(self):
