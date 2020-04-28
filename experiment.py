@@ -550,6 +550,7 @@ class CountCollisionsAgent(Experiment):
 
         # experiment parameters
         self.episode_len = 500
+        self.episode_reward = 0
 
     def run(self):
         state = self.env.reset()
@@ -575,6 +576,7 @@ class CountCollisionsAgent(Experiment):
                 done = True
                 if self.cnf.main.train:
                     self.env.reset()
+                    wandb.log({"episode reward": episode_reward}, step=self.global_step)
 
             self.agent.set_is_done(done)
 
@@ -591,7 +593,8 @@ class CountCollisionsAgent(Experiment):
                 # train and log resulting metrics
                 train_results = self.agent.train(train_ppo=self.cnf.main.train)
 
-                self.reward_sum += train_results["imloss"].sum().item()
+                batch_reward = train_results["imloss"].sum().item()
+                self.reward_sum += batch_reward
 
                 # if we don't train we still want to log all the relevant data
                 self.wandb.log(
@@ -604,6 +607,7 @@ class CountCollisionsAgent(Experiment):
                         "col rate dyn": self.n_collisions_dynamic / self.global_step,
                         "n sounds": self.n_sounds,
                         "cum reward": self.reward_sum,
+                        "batch reward": batch_reward,
                         "policy loss": train_results["ploss"],
                         "value loss": train_results["vloss"],
                     },
