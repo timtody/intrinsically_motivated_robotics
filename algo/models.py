@@ -173,12 +173,13 @@ class ICModule(nn.Module):
         next_state_embed_pred = self.next_state(this_state, action)
         next_state_embed_true = self.embed(next_state)
 
-        self.opt.zero_grad()
+        # TODO: undo this
+        # self.opt.zero_grad()
         loss = F.mse_loss(
             next_state_embed_pred, next_state_embed_true, reduction="none"
         )
-        loss.mean().backward()
-        self.opt.step()
+        # loss.mean().backward()
+        # self.opt.step()
         return loss.mean(dim=1).detach() / 0.4065
 
     def _process_loss(self, loss):

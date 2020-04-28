@@ -42,22 +42,32 @@ class Agent:
         action, *_ = self.ppo.policy_old.act(state, self.ppo_mem)
         return action
 
-    def train(self) -> dict:
+    def train(self, train_fw=True, train_ppo=True) -> dict:
         """
         Trains the ICM of the agent. This method clears the buffer which was filled by
         this.append_icm_transition
         """
-        state_batch, next_state_batch, action_batch = zip(*self.icm_buffer)
-        im_loss_batch = self.icm.train_forward(
-            state_batch, next_state_batch, action_batch
-        )
+        results = {"ploss": 0, "vloss": 0, "imloss": torch.tensor([0])}
+
+        if train_fw:
+            state_batch, next_state_batch, action_batch = zip(*self.icm_buffer)
+            im_loss_batch = self.icm.train_forward(
+                state_batch, next_state_batch, action_batch
+            )
+            results["imloss"] = im_loss_batch
+
         # train actor
-        self.ppo_mem.rewards = im_loss_batch.cpu().numpy()
-        ploss, vloss = self.ppo.update(self.ppo_mem)
+        if train_ppo:
+            self.ppo_mem.rewards = im_loss_batch.cpu().numpy()
+            ploss, vloss = self.ppo.update(self.ppo_mem)
+            results["ploss"] = ploss
+            results["vloss"] = vloss
+
+        # reset buffers
         self.ppo_mem.clear_memory()
         self.icm_buffer = []
 
-        return {"ploss": ploss, "vloss": vloss, "imloss": im_loss_batch}
+        return results
 
     def save_state(self, timestep) -> None:
         # save icm
