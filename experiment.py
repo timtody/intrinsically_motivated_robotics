@@ -576,7 +576,6 @@ class CountCollisionsAgent(Experiment):
                 done = True
                 if self.cnf.main.train:
                     self.env.reset()
-                    wandb.log({"episode reward": episode_reward}, step=self.global_step)
 
             self.agent.set_is_done(done)
 
