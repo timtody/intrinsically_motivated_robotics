@@ -16,7 +16,7 @@ os.environ["WANDB_DISABLE_CODE"] = "true"
 
 class Exp(Experiment):
     def run(self):
-        sensors = self.env.skin_forearm
+        sensors = self.env.skin_wrist
         self.win = GraphWindow(
             [
                 label
