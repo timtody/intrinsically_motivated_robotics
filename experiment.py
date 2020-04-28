@@ -620,3 +620,31 @@ class CountCollisionsAgent(Experiment):
 
         self.env.close()
         return self.n_collisions_self, self.reward_sum
+
+
+class MeasureForgetting(Experiment):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        import wandb
+
+        self.wandb = wandb
+
+        self.wandb.init(
+            config=self.cnf,
+            project=self.cnf.wandb.project,
+            name=f"{self.cnf.wandb.name}_{kwargs['mode']}_rank{args[1]}",
+            group=f"{self.cnf.wandb.name}_{kwargs['mode']}",
+        )
+
+        self.agent = Agent(self.action_dim, self.state_dim, self.cnf, self.device)
+
+        # setup logging metrics
+        self.n_collisions_self = 0
+        self.n_collisions_other = 0
+        self.n_collisions_dynamic = 0
+        self.n_sounds = 0
+        self.reward_sum = 0
+
+        # experiment parameters
+        self.episode_len = 500
