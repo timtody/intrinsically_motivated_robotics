@@ -588,19 +588,10 @@ class CountCollisionsAgent(Experiment):
 
             # train agent
             if self.ppo_timestep % self.cnf.main.train_each == 0:
-                if self.cnf.main.train:
-                    # train and log resulting metrics
-                    train_results = self.agent.train()
-                    self.wandb.log(
-                        {
-                            "cum reward": self.reward_sum,
-                            "policy loss": train_results["ploss"],
-                            "value loss": train_results["vloss"],
-                        },
-                        step=self.global_step,
-                    )
+                # train and log resulting metrics
+                train_results = self.agent.train(train_ppo=self.cnf.main.train)
 
-                    self.reward_sum += train_results["imloss"].sum().item()
+                self.reward_sum += train_results["imloss"].sum().item()
 
                 # if we don't train we still want to log all the relevant data
                 self.wandb.log(
@@ -612,6 +603,9 @@ class CountCollisionsAgent(Experiment):
                         "col rate other": self.n_collisions_other / self.global_step,
                         "col rate dyn": self.n_collisions_dynamic / self.global_step,
                         "n sounds": self.n_sounds,
+                        "cum reward": self.reward_sum,
+                        "policy loss": train_results["ploss"],
+                        "value loss": train_results["vloss"],
                     },
                     step=self.global_step,
                 )
