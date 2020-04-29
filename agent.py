@@ -76,11 +76,11 @@ class Agent:
 
         return results
 
-    def save_state(self, timestep) -> None:
+    def save_state(self, path="") -> None:
         # save icm
-        self.icm.save_state(timestep)
+        self.icm.save_state(path)
         # save ppo
-        self.ppo.save_state(timestep)
+        self.ppo.save_state(path)
 
     def load_state(self, path) -> None:
         # load icm

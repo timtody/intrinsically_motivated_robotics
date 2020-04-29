@@ -21,6 +21,7 @@ class Experiment:
     def __init__(self, cnf, rank, log=False, tb=True, mode=None):
         self.cnf = cnf
         self.log = log
+        self.rank = rank
 
         # set random seeds
         np.random.seed(cnf.env.np_seed)
@@ -651,8 +652,8 @@ class MeasureForgetting(Experiment):
         # experiment parameters
         self.episode_len = 500
 
-        self.burnin_len = 100000
-        self.buffer_length = 100
+        self.burnin_len = 1000
+        self.buffer_length = 2
         self.buffer_gap = 25
 
         self.train_len = 1000000
@@ -661,11 +662,7 @@ class MeasureForgetting(Experiment):
         # buffer for transitions
         self.trans_buffer = []
 
-    def test_forgetting(self):
-        pass
-
-    def run(self):
-        # burnin period
+    def _burn_in(self):
         state = self.env.reset()
         print("starting burn-in")
         for i in range(self.burnin_len):
@@ -685,6 +682,7 @@ class MeasureForgetting(Experiment):
 
             state = next_state
 
+    def _gather_data(self):
         # collect data
         print("start gathering data...")
         state = self.env.reset()
@@ -693,11 +691,28 @@ class MeasureForgetting(Experiment):
             next_state, _, done, info = self.env.step(action)
 
             if i % self.buffer_gap == 0:
-                self.trans_buffer.append(self.icm_transition(state, next_state, action))
+                self.trans_buffer.append([state, next_state, action])
 
             state = next_state
 
-        # train and measure the performance
+    def create_db(self):
+        self._burn_in()
+        self._gather_data()
+        with open(f"rank_{self.rank}_database.p", "wb") as f:
+            pickle.dump(self.trans_buffer, f)
+        self.agent.save_state(f"rank_{self.rank}_")
+
+    def _restore_db(self):
+        with open(f"rank_{self.rank}_database.p", "wb") as f:
+            self.trans_buffer = pickle.load(f)
+
+    def test_forgetting(self):
+        # restore saved database of transitions
+        self._restore_db()
+        # restore agent
+        self.agent.load_state(f"rank_{self.rank}")
+
+        # start the exp
         state = self.env.reset()
         self.agent.reset_buffer()
         self.agent.ppo_mem.clear_memory()
@@ -725,3 +740,6 @@ class MeasureForgetting(Experiment):
                 wandb.log({"mean loss": loss.mean()})
 
             state = next_state
+
+    def run(self):
+        self.test_forgetting()

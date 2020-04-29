@@ -195,13 +195,9 @@ class ICModule(nn.Module):
             self.running_return_std = return_std
         return loss / self.running_return_std
 
-    def save_state(self, timestep):
-        torch.save(
-            self.state_dict(), os.path.join("checkpoints", str(timestep), "icm.pt")
-        )
+    def save_state(self, path):
+        torch.save(self.state_dict(), path + "icm.pt")
 
     def load_state(self, path):
-        abspath = os.path.abspath(os.environ["owd"])
-        path = os.path.join(abspath, path, "icm.pt")
         print("loading model state from", path)
         self.load_state_dict(torch.load(path))
