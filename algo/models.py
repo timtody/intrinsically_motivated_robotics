@@ -166,19 +166,22 @@ class ICModule(nn.Module):
         """
         return self._inverse(this_state, next_state)
 
-    def train_forward(self, this_state, next_state, action):
+    def train_forward(self, this_state, next_state, action, freeze=False):
         action = torch.stack(action).float().to(device)
         this_state = torch.tensor(this_state).float().to(device)
         next_state = torch.tensor(next_state).float().to(device)
         next_state_embed_pred = self.next_state(this_state, action)
         next_state_embed_true = self.embed(next_state)
 
-        self.opt.zero_grad()
+        if not freeze:
+            self.opt.zero_grad()
+
         loss = F.mse_loss(
             next_state_embed_pred, next_state_embed_true, reduction="none"
         )
-        loss.mean().backward()
-        self.opt.step()
+        if not freeze:
+            loss.mean().backward()
+            self.opt.step()
         return loss.mean(dim=1).detach() / 0.4065
 
     def _process_loss(self, loss):

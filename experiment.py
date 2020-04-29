@@ -650,10 +650,78 @@ class MeasureForgetting(Experiment):
 
         # experiment parameters
         self.episode_len = 500
-        
-        self.burnin_len = 50000
+
+        self.burnin_len = 100000
+        self.buffer_length = 100
+        self.buffer_gap = 25
+
+        self.train_len = 1000000
+        self.train_every = 1000
+
+        # buffer for transitions
+        self.trans_buffer = []
+
+    def test_forgetting(self):
+        pass
 
     def run(self):
         # burnin period
         state = self.env.reset()
-        
+        print("starting burn-in")
+        for i in range(self.burnin_len):
+            action = self.agent.get_action(state)
+            next_state, _, done, info = self.env.step(action)
+            self.agent.append_icm_transition(state, next_state, action)
+
+            if i % self.episode_len == self.episode_len - 1:
+                done = True
+                self.env.reset()
+
+            self.agent.set_is_done(done)
+
+            if i % self.train_every == self.train_every - 1:
+                print("training")
+                self.agent.train()
+
+            state = next_state
+
+        # collect data
+        print("start gathering data...")
+        state = self.env.reset()
+        for i in range(self.buffer_length * self.buffer_gap):
+            action = self.agent.get_action(state)
+            next_state, _, done, info = self.env.step(action)
+
+            if i % self.buffer_gap == 0:
+                self.trans_buffer.append(self.icm_transition(state, next_state, action))
+
+            state = next_state
+
+        # train and measure the performance
+        state = self.env.reset()
+        self.agent.reset_buffer()
+        self.agent.ppo_mem.clear_memory()
+        print("starting training")
+        for i in range(self.train_len):
+            action = self.agent.get_action(state)
+            next_state, _, done, info = self.env.step(action)
+            self.agent.append_icm_transition(state, next_state, action)
+
+            if i % self.episode_len == self.episode_len - 1:
+                done = True
+                self.env.reset()
+
+            self.agent.set_is_done(done)
+
+            if i % self.train_every == self.train_every - 1:
+                print("training")
+                # train the agent
+                self.agent.train()
+                # check how performance has changed after training
+                state_batch, next_state_batch, action_batch = zip(*self.trans_buffer)
+                loss = self.agent.icm.train_forward(
+                    state_batch, next_state_batch, action_batch, freeze=True
+                )
+                wandb.log({"mean loss": loss.mean()})
+
+            state = next_state

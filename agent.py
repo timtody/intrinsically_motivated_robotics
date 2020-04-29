@@ -32,6 +32,9 @@ class Agent:
         """
         self.icm_buffer.append(self.icm_transition(this_state, next_state, action))
 
+    def reset_buffer(self) -> None:
+        self.icm_buffer = []
+
     def set_is_done(self, is_done) -> None:
         self.ppo_mem.is_terminals.append(is_done)
 
@@ -42,7 +45,9 @@ class Agent:
         action, *_ = self.ppo.policy_old.act(state, self.ppo_mem)
         return action
 
-    def train(self, train_fw=True, train_ppo=True, random_reward=False) -> dict:
+    def train(
+        self, train_fw=True, train_ppo=True, freeze_fw_model=False, random_reward=False
+    ) -> dict:
         """
         Trains the ICM of the agent. This method clears the buffer which was filled by
         this.append_icm_transition
@@ -52,7 +57,7 @@ class Agent:
         if train_fw:
             state_batch, next_state_batch, action_batch = zip(*self.icm_buffer)
             im_loss_batch = self.icm.train_forward(
-                state_batch, next_state_batch, action_batch
+                state_batch, next_state_batch, action_batch, freeze_fw_model
             )
             results["imloss"] = im_loss_batch
 
