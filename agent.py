@@ -58,7 +58,7 @@ class Agent:
 
         # train actor
         if train_ppo:
-            self.ppo_mem.rewards = im_loss_batch.cpu().numpy()
+            self.ppo_mem.rewards = im_loss_batch.normal_()
             ploss, vloss = self.ppo.update(self.ppo_mem)
             results["ploss"] = ploss
             results["vloss"] = vloss
