@@ -656,8 +656,8 @@ class MeasureForgetting(Experiment):
         self.buffer_length = 25
         self.buffer_gap = 60
 
-        self.train_len = 1000000
-        self.train_every = 1000
+        self.train_len = 100000
+        self.train_every = 500
 
         # buffer for transitions
         self.trans_buffer = []
@@ -703,7 +703,7 @@ class MeasureForgetting(Experiment):
         self.agent.save_state(f"rank_{self.rank}_")
 
     def _restore_db(self):
-        with open(f"data/forget/{self.rank}/database.p", "wb") as f:
+        with open(f"data/forget/{self.rank}/database.p", "rb") as f:
             self.trans_buffer = pickle.load(f)
 
     def test_forgetting(self):
@@ -714,8 +714,6 @@ class MeasureForgetting(Experiment):
 
         # start the exp
         state = self.env.reset()
-        self.agent.reset_buffer()
-        self.agent.ppo_mem.clear_memory()
         print("starting training")
         for i in range(self.train_len):
             action = self.agent.get_action(state)
@@ -742,4 +740,4 @@ class MeasureForgetting(Experiment):
             state = next_state
 
     def run(self):
-        self.create_db()
+        self.test_forgetting()
