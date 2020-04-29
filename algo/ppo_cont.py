@@ -123,25 +123,6 @@ class PPO:
 
         self.MseLoss = nn.MSELoss()
 
-    def load_state(self, path):
-        abspath = os.path.abspath(os.environ["owd"])
-        checkpoint_path = os.path.join(abspath, path)
-        print("loading ppo from path", checkpoint_path)
-        self.policy.load_state_dict(
-            torch.load(os.path.join(checkpoint_path, "policy.pt"))
-        )
-        self.optimizer.load_state_dict(
-            torch.load(os.path.join(checkpoint_path, "opt.pt"))
-        )
-        self.policy_old.load_state_dict(
-            torch.load(os.path.join(checkpoint_path, "policy_old.pt"))
-        )
-
-    def save_state(self, path):
-        torch.save(self.policy.state_dict(), path + "policy.pt")
-        torch.save(self.policy_old.state_dict(), path + "policy_old.pt")
-        torch.save(self.optimizer.state_dict(), path + "opt.pt")
-
     def get_value(self, state):
         return self.policy_old.get_value(state).item()
 
@@ -198,3 +179,14 @@ class PPO:
         # Copy new weights into old policy:
         self.policy_old.load_state_dict(self.policy.state_dict())
         return loss.mean(), value_loss
+
+    def load_state(self, path):
+        print("loading ppo from path", path)
+        self.policy.load_state_dict(torch.load(os.path.join(path, "policy.pt")))
+        self.optimizer.load_state_dict(torch.load(os.path.join(path, "opt.pt")))
+        self.policy_old.load_state_dict(torch.load(os.path.join(path, "policy_old.pt")))
+
+    def save_state(self, path):
+        torch.save(self.policy.state_dict(), path + "policy.pt")
+        torch.save(self.policy_old.state_dict(), path + "policy_old.pt")
+        torch.save(self.optimizer.state_dict(), path + "opt.pt")

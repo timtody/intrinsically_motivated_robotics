@@ -199,5 +199,6 @@ class ICModule(nn.Module):
         torch.save(self.state_dict(), path + "icm.pt")
 
     def load_state(self, path):
+        path = os.path.join(path, "icm.pt")
         print("loading model state from", path)
         self.load_state_dict(torch.load(path))
