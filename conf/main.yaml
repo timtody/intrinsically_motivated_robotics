@@ -32,7 +32,7 @@ wandb:
   name: testname
 
 icm:
-  embedding_size: 32
+  embedding_size: 256
 
 MMModel:
   prop_dim: 14
