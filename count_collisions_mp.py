@@ -57,6 +57,7 @@ if __name__ == "__main__":
     cum_reward = {}
     state_modes = [
         ["tac", "prop"],
+        ["tac", "prop", "random_reward"],
     ]
 
     for mode in state_modes:

@@ -42,7 +42,7 @@ class Agent:
         action, *_ = self.ppo.policy_old.act(state, self.ppo_mem)
         return action
 
-    def train(self, train_fw=True, train_ppo=True) -> dict:
+    def train(self, train_fw=True, train_ppo=True, random_reward=False) -> dict:
         """
         Trains the ICM of the agent. This method clears the buffer which was filled by
         this.append_icm_transition
@@ -58,7 +58,9 @@ class Agent:
 
         # train actor
         if train_ppo:
-            self.ppo_mem.rewards = im_loss_batch
+            self.ppo_mem.rewards = (
+                im_loss_batch if not random_reward else im_loss_batch.normal_()
+            )
             ploss, vloss = self.ppo.update(self.ppo_mem)
             results["ploss"] = ploss
             results["vloss"] = vloss

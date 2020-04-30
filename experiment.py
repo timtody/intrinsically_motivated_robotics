@@ -590,7 +590,12 @@ class CountCollisionsAgent(Experiment):
             # train agent
             if self.ppo_timestep % self.cnf.main.train_each == 0:
                 # train and log resulting metrics
-                train_results = self.agent.train(train_ppo=self.cnf.main.train)
+                train_results = self.agent.train(
+                    train_ppo=self.cnf.main.train,
+                    random_reward=True
+                    if "random_reward" in self.cnf.env.mode
+                    else False,
+                )
 
                 batch_reward = train_results["imloss"].sum().item()
                 self.reward_sum += batch_reward
