@@ -117,7 +117,7 @@ class ICModule(nn.Module):
         self._inverse = InverseModule(embedding_size, action_dim, self.base)
         self._forward = ForwardModule(embedding_size, action_dim, self.base)
 
-        self.opt = optim.Adam(self.parameters(), lr=5e-5)
+        self.opt = optim.Adam(self.parameters(), lr=1e-4)
         self.loss_buffer = LossBuffer(100)
         self.running_return_std = None
         self.alpha = alpha
