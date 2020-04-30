@@ -32,8 +32,9 @@ class Agent:
         """
         self.icm_buffer.append(self.icm_transition(this_state, next_state, action))
 
-    def reset_buffer(self) -> None:
+    def reset_buffers(self) -> None:
         self.icm_buffer = []
+        self.ppo_mem.clear_memory()
 
     def set_is_done(self, is_done) -> None:
         self.ppo_mem.is_terminals.append(is_done)
