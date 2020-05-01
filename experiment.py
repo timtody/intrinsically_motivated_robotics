@@ -652,9 +652,9 @@ class MeasureForgetting(Experiment):
         # experiment parameters
         self.episode_len = 250
 
-        self.burnin_len = 100000
-        self.buffer_length = 100
-        self.buffer_gap = 15
+        self.burnin_len = 250000
+        self.buffer_length = 250
+        self.buffer_gap = 12
 
         self.train_len = 500000
         self.train_every = 500
@@ -699,8 +699,6 @@ class MeasureForgetting(Experiment):
             state = next_state
 
     def _create_db(self):
-        self._burn_in()
-        self._gather_dataset()
         with open(f"rank_{self.rank}_database.p", "wb") as f:
             pickle.dump(self.trans_buffer, f)
         self.agent.save_state(f"rank_{self.rank}_")
@@ -744,5 +742,7 @@ class MeasureForgetting(Experiment):
             state = next_state
 
     def run(self):
+        self._burn_in()
+        self._gather_dataset()
         self._create_db()
         self._test_forgetting()
