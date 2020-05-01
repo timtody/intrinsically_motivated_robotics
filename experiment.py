@@ -453,9 +453,6 @@ class Behavior(Experiment):
             state = next_state
 
 
-from matplotlib import pyplot as plt
-
-
 class GoalReachAgent(Experiment):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -746,3 +743,70 @@ class MeasureForgetting(Experiment):
         self._gather_dataset()
         self._create_db()
         self._test_forgetting()
+
+
+class TestFWmodel(Experiment):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        import wandb
+
+        self.wandb = wandb
+
+        self.wandb.init(
+            config=self.cnf,
+            project=self.cnf.wandb.project,
+            name=f"{self.cnf.wandb.name}_{self.cnf.env.state}_rank{args[1]}",
+            group=f"{self.cnf.wandb.name}_{self.cnf.env.state}",
+        )
+
+        self.agent = Agent(self.action_dim, self.state_dim, self.cnf, self.device)
+
+    def run(self):
+        state = self.env.reset()
+        for i in range(100000):
+            action = self.env.action_space.sample()
+            next_state, *_ = self.env.step(action)
+            self.agent.append_icm_transition(state, next_state, torch.tensor(action))
+
+            if i % 1000 == 999:
+                results = self.agent.train(train_fw=True, train_ppo=False)
+                self.wandb.log({"fw loss": results["imloss"].mean()})
+
+            state = next_state
+
+
+class TestStateDifference(Experiment):
+    def run(self):
+        state = self.env.reset()
+        diffs = []
+
+        for i in range(1000):
+            action = self.env.action_space.sample()
+            next_state, *_ = self.env.step(action)
+
+            state = torch.tensor(state).float().to(self.device)
+            next_state = torch.tensor(next_state).float().to(self.device)
+
+            diffs.append(torch.nn.functional.mse_loss(state, next_state,).mean())
+
+            state = next_state
+
+        stacked_diffs = torch.stack(diffs)
+
+        print("diff mean:", stacked_diffs.mean())
+        print("diff std:", stacked_diffs.std())
+
+
+class CreateFWDB(Experiment):
+    def run(self):
+        db = []
+
+        DB_SIZE = 50000
+
+        state = self.env.reset()
+        for i in range(DB_SIZE):
+            action = self.env.action_space.sample()
+            next_state, *_ = self.env.step(action)
+            db.append([state, next_state, action])
+
