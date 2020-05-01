@@ -19,5 +19,5 @@ class Runner:
     def _start_env(self, rank):
         self.cnf.env.torch_seed += rank
         self.cnf.env.np_seed += rank
-        exp = self.exp(self.cnf, rank, mode="test")
+        exp = self.exp(self.cnf, rank)
         exp.run()
