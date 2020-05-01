@@ -19,9 +19,6 @@ class Agent:
 
         # ICM related stuff
         self.icm = ICModule(action_dim, state_dim, **cnf.icm).to(device)
-        self.icm_transition = collections.namedtuple(
-            "icm_trans", ["state", "next_state", "action"]
-        )
         self.icm_buffer = []
 
     def append_icm_transition(self, this_state, next_state, action) -> None:
@@ -30,7 +27,7 @@ class Agent:
         for computing the intrinsic reward which is the error when predicting
         s_t+1 from (s_t, a).
         """
-        self.icm_buffer.append(self.icm_transition(this_state, next_state, action))
+        self.icm_buffer.append([this_state, next_state, action])
 
     def reset_buffers(self) -> None:
         self.icm_buffer = []
