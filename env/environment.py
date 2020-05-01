@@ -26,9 +26,7 @@ class Env(gym.Env):
         self._setup_mobile()
         self._setup_skin()
 
-        self.action_space = gym.spaces.Box(
-            low=-np.inf, high=np.inf, shape=(self.cnf.action_dim,)
-        )
+        self.action_space = gym.spaces.Box(low=-1, high=1, shape=(self.cnf.action_dim,))
         # TODO: need to be made more general for vision space
         obs = self._init_step()
         self.observation_space = gym.spaces.Box(
