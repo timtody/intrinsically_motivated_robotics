@@ -43,4 +43,4 @@ MMModel:
   lstm_layers: 2
 
 mp:
-  n_procs: 6
+  n_procs: 1
