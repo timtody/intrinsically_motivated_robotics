@@ -77,8 +77,8 @@ class ForwardModule(nn.Module):
         with torch.no_grad():
             x = self.base(x)
         x = torch.cat([x, a], dim=1)
-        x = self.l1(x)
-        x = self.l2(x)
+        x = F.relu(self.l1(x))
+        x = F.relu(self.l2(x))
         x = self.head(x)
         return x
 

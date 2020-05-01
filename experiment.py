@@ -756,8 +756,8 @@ class TestFWmodel(Experiment):
         self.wandb.init(
             config=self.cnf,
             project=self.cnf.wandb.project,
-            name=f"{self.cnf.wandb.name}_{self.cnf.env.state}_rank{args[1]}",
-            group=f"{self.cnf.wandb.name}_{self.cnf.env.state}",
+            name=f"{self.cnf.wandb.name}_rank{args[1]}",
+            group=f"{self.cnf.wandb.name}",
         )
 
         self.agent = Agent(self.action_dim, self.state_dim, self.cnf, self.device)
@@ -809,4 +809,3 @@ class CreateFWDB(Experiment):
             action = self.env.action_space.sample()
             next_state, *_ = self.env.step(action)
             db.append([state, next_state, action])
-
