@@ -71,6 +71,7 @@ class ForwardModule(nn.Module):
         # we add + 1 because of the concatenated action
         self.l1 = nn.Linear(embedding_size + action_dim, 128)
         self.l2 = nn.Linear(128, 128)
+        self.l3 = nn.Linear(128, 128)
         self.head = nn.Linear(128, embedding_size)
 
     def forward(self, x, a):
@@ -79,6 +80,7 @@ class ForwardModule(nn.Module):
         x = torch.cat([x, a], dim=1)
         x = F.relu(self.l1(x))
         x = F.relu(self.l2(x))
+        x = F.relu(self.l3(x))
         x = self.head(x)
         return x
 

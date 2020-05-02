@@ -633,8 +633,8 @@ class MeasureForgetting(Experiment):
         self.wandb.init(
             config=self.cnf,
             project=self.cnf.wandb.project,
-            name=f"{self.cnf.wandb.name}_{kwargs['mode']}_rank{args[1]}",
-            group=f"{self.cnf.wandb.name}_{kwargs['mode']}",
+            name=f"{self.cnf.wandb.name}_rank{args[1]}",
+            group=f"{self.cnf.wandb.name}",
         )
 
         self.agent = Agent(self.action_dim, self.state_dim, self.cnf, self.device)
@@ -745,7 +745,7 @@ class MeasureForgetting(Experiment):
         self._test_forgetting()
 
 
-class TestFWmodel(Experiment):
+class TestFWModel(Experiment):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -764,7 +764,7 @@ class TestFWmodel(Experiment):
 
     def run(self):
         state = self.env.reset()
-        for i in range(100000):
+        for i in range(1000000):
             action = self.env.action_space.sample()
             next_state, *_ = self.env.step(action)
             self.agent.append_icm_transition(state, next_state, torch.tensor(action))
