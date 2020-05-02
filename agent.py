@@ -55,7 +55,7 @@ class Agent:
         if train_fw:
             state_batch, next_state_batch, action_batch = zip(*self.icm_buffer)
             im_loss_batch = self.icm.train_forward(
-                state_batch, next_state_batch, action_batch, freeze_fw_model
+                state_batch, next_state_batch, action_batch, freeze=freeze_fw_model
             )
             results["imloss"] = im_loss_batch
 
