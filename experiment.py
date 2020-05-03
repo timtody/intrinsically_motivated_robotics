@@ -771,9 +771,36 @@ class TestFWModel(Experiment):
 
             if i % 1000 == 999:
                 results = self.agent.train(train_fw=True, train_ppo=False)
-                self.wandb.log({"fw loss": results["imloss"].mean()})
+                self.wandb.log({"fw loss": results["imloss"].mean()}, step=i)
 
             state = next_state
+
+
+class TestFWModelFromDB(Experiment):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        import wandb
+
+        self.wandb = wandb
+
+        self.wandb.init(
+            config=self.cnf,
+            project=self.cnf.wandb.project,
+            name=f"{self.cnf.wandb.name}_rank{args[1]}",
+            group=f"{self.cnf.wandb.name}",
+        )
+
+        self.agent = Agent(self.action_dim, self.state_dim, self.cnf, self.device)
+    
+    def run(self):
+        N_STEPS = 1000000
+        
+        with open("data/fwmodel_db.p", "rb") as f:
+            db = pickle.load(f)
+        
+        for i in range(N_STEPS):
+            pass
 
 
 class TestStateDifference(Experiment):
