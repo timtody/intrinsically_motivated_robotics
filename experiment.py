@@ -769,7 +769,8 @@ class TestFWModel(Experiment):
             next_state, *_ = self.env.step(action)
             self.agent.append_icm_transition(state, next_state, torch.tensor(action))
 
-            if i % 1000 == 999:
+            if i % self.cnf.main.train_each == self.cnf.main.train_each - 1:
+                print("logging bro")
                 results = self.agent.train(train_fw=True, train_ppo=False)
                 self.wandb.log({"fw loss": results["imloss"].mean()}, step=i)
 
