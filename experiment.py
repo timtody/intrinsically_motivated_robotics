@@ -744,7 +744,7 @@ class MeasureForgetting(Experiment):
         self._create_db()
         self._test_forgetting()
 
-
+    
 class TestFWModel(Experiment):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

@@ -9,8 +9,6 @@ import torch.optim as optim
 import torch.nn.functional as F
 from itertools import chain
 
-from utils import LossBuffer
-
 torch.manual_seed(1)
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
@@ -71,7 +69,7 @@ class ForwardModule(nn.Module):
         # we add + 1 because of the concatenated action
         self.l1 = nn.Linear(embedding_size + action_dim, 128)
         self.l2 = nn.Linear(128, 128)
-        self.l3 = nn.Linear(128, 128)
+        # self.l3 = nn.Linear(128, 128)
         self.head = nn.Linear(128, embedding_size)
 
     def forward(self, x, a):
@@ -80,7 +78,7 @@ class ForwardModule(nn.Module):
         x = torch.cat([x, a], dim=1)
         x = F.relu(self.l1(x))
         x = F.relu(self.l2(x))
-        x = F.relu(self.l3(x))
+        # x = F.relu(self.l3(x))
         x = self.head(x)
         return x
 
@@ -118,9 +116,10 @@ class ICModule(nn.Module):
         # define forward and inverse modules
         self._inverse = InverseModule(embedding_size, action_dim, self.base)
         self._forward = ForwardModule(embedding_size, action_dim, self.base)
+        for param in self.parameters():
+            print("type in list", type(param))
 
         self.opt = optim.Adam(self.parameters(), lr=1e-4)
-        self.loss_buffer = LossBuffer(100)
         self.running_return_std = None
         self.alpha = alpha
 
@@ -132,15 +131,13 @@ class ICModule(nn.Module):
         Returns all parameters of the ICModule, removing unnecessary weights
         from base network.
         """
-        return set(
-            chain(
-                self._inverse.linear.parameters(),
-                self._inverse.head.parameters(),
-                self._forward.l1.parameters(),
-                self._forward.l2.parameters(),
-                self._forward.head.parameters(),
-            )
-        )
+        params = []
+        for name, param in self.named_parameters():
+            print("appending type", type(param))
+            if "base" not in name:
+                params.append(param)
+        return params
+
 
     def embed(self, state):
         """
@@ -204,3 +201,12 @@ class ICModule(nn.Module):
         path = os.path.join(path, "icm.pt")
         print("loading model state from", path)
         self.load_state_dict(torch.load(path))
+
+
+if __name__ == "__main__":
+    icm = ICModule(10, 10, 200)
+    # print(len(list(icm.named_parameters())))
+    # print(len(icm.parameters()))
+    for param in icm.parameters():
+        
+        print("param", param)
