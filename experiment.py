@@ -802,10 +802,14 @@ class CreateFWDB(Experiment):
     def run(self):
         db = []
 
-        DB_SIZE = 50000
+        DB_SIZE = 100000
 
         state = self.env.reset()
         for i in range(DB_SIZE):
             action = self.env.action_space.sample()
             next_state, *_ = self.env.step(action)
             db.append([state, next_state, action])
+        
+        with open("data/fwmodel_db.p", "wb") as f:
+            pickle.dump(db, f)
+

@@ -116,8 +116,6 @@ class ICModule(nn.Module):
         # define forward and inverse modules
         self._inverse = InverseModule(embedding_size, action_dim, self.base)
         self._forward = ForwardModule(embedding_size, action_dim, self.base)
-        for param in self.parameters():
-            print("type in list", type(param))
 
         self.opt = optim.Adam(self.parameters(), lr=1e-4)
         self.running_return_std = None
@@ -133,7 +131,6 @@ class ICModule(nn.Module):
         """
         params = []
         for name, param in self.named_parameters():
-            print("appending type", type(param))
             if "base" not in name:
                 params.append(param)
         return params
