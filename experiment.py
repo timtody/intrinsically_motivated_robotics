@@ -764,7 +764,7 @@ class TestFWModel(Experiment):
 
     def run(self):
         state = self.env.reset()
-        for i in range(5000000):
+        for i in range(self.cnf.main.n_steps):
             action = self.env.action_space.sample()
             next_state, *_ = self.env.step(action)
             self.agent.append_icm_transition(state, next_state, torch.tensor(action))
