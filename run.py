@@ -13,5 +13,5 @@ if __name__ == "__main__":
     mp.set_start_method("spawn")
 
     cnf = get_conf("conf/main.yaml")
-    runner = Runner(CreateFWDB, cnf)
+    runner = Runner(TestFWModel, cnf)
     runner.run()

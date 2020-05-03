@@ -63,22 +63,28 @@ class ForwardModule(nn.Module):
     Module for learning the forward mapping of state x action -> next state
     """
 
-    def __init__(self, embedding_size, action_dim, base):
+    def __init__(self, embedding_size, action_dim, base, n_layers=3):
         super().__init__()
         self.base = base
+        self.n_layers = n_layers
         # we add + 1 because of the concatenated action
-        self.l1 = nn.Linear(embedding_size + action_dim, 128)
-        self.l2 = nn.Linear(128, 128)
-        self.l3 = nn.Linear(128, 128)
-        self.head = nn.Linear(128, embedding_size)
+        self.l1 = nn.Linear(embedding_size + action_dim, 256)
+        self.l2 = nn.Linear(256, 256)
+        self.l3 = nn.Linear(256, 256)
+        self.l4 = nn.Linear(256, 256)
+        self.head = nn.Linear(256, embedding_size)
 
     def forward(self, x, a):
         with torch.no_grad():
             x = self.base(x)
         x = torch.cat([x, a], dim=1)
         x = F.relu(self.l1(x))
-        x = F.relu(self.l2(x))
-        x = F.relu(self.l3(x))
+        if self.n_layers > 1:
+            x = F.relu(self.l2(x))
+        if self.n_layers > 2:
+            x = F.relu(self.l3(x))
+        if self.n_layers > 3:
+            x = F.relu(self.l4(x))
         x = self.head(x)
         return x
 
@@ -109,13 +115,13 @@ class ICModule(nn.Module):
     Intrinsic curiosity module.
     """
 
-    def __init__(self, action_dim, state_dim, embedding_size, alpha=0.001):
+    def __init__(self, action_dim, state_dim, embedding_size, alpha, n_layers):
         super().__init__()
         # self._conv_base = ConvModule()
         self.base = FCModule(state_dim, embedding_size)
         # define forward and inverse modules
         self._inverse = InverseModule(embedding_size, action_dim, self.base)
-        self._forward = ForwardModule(embedding_size, action_dim, self.base)
+        self._forward = ForwardModule(embedding_size, action_dim, self.base, n_layers)
 
         self.opt = optim.Adam(self.parameters(), lr=1e-4)
         self.running_return_std = None
@@ -202,8 +208,4 @@ class ICModule(nn.Module):
 
 if __name__ == "__main__":
     icm = ICModule(10, 10, 200)
-    # print(len(list(icm.named_parameters())))
-    # print(len(icm.parameters()))
-    for param in icm.parameters():
-        
-        print("param", param)
+    print(len(icm.parameters()))
