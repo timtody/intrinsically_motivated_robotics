@@ -25,6 +25,7 @@ class Env(gym.Env):
         self._setup_force_sensors_hand()
         self._setup_mobile()
         self._setup_skin_fs()
+        self._setup_skin_contacts()
 
         self.action_space = gym.spaces.Box(low=-1, high=1, shape=(self.cnf.action_dim,))
         # TODO: need to be made more general for vision space
@@ -311,6 +312,21 @@ class Env(gym.Env):
         Returns a binary map representing all skin contacts. Each entry is 1,
         when it is in contact with something, else 0.
         """
+        arm_contacts = [
+            *self.skin_contact_wrist,
+            *self.skin_contact_forearm,
+            *self.skin_contact_upper,
+            *self.skin_contacts_base,
+        ]
+        arm_map = [
+            self._check_collision(contact.get_handle(), self._robot_collection_hand)
+            for contact in arm_contacts
+        ]
+        hand_map = [
+            self._check_collision(contact.get_handle(), self._all_but_hand_collection)
+            for contact in self.skin_contact_hand
+        ]
+        return [*arm_map, *hand_map]
 
     def get_mobile_positions(self):
         return (
@@ -408,9 +424,10 @@ class Env(gym.Env):
             [obs.append(open_amount) for open_amount in self._gripper.get_open_amount()]
 
         if "tac" in self.cnf.state:
-            switch = lambda x: 1 if x > 0.01 else 0
-            [obs.append(switch(reading)) for reading in self.read_force_sensors_hand()]
-            [obs.append(switch(skin_reading)) for skin_reading in self.get_skin_info()]
+            # switch = lambda x: 1 if x > 0.01 else 0
+            # [obs.append(switch(reading)) for reading in self.read_force_sensors_hand()]
+            # [obs.append(switch(skin_reading)) for skin_reading in self.get_skin_info()]
+            [obs.append(touch) for touch in self.get_skin_touch_map()]
 
         if "mobile" in self.cnf.state:
             [obs.append(mob_vel) for mob_vel in self.get_mobile_velocities()]
@@ -519,6 +536,12 @@ class Env(gym.Env):
         return sim.simCheckCollision(
             self._collidables_dynamic_collection, self._robot_collection
         )
+
+    def _check_collision(self, enitity1, entity2):
+        """
+        generall checks for collision between two objects
+        """
+        return sim.simCheckCollision(enitity1, entity2)
 
     def check_collision(self):
         # TODO: check for non trivial self collision
