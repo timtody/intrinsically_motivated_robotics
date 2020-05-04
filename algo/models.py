@@ -141,7 +141,6 @@ class ICModule(nn.Module):
                 params.append(param)
         return params
 
-
     def embed(self, state):
         """
         Returns the state embedding from the shared convolutional base.
@@ -184,7 +183,7 @@ class ICModule(nn.Module):
         if not freeze:
             loss.mean().backward()
             self.opt.step()
-        return loss.mean(dim=1).detach() / 0.4065
+        return loss.mean(dim=1).detach() / 2.5
 
     def _process_loss(self, loss):
         self.loss_buffer.push(loss)
