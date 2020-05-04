@@ -14,31 +14,28 @@ from matplotlib import pyplot as plt
 sns.set()
 
 
-def run(rank, cnf, mode, results):
-    if mode == "notrain":
+def run(rank, cnf, state, results):
+    if state == "notrain":
         cnf.main.train = False
-    else:
-        cnf.main.train = True
-        cnf.env.state = mode
-    cnf.env.mode = mode
+    cnf.env.state = state
     # set seeds
     cnf.env.torch_seed = np.random.randint(9999)
     cnf.env.np_seed = np.random.randint(9999)
-    exp = CountCollisionsAgent(cnf, rank, log=True if rank == 0 else False, mode=mode)
+    exp = CountCollisionsAgent(cnf, rank, log=True if rank == 0 else False)
     n_collisions = 0
     # start the experiment
     if rank == 0:
-        print("Starting mode", mode)
+        print("Starting state", state)
     n_collisions, cum_reward = exp.run()
     results[rank] = n_collisions
     results[rank + len(results) // 2] = cum_reward
 
 
-def run_mode_mp(mode, cnf):
+def run_state(state, cnf):
     processes = []
     results = Array("d", cnf.mp.n_procs * 2)
     for rank in range(cnf.mp.n_procs):
-        p = Process(target=run, args=(rank, cnf, mode, results))
+        p = Process(target=run, args=(rank, cnf, state, results))
         p.start()
         processes.append(p)
 
@@ -55,15 +52,15 @@ if __name__ == "__main__":
     log = Logger(cnf)
     n_collisions = {}
     cum_reward = {}
-    state_modes = [
+    states = [
         ["tac", "prop"],
         ["tac", "prop", "random_reward"],
     ]
 
-    for mode in state_modes:
-        ncol, cumrew = run_mode_mp(mode, cnf)
-        n_collisions[str(mode)] = ncol
-        cum_reward[str(mode)] = cumrew
+    for state in states:
+        ncol, cumrew = run_state(state, cnf)
+        n_collisions[str(state)] = ncol
+        cum_reward[str(state)] = cumrew
 
     n_collisions_df = pd.DataFrame(data=n_collisions)
     cum_reward_df = pd.DataFrame(data=cum_reward)

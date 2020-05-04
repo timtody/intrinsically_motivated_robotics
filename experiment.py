@@ -533,8 +533,8 @@ class CountCollisionsAgent(Experiment):
         self.wandb.init(
             config=self.cnf,
             project=self.cnf.wandb.project,
-            name=f"{self.cnf.wandb.name}_{kwargs['mode']}_rank{args[1]}",
-            group=f"{self.cnf.wandb.name}_{kwargs['mode']}",
+            name=f"{self.cnf.wandb.name}_{self.cnf.env.state}_rank{args[1]}",
+            group=f"{self.cnf.wandb.name}_{self.cnf.env.state}",
         )
 
         self.agent = Agent(self.action_dim, self.state_dim, self.cnf, self.device)
@@ -591,7 +591,7 @@ class CountCollisionsAgent(Experiment):
                 train_results = self.agent.train(
                     train_ppo=self.cnf.main.train,
                     random_reward=True
-                    if "random_reward" in self.cnf.env.mode
+                    if "random_reward" in self.cnf.env.state
                     else False,
                 )
 
@@ -744,7 +744,7 @@ class MeasureForgetting(Experiment):
         self._create_db()
         self._test_forgetting()
 
-    
+
 class TestFWModel(Experiment):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -792,13 +792,13 @@ class TestFWModelFromDB(Experiment):
         )
 
         self.agent = Agent(self.action_dim, self.state_dim, self.cnf, self.device)
-    
+
     def run(self):
         N_STEPS = 1000000
-        
+
         with open("data/fwmodel_db.p", "rb") as f:
             db = pickle.load(f)
-        
+
         for i in range(N_STEPS):
             pass
 
@@ -836,7 +836,6 @@ class CreateFWDB(Experiment):
             action = self.env.action_space.sample()
             next_state, *_ = self.env.step(action)
             db.append([state, next_state, action])
-        
+
         with open("data/fwmodel_db.p", "wb") as f:
             pickle.dump(db, f)
-
