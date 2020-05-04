@@ -33,6 +33,10 @@ class Agent:
         self.icm_buffer = []
         self.ppo_mem.clear_memory()
 
+    def train_ppo(self) -> None:
+        self.ppo.update(self.ppo_mem)
+        self.ppo_mem.clear_memory()
+
     def set_is_done(self, is_done) -> None:
         self.ppo_mem.is_terminals.append(is_done)
 
