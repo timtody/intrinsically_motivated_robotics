@@ -318,8 +318,9 @@ class Env(gym.Env):
             [obs.append(open_amount) for open_amount in self._gripper.get_open_amount()]
 
         if "tac" in self.cnf.state:
-            [obs.append(reading) for reading in self.read_force_sensors_hand()]
-            [obs.append(skin_reading) for skin_reading in self.get_skin_info()]
+            switch = lambda x: 1 if x > 0.01 else 0
+            [obs.append(switch(reading)) for reading in self.read_force_sensors_hand()]
+            [obs.append(switch(skin_reading)) for skin_reading in self.get_skin_info()]
 
         if "mobile" in self.cnf.state:
             [obs.append(mob_vel) for mob_vel in self.get_mobile_velocities()]
