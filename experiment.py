@@ -865,31 +865,60 @@ class CreateFWDB(Experiment):
 
 
 class GoalBasedExp(Experiment):
-    def compute_reward(self, goal, state):
-        return ((goal - state) ** 2).mean()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        import wandb
+
+        self.wandb = wandb
+
+        self.wandb.init(
+            config=self.cnf,
+            project=self.cnf.wandb.project,
+            name=f"{self.cnf.wandb.name}_rank{args[1]}",
+            group=f"{self.cnf.wandb.name}",
+        )
+
+        self.agent = Agent(self.action_dim, self.state_dim * 2, self.cnf, self.device)
+
+    def compute_reward(self, state, goal):
+        return -((goal - state) ** 2).sum()
 
     def run(self):
         goal_buffer = []
 
         # generate goals
-        for i in range(1):
-            state = self.env.reset()
-            for j in range(1000):
-                print(state)
-                state, *_ = self.env.step([0, 0.25, 0, -1, 0, 0, 0])
-            goal_buffer.append(state)
+        self.env.reset()
+        for j in range(40):
+            state, *_ = self.env.step([0, 1, 0, 0, 0, 0, 0])
+        goal_buffer.append(state)
 
-        state = self.env.reset()
-        for i in range(1):
-            state = self.env.reset()
-            for j in range(100):
-                state, *_ = self.env.step([1, 0, 0, 0, 0, 0, 0])
-                print(self.compute_reward(state, goal_buffer[0]))
-                if self.compute_reward(state, goal_buffer[0]) < 0.01:
-                    print("DONE")
-                    exit(1)
+        self.env.reset()
+        for j in range(40):
+            state, *_ = self.env.step([1, 1, 0, 0, 0, 0, 0])
+        goal_buffer.append(state)
 
         for i in range(100000):
-            goal = goal_buffer[np.random.randint(len(goal_buffer))]
-            for j in range(500):
-                pass
+            # pick goal
+            goal = goal_buffer[np.random.randint(2)]
+            state = self.env.reset()
+            episode_len = 0
+            episode_reward = 0
+            for j in range(250):
+                episode_len += 1
+                action = self.agent.get_action(np.concatenate([goal, state]))
+                state, _, done, _ = self.env.step(action)
+                reward = self.compute_reward(state, goal_buffer[0])
+
+                episode_reward += reward
+                if reward > -0.2:
+                    done = True
+
+                self.agent.set_reward(reward)
+                self.agent.set_is_done(done)
+
+            self.wandb.log(
+                {"episode length": episode_len, "episode reward": episode_reward}
+            )
+
+            self.agent.train_ppo()
