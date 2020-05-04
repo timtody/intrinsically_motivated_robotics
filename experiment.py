@@ -551,6 +551,7 @@ class CountCollisionsAgent(Experiment):
         self.episode_reward = 0
 
     def run(self):
+        obs = []
         state = self.env.reset()
         for i in range(self.cnf.main.n_steps):
             self.ppo_timestep += 1
@@ -617,7 +618,10 @@ class CountCollisionsAgent(Experiment):
                 )
 
             state = next_state
+            obs.append(state)
+        obs = np.concatenate(obs)
 
+        print(obs.mean(), obs.std())
         self.env.close()
         return self.n_collisions_self, self.reward_sum
 
@@ -795,12 +799,31 @@ class TestFWModelFromDB(Experiment):
 
     def run(self):
         N_STEPS = 1000000
+        BATCH_SIZE = 5000
 
         with open("data/fwmodel_db.p", "rb") as f:
             db = pickle.load(f)
+        db = np.array(db)
+        train_set = db[:90000]
+        test_set = db[90000:]
 
         for i in range(N_STEPS):
-            pass
+            idx = np.random.randint(len(train_set), size=BATCH_SIZE)
+            state_batch, next_state_batch, action_batch = zip(*train_set[idx])
+
+            # train fw model
+            train_loss = self.agent.icm.train_forward(
+                state_batch, next_state_batch, torch.tensor(action_batch),
+            )
+            wandb.log({"training loss": train_loss.mean().cpu()})
+            if i % 5000 == 0:
+                # test
+                idx = np.random.randint(len(test_set), size=BATCH_SIZE)
+                state_batch, next_state_batch, action_batch = zip(*test_set[idx])
+                test_loss = self.agent.icm.train_forward(
+                    state_batch, next_state_batch, torch.tensor(action_batch),
+                )
+                wandb.log({"test loss": test_loss.mean().cpu()})
 
 
 class TestStateDifference(Experiment):
@@ -839,3 +862,34 @@ class CreateFWDB(Experiment):
 
         with open("data/fwmodel_db.p", "wb") as f:
             pickle.dump(db, f)
+
+
+class GoalBasedExp(Experiment):
+    def compute_reward(self, goal, state):
+        return ((goal - state) ** 2).mean()
+
+    def run(self):
+        goal_buffer = []
+
+        # generate goals
+        for i in range(1):
+            state = self.env.reset()
+            for j in range(1000):
+                print(state.max(), state.min())
+                state, *_ = self.env.step([0, 0.1, 0, -0.1, 0, 0, 0])
+            goal_buffer.append(state)
+
+        state = self.env.reset()
+        for i in range(1):
+            state = self.env.reset()
+            for j in range(100):
+                state, *_ = self.env.step([1, 0, 0, 0, 0, 0, 0])
+                print(self.compute_reward(state, goal_buffer[0]))
+                if self.compute_reward(state, goal_buffer[0]) < 0.01:
+                    print("DONE")
+                    exit(1)
+
+        for i in range(100000):
+            goal = goal_buffer[np.random.randint(len(goal_buffer))]
+            for j in range(500):
+                pass
