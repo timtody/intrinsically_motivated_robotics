@@ -335,6 +335,7 @@ class Env(gym.Env):
             # state is not used anyways so we can append stuff here.
             obs.append(1)
 
+        # return (np.array(obs) - 0.1279311) / 4.236529262154189
         return np.array(obs)
 
     def _set_objects_collidable(self):
