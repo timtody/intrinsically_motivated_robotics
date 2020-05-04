@@ -24,7 +24,7 @@ class Env(gym.Env):
         self._set_collections()
         self._setup_force_sensors_hand()
         self._setup_mobile()
-        self._setup_skin()
+        self._setup_skin_fs()
 
         self.action_space = gym.spaces.Box(low=-1, high=1, shape=(self.cnf.action_dim,))
         # TODO: need to be made more general for vision space
@@ -134,7 +134,91 @@ class Env(gym.Env):
             self._mobile_2_joint_1,
         ]
 
-    def _setup_skin(self):
+    def _setup_skin_contacts(self):
+        """
+        Sets up the contacts which connect to the force sensors. These are
+        the shapes which collide and interact with other objects in the scene.
+        """
+        self._skin_contact_base_0 = Shape("right_wrist_force_contact#8")
+        self._skin_contact_base_1 = Shape("right_wrist_force_contact#9")
+        self._skin_contact_base_2 = Shape("right_wrist_force_contact#10")
+        self._skin_contact_base_3 = Shape("right_wrist_force_contact#18")
+        self.skin_contacts_base = [
+            self._skin_contact_base_0,
+            self._skin_contact_base_1,
+            self._skin_contact_base_2,
+            self._skin_contact_base_3,
+        ]
+
+        self._skin_contact_upper_0 = Shape("right_wrist_force_contact#0")
+        self._skin_contact_upper_1 = Shape("right_wrist_force_contact#1")
+        self._skin_contact_upper_2 = Shape("right_wrist_force_contact#2")
+        self._skin_contact_upper_3 = Shape("right_wrist_force_contact#3")
+        self._skin_contact_upper_4 = Shape("right_wrist_force_contact#4")
+        self._skin_contact_upper_5 = Shape("right_wrist_force_contact#5")
+        self._skin_contact_upper_6 = Shape("right_wrist_force_contact#6")
+        self._skin_contact_upper_7 = Shape("right_wrist_force_contact#7")
+        self.skin_contact_upper = [
+            self._skin_contact_upper_0,
+            self._skin_contact_upper_1,
+            self._skin_contact_upper_2,
+            self._skin_contact_upper_3,
+            self._skin_contact_upper_4,
+            self._skin_contact_upper_5,
+            self._skin_contact_upper_6,
+            self._skin_contact_upper_7,
+        ]
+
+        self._skin_contact_forearm_0 = Shape("right_wrist_force_contact#11")
+        self._skin_contact_forearm_1 = Shape("right_wrist_force_contact#12")
+        self._skin_contact_forearm_2 = Shape("right_wrist_force_contact#13")
+        self._skin_contact_forearm_3 = Shape("right_wrist_force_contact#14")
+        self._skin_contact_forearm_4 = Shape("right_wrist_force_contact#15")
+        self._skin_contact_forearm_5 = Shape("right_wrist_force_contact#16")
+        self._skin_contact_forearm_6 = Shape("right_wrist_force_contact#17")
+        self.skin_contact_forearm = [
+            self._skin_contact_forearm_0,
+            self._skin_contact_forearm_1,
+            self._skin_contact_forearm_2,
+            self._skin_contact_forearm_3,
+            self._skin_contact_forearm_4,
+            self._skin_contact_forearm_5,
+            self._skin_contact_forearm_6,
+        ]
+
+        self._skin_contact_wrist_0 = Shape("right_wrist_force_contact#19")
+        self._skin_contact_wrist_1 = Shape("right_wrist_force_contact#23")
+        self._skin_contact_wrist_2 = Shape("right_wrist_force_contact#24")
+        self._skin_contact_wrist_3 = Shape("right_wrist_force_contact#25")
+        self.skin_contact_wrist = [
+            self._skin_contact_wrist_0,
+            self._skin_contact_wrist_1,
+            self._skin_contact_wrist_2,
+            self._skin_contact_wrist_3,
+        ]
+
+        self.skin_contact_hand_0 = Shape("right_outer_force_contact")
+        self.skin_contact_hand_1 = Shape("left_outer_force_contact")
+        self.skin_contact_hand_2 = Shape("palm_force_contact")
+        self.skin_contact_hand_3 = Shape("left_wrist_force_contact")
+        self.skin_contact_hand_4 = Shape("right_wrist_force_contact")
+        self.skin_contact_hand = [
+            self.skin_contact_hand_0,
+            self.skin_contact_hand_1,
+            self.skin_contact_hand_2,
+            self.skin_contact_hand_3,
+            self.skin_contact_hand_4,
+        ]
+
+        self.skin_contacts = [
+            *self.skin_contacts_base,
+            *self.skin_contact_upper,
+            *self.skin_contact_forearm,
+            *self.skin_contact_wrist,
+            *self.skin_contact_hand,
+        ]
+
+    def _setup_skin_fs(self):
         """
         Sets up the skin sensors of the robot which are force sensors
         measuring forces in XYZ-direction. The skin is separated into three
@@ -183,7 +267,7 @@ class Env(gym.Env):
         self._skin_sensor_forearm_3 = ForceSensor("force_sensor_2#15")
         self._skin_sensor_forearm_4 = ForceSensor("force_sensor_2#16")
         self._skin_sensor_forearm_5 = ForceSensor("force_sensor_2#17")
-        self._skin_sensor_forearm_6 = ForceSensor("force_sensor_2#18")
+        self._skin_sensor_forearm_6 = ForceSensor("force_sensor_2#11")
         self.skin_forearm = [
             self._skin_sensor_forearm_0,
             self._skin_sensor_forearm_1,
@@ -221,6 +305,12 @@ class Env(gym.Env):
 
         # nested list comprehension flattens list
         return [e for skin_sensor in self.skin for e in skin_sensor.read()[0]]
+
+    def get_skin_touch_map(self):
+        """
+        Returns a binary map representing all skin contacts. Each entry is 1,
+        when it is in contact with something, else 0.
+        """
 
     def get_mobile_positions(self):
         return (
@@ -351,6 +441,9 @@ class Env(gym.Env):
         self._robot_collection_rest = sim.simGetCollectionHandle("collection_rest")
         self._collidables_dynamic_collection = sim.simGetCollectionHandle(
             "collection_dynamic"
+        )
+        self._all_but_hand_collection = sim.simGetCollectionHandle(
+            "collection_all_but_hand"
         )
 
     def step(self, action):

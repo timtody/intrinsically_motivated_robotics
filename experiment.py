@@ -875,8 +875,8 @@ class GoalBasedExp(Experiment):
         for i in range(1):
             state = self.env.reset()
             for j in range(1000):
-                print(state.max(), state.min())
-                state, *_ = self.env.step([0, 0.1, 0, -0.1, 0, 0, 0])
+                print(state)
+                state, *_ = self.env.step([0, 0.25, 0, -1, 0, 0, 0])
             goal_buffer.append(state)
 
         state = self.env.reset()
