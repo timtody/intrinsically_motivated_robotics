@@ -21,7 +21,7 @@ def run(rank, cnf, state, results):
     # set seeds
     cnf.env.torch_seed = np.random.randint(9999)
     cnf.env.np_seed = np.random.randint(9999)
-    exp = CountCollisionsAgent(cnf, rank, log=True if rank == 0 else False)
+    exp = CountCollisionsAgent(cnf, rank)
     n_collisions = 0
     # start the experiment
     if rank == 0:

@@ -18,7 +18,7 @@ from abc import abstractmethod
 
 
 class Experiment:
-    def __init__(self, cnf, rank, log=False, tb=True, mode=None):
+    def __init__(self, cnf, rank):
         self.cnf = cnf
         self.log = log
         self.rank = rank
@@ -52,7 +52,7 @@ class Experiment:
         self.wandb.init(
             config=self.cnf,
             project=self.cnf.wandb.project,
-            name=f"{self.cnf.wandb.name}_rank{args[1]}",
+            name=f"{self.cnf.wandb.name}_rank{self.rank}",
             group=f"{self.cnf.wandb.name}",
         )
 
