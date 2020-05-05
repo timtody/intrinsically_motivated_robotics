@@ -577,8 +577,6 @@ class GoalBasedExp(Experiment):
             state, *_ = self.env.step([-0.5, 1, 0, 0, 0, 0, 0])
         goal_buffer.append(state)
 
-        exit(1)
-
         for i in range(100000):
             # pick goal
             goal = goal_buffer[np.random.randint(len(goal_buffer))]
