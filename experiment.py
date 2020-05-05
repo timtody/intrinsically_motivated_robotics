@@ -20,7 +20,6 @@ from abc import abstractmethod
 class Experiment:
     def __init__(self, cnf, rank):
         self.cnf = cnf
-        self.log = log
         self.rank = rank
 
         # set random seeds
