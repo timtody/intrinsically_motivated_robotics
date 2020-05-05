@@ -548,6 +548,11 @@ class GoalBasedExp(Experiment):
 
         # generate goals
         self.env.reset()
+        for j in range(50):
+            state, *_ = self.env.step([0, 0, 0, -1, 0, 0, 0])
+        goal_buffer.append(state)
+
+        self.env.reset()
         for j in range(40):
             state, *_ = self.env.step([0, 1, 0, 0, 0, 0, 0])
         goal_buffer.append(state)
@@ -557,9 +562,26 @@ class GoalBasedExp(Experiment):
             state, *_ = self.env.step([1, 1, 0, 0, 0, 0, 0])
         goal_buffer.append(state)
 
+        self.env.reset()
+        for j in range(40):
+            state, *_ = self.env.step([-1, 1, 0, 0, 0, 0, 0])
+        goal_buffer.append(state)
+
+        self.env.reset()
+        for j in range(40):
+            state, *_ = self.env.step([0.5, 1, 0, 0, 0, 0, 0])
+        goal_buffer.append(state)
+
+        self.env.reset()
+        for j in range(40):
+            state, *_ = self.env.step([-0.5, 1, 0, 0, 0, 0, 0])
+        goal_buffer.append(state)
+
+        exit(1)
+
         for i in range(100000):
             # pick goal
-            goal = goal_buffer[np.random.randint(2)]
+            goal = goal_buffer[np.random.randint(len(goal_buffer))]
             state = self.env.reset()
             episode_len = 0
             episode_reward = 0

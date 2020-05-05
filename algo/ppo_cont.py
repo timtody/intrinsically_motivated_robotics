@@ -4,6 +4,7 @@ import torch.nn as nn
 from torch.distributions import MultivariateNormal
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = torch.device("cpu")
 # device = torch.device("cpu")
 # torch.manual_seed(42)
 
@@ -140,7 +141,7 @@ class PPO:
             rewards.insert(0, discounted_reward)
 
         # Normalizing the rewards:
-        rewards = torch.tensor(rewards).to(device)
+        rewards = torch.tensor(rewards).to(device).double()
         # rewards = (rewards - rewards.mean()) / (rewards.std() + 1e-5)
 
         # convert list to tensor
@@ -168,7 +169,7 @@ class PPO:
             surr2 = (
                 torch.clamp(ratios, 1 - self.eps_clip, 1 + self.eps_clip) * advantages
             )
-            value_loss = self.MseLoss(state_values, rewards)
+            value_loss = self.MseLoss(state_values.double(), rewards)
             loss = -torch.min(surr1, surr2) + 0.5 * value_loss  # - 1.0 * dist_entropy
 
             # take gradient step
