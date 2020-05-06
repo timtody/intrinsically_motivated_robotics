@@ -34,7 +34,7 @@ wandb:
 icm:
   embedding_size: 256
   alpha: 0.001
-  n_layers: 4
+  n_layers: 2
 
 MMModel:
   prop_dim: 14
