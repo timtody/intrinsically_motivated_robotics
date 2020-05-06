@@ -444,7 +444,11 @@ class Env(gym.Env):
             obs.append(1)
 
         # return (np.array(obs) - 0.1279311) / 4.236529262154189
+        # TODO: REMOVE THE NORAMLIZATION OF THE OBSERVATION AFTER
+        # EVALUATING FWMODEL
+        # return np.array(obs)
         return np.array(obs) * 10
+        # ---------------------------
 
     def _set_objects_collidable(self):
         self._arm.set_collidable(True)

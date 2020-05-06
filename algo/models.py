@@ -183,7 +183,11 @@ class ICModule(nn.Module):
         if not freeze:
             loss.mean().backward()
             self.opt.step()
+        # TODO: RESTORE THE ORIGINAL HERE AFTER REMOVING THE
+        # CONSTANT NORMALIZATION OF THE OBSERVATION
+        # return loss.mean(dim=1).detach() / 2.5
         return loss.mean(dim=1).detach()
+        # --------------------------------------
 
     def _process_loss(self, loss):
         self.loss_buffer.push(loss)
