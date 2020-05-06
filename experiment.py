@@ -15,6 +15,7 @@ from algo.models import ICModule
 from torch.utils.tensorboard import SummaryWriter
 from collections import defaultdict
 from abc import abstractmethod
+import plotly.graph_objects as go
 
 
 class Experiment:
@@ -213,19 +214,6 @@ class CountCollisionsAgent(Experiment):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        import wandb
-
-        self.wandb = wandb
-
-        self.wandb.init(
-            config=self.cnf,
-            project=self.cnf.wandb.project,
-            name=f"{self.cnf.wandb.name}_{self.cnf.env.state}_rank{args[1]}",
-            group=f"{self.cnf.wandb.name}_{self.cnf.env.state}",
-        )
-
-        self.agent = Agent(self.action_dim, self.state_dim, self.cnf, self.device)
-
         # setup logging metrics
         self.n_collisions_self = 0
         self.n_collisions_other = 0
@@ -237,16 +225,32 @@ class CountCollisionsAgent(Experiment):
         self.episode_len = 500
         self.episode_reward = 0
 
+        # gripper positions
+        self.gripper_positions = []
+
+        self.gripper_positions_means = []
+        self.gripper_positions_acc = 0
+
+        self.gripper_freq_0 = 10
+        self.gripper_freq_1 = 1000
+
     def run(self):
-        obs = []
         state = self.env.reset()
         for i in range(self.cnf.main.n_steps):
             self.ppo_timestep += 1
             self.global_step += 1
 
-            # env step
-            if self.log and self.global_step % 5000 == 0:
-                print("exp in mode", self.cnf.env.mode, "at step", self.global_step)
+            # record pointcloud stuff
+            if i % self.gripper_freq_0 == 0:
+                self.gripper_positions.append(self.env._gripper.get_position())
+
+            if i % self.gripper_freq_1 == self.gripper_freq_1 - 1:
+                self.gripper_positions_means.append(
+                    self.gripper_positions_acc / self.gripper_freq_1
+                )
+                self.gripper_positions_acc = 0
+
+            self.gripper_positions_acc += np.array(self.env._gripper.get_position())
 
             if not self.cnf.main.train:
                 action = self.env.action_space.sample()
@@ -305,11 +309,47 @@ class CountCollisionsAgent(Experiment):
                 )
 
             state = next_state
-            obs.append(state)
-        obs = np.concatenate(obs)
 
-        print(obs.mean(), obs.std())
         self.env.close()
+
+        gripx, gripy, gripz = zip(*self.gripper_positions)
+        grip_mean_x, grip_mean_y, grip_mean_z = zip(*self.gripper_positions_means)
+
+        cloud_high_freq = go.Figure(
+            data=[
+                go.Scatter3d(
+                    x=gripx,
+                    y=gripy,
+                    z=gripz,
+                    mode="markers",
+                    marker=dict(
+                        size=2,
+                        color=np.arange(len(gripx)),
+                        colorscale="Viridis",
+                        opacity=0.8,
+                    ),
+                )
+            ]
+        )
+        cloud_low_freq = go.Figure(
+            data=[
+                go.Scatter3d(
+                    x=grip_mean_x,
+                    y=grip_mean_y,
+                    z=grip_mean_z,
+                    mode="markers",
+                    marker=dict(
+                        size=8,
+                        color=np.arange(len(grip_mean_x)),
+                        colorscale="Viridis",
+                        opacity=0.8,
+                    ),
+                )
+            ]
+        )
+        cloud_high_freq.write_html(f"data/pointclouds/high_freq_{self.rank}.html")
+        cloud_low_freq.write_html(f"data/pointclouds/low_freq_rank_{self.rank}.html")
+
         return self.n_collisions_self, self.reward_sum
 
 

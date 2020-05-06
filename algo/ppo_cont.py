@@ -4,7 +4,6 @@ import torch.nn as nn
 from torch.distributions import MultivariateNormal
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-device = torch.device("cpu")
 # device = torch.device("cpu")
 # torch.manual_seed(42)
 
