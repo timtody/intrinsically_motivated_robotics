@@ -361,17 +361,17 @@ class MeasureForgetting(Experiment):
             next_state, _, done, info = self.env.step(action)
             self.agent.append_icm_transition(state, next_state, action)
 
+            state = next_state
+
             if i % self.episode_len == self.episode_len - 1:
                 done = True
-                self.env.reset()
+                state = self.env.reset()
 
             self.agent.set_is_done(done)
 
             if i % self.train_every == self.train_every - 1:
                 # print("training")
                 self.agent.train()
-
-            state = next_state
 
     def _gather_dataset(self):
         # collect data
