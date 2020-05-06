@@ -234,6 +234,57 @@ class CountCollisionsAgent(Experiment):
         self.gripper_freq_0 = 10
         self.gripper_freq_1 = 1000
 
+        self.pointcloud_every = 250000
+
+    def make_pointclouds(self, step):
+        gripx, gripy, gripz = zip(*self.gripper_positions)
+        grip_mean_x, grip_mean_y, grip_mean_z = zip(*self.gripper_positions_means)
+
+        cloud_high_freq = go.Figure(
+            data=[
+                go.Scatter3d(
+                    x=gripx,
+                    y=gripy,
+                    z=gripz,
+                    mode="markers",
+                    marker=dict(
+                        size=2,
+                        color=np.arange(len(gripx)),
+                        colorscale="Viridis",
+                        opacity=0.8,
+                    ),
+                )
+            ]
+        )
+        cloud_low_freq = go.Figure(
+            data=[
+                go.Scatter3d(
+                    x=grip_mean_x,
+                    y=grip_mean_y,
+                    z=grip_mean_z,
+                    mode="markers",
+                    marker=dict(
+                        size=8,
+                        color=np.arange(len(grip_mean_x)),
+                        colorscale="Viridis",
+                        opacity=0.8,
+                    ),
+                )
+            ]
+        )
+        cloud_high_freq.write_html(
+            f"data/pointclouds/high_freq_{self.rank}_{step}.html"
+        )
+        cloud_low_freq.write_html(
+            f"data/pointclouds/low_freq_rank_{self.rank}_{step}.html"
+        )
+
+        # gripper positions
+        self.gripper_positions = []
+
+        self.gripper_positions_means = []
+        self.gripper_positions_acc = 0
+
     def run(self):
         state = self.env.reset()
         for i in range(self.cnf.main.n_steps):
@@ -251,6 +302,10 @@ class CountCollisionsAgent(Experiment):
                 self.gripper_positions_acc = 0
 
             self.gripper_positions_acc += np.array(self.env._gripper.get_position())
+
+            # save the clouds
+            if i % self.pointcloud_every == self.pointcloud_every - 1:
+                self.make_pointclouds(i)
 
             if not self.cnf.main.train:
                 action = self.env.action_space.sample()
@@ -311,44 +366,6 @@ class CountCollisionsAgent(Experiment):
             state = next_state
 
         self.env.close()
-
-        gripx, gripy, gripz = zip(*self.gripper_positions)
-        grip_mean_x, grip_mean_y, grip_mean_z = zip(*self.gripper_positions_means)
-
-        cloud_high_freq = go.Figure(
-            data=[
-                go.Scatter3d(
-                    x=gripx,
-                    y=gripy,
-                    z=gripz,
-                    mode="markers",
-                    marker=dict(
-                        size=2,
-                        color=np.arange(len(gripx)),
-                        colorscale="Viridis",
-                        opacity=0.8,
-                    ),
-                )
-            ]
-        )
-        cloud_low_freq = go.Figure(
-            data=[
-                go.Scatter3d(
-                    x=grip_mean_x,
-                    y=grip_mean_y,
-                    z=grip_mean_z,
-                    mode="markers",
-                    marker=dict(
-                        size=8,
-                        color=np.arange(len(grip_mean_x)),
-                        colorscale="Viridis",
-                        opacity=0.8,
-                    ),
-                )
-            ]
-        )
-        cloud_high_freq.write_html(f"data/pointclouds/high_freq_{self.rank}.html")
-        cloud_low_freq.write_html(f"data/pointclouds/low_freq_rank_{self.rank}.html")
 
         return self.n_collisions_self, self.reward_sum
 
