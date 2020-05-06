@@ -340,11 +340,11 @@ class MeasureForgetting(Experiment):
         # experiment parameters
         self.episode_len = 250
 
-        self.burnin_len = 250000
+        self.burnin_len = 1000000
         self.buffer_length = 250
         self.buffer_gap = 12
 
-        self.train_len = 500000
+        self.train_len = 1000000
         self.train_every = 500
 
         # buffer for transitions
