@@ -1,6 +1,12 @@
 import os
 
-from experiment import TestFWModel, CreateFWDB, GoalBasedExp, MeasureForgetting
+from experiment import (
+    TestFWModel,
+    CreateFWDB,
+    GoalBasedExp,
+    MeasureForgetting,
+    CountCollisionsAgent,
+)
 import multiprocessing as mp
 from runner import Runner
 from utils import get_conf
@@ -13,5 +19,5 @@ if __name__ == "__main__":
     mp.set_start_method("spawn")
 
     cnf = get_conf("conf/main.yaml")
-    runner = Runner(MeasureForgetting, cnf)
+    runner = Runner(CountCollisionsAgent, cnf)
     runner.run()
