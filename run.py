@@ -1,14 +1,6 @@
 import os
 import sys
-import importlib.util
-
-from experiment import (
-    TestFWModel,
-    CreateFWDB,
-    GoalBasedExp,
-    MeasureForgetting,
-    CountCollisionsAgent,
-)
+import importlib
 import multiprocessing as mp
 from exp_runner import Runner
 from utils import get_conf
