@@ -319,8 +319,11 @@ class CountCollisionsAgent(Experiment):
             # reset environment
             if self.global_step % self.episode_len == 0:
                 done = True
-                if self.cnf.main.train:
-                    self.env.reset()
+                # -------------
+                self.env.reset()
+                # TODO: change back
+                # if self.cnf.main.train:
+                #     self.env.reset()
 
             self.agent.set_is_done(done)
 
