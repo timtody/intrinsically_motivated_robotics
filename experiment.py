@@ -273,10 +273,10 @@ class CountCollisionsAgent(Experiment):
             ]
         )
         cloud_high_freq.write_html(
-            f"data/pointclouds/high_freq_{self.rank}_{step}.html"
+            f"data/pointclouds/{self.cnf.wandb.name}_high_freq_{self.rank}_{step}.html"
         )
         cloud_low_freq.write_html(
-            f"data/pointclouds/low_freq_rank_{self.rank}_{step}.html"
+            f"data/pointclouds/{self.cnf.wandb.name}_low_freq_rank_{self.rank}_{step}.html"
         )
 
         # gripper positions
@@ -377,19 +377,6 @@ class MeasureForgetting(Experiment):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        import wandb
-
-        self.wandb = wandb
-
-        self.wandb.init(
-            config=self.cnf,
-            project=self.cnf.wandb.project,
-            name=f"{self.cnf.wandb.name}_rank{args[1]}",
-            group=f"{self.cnf.wandb.name}",
-        )
-
-        self.agent = Agent(self.action_dim, self.state_dim, self.cnf, self.device)
-
         # setup logging metrics
         self.n_collisions_self = 0
         self.n_collisions_other = 0
@@ -416,6 +403,9 @@ class MeasureForgetting(Experiment):
         state = self.env.reset()
         print("starting burn-in")
         for i in range(self.burnin_len):
+
+            if i % 10000 == 0:
+                print("burn-in at step", i)
 
             action = self.agent.get_action(state)
             next_state, _, done, info = self.env.step(action)

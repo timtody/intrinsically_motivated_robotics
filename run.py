@@ -19,5 +19,5 @@ if __name__ == "__main__":
     mp.set_start_method("spawn")
 
     cnf = get_conf("conf/main.yaml")
-    runner = Runner(CountCollisionsAgent, cnf)
+    runner = Runner(MeasureForgetting, cnf)
     runner.run()
