@@ -9,8 +9,6 @@ from experiment import (
     TestFWModelFromDB,
 )
 
-from runner import Runner
-
 from logger import Logger
 from utils import get_conf, GraphWindow
 
