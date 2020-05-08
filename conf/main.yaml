@@ -30,6 +30,7 @@ log:
 wandb:
   project: test
   name: testname
+  dryrun: True
 
 icm:
   embedding_size: 256

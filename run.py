@@ -7,9 +7,6 @@ from utils import get_conf
 
 if __name__ == "__main__":
 
-    # os.environ["WANDB_MODE"] = "dryrun"
-    # os.environ["WANDB_DISABLE_CODE"] = "true"
-
     mp.set_start_method("spawn")
 
     # dynamicall import the experiment
@@ -18,5 +15,8 @@ if __name__ == "__main__":
     exp = getattr(module, "Experiment")
 
     cnf = get_conf("conf/main.yaml")
+    if cnf.wandb.dryrun:
+        os.environ["WANDB_MODE"] = "dryrun"
+        os.environ["WANDB_DISABLE_CODE"] = "true"
     runner = Runner(exp, cnf)
     runner.run()
