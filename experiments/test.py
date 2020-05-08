@@ -1,15 +1,13 @@
 from .experiment import BaseExperiment
+import time
 
 
 class Experiment(BaseExperiment):
     def run(self):
         obs = self.env.reset()
-        print(len(obs))
-        exit(1)
-        for i in range(15):
-            self.env.step([0, 0, 0, 0, 0, 1, 0])
-
-        for i in range(200):
-            self.env.step([0, 1, 0, 0, 0, 0, 0])
-
+        start = time.time()
+        for i in range(10000):
+            self.env.step(self.env.action_space.sample())
+        end = time.time()
+        print("took", end - start, "s")
         self.env.close()
