@@ -24,6 +24,11 @@ if cnf.wandb.dryrun:
     os.environ["WANDB_MODE"] = "dryrun"
     os.environ["WANDB_DISABLE_CODE"] = "true"
 
+
+# set the experiment seeds according to the number of the process
+cnf.env.torch_seed += iproc
+cnf.env.np_seed += iproc
+
 experiment = exp(cnf, iproc)
 experiment.run()
 
