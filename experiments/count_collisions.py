@@ -30,6 +30,10 @@ class Experiment(BaseExperiment):
 
         self.pointcloud_every = 250000
 
+        # running mean and std of reward
+        self.running_mean = 0
+        self.running_std = 0
+
     def make_pointclouds(self, step):
         gripx, gripy, gripz = zip(*self.gripper_positions)
         grip_mean_x, grip_mean_y, grip_mean_z = zip(*self.gripper_positions_means)
@@ -142,6 +146,16 @@ class Experiment(BaseExperiment):
                 batch_reward = train_results["imloss"].sum().item()
                 self.reward_sum += batch_reward
 
+                # compute running mean and std
+                prev_mean = self.running_mean
+                self.running_mean = (
+                    self.running_mean
+                    + (batch_reward - self.running_mean) / self.global_step
+                )
+                self.running_std = self.running_std + (
+                    batch_reward - self.running_mean
+                ) * (batch_reward - prev_mean)
+
                 # if we don't train we still want to log all the relevant data
                 self.wandb.log(
                     {
@@ -162,6 +176,12 @@ class Experiment(BaseExperiment):
 
             state = next_state
 
+        self.wandb.log(
+            {
+                "running mean": self.running_mean,
+                "running std": np.sqrt(self.running_std / self.global_step),
+            }
+        )
         self.env.close()
 
         return self.n_collisions_self, self.reward_sum
