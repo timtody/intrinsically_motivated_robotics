@@ -13,7 +13,7 @@ iproc = MPI.COMM_WORLD.Get_rank()  # Ranks in communicator
 inode = MPI.Get_processor_name()  # Node where this MPI process runs
 
 
-# dynamicall import the experiment
+# dynamically import the experiment
 experiment = sys.argv[1].split("/")[1].split(".")[0]
 module = importlib.import_module("." + experiment, package="experiments")
 exp = getattr(module, "Experiment")

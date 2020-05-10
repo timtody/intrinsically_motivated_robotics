@@ -115,7 +115,7 @@ class ICModule(nn.Module):
     Intrinsic curiosity module.
     """
 
-    def __init__(self, action_dim, state_dim, embedding_size, alpha, n_layers):
+    def __init__(self, action_dim, state_dim, embedding_size, alpha, n_layers, lr):
         super().__init__()
         # self._conv_base = ConvModule()
         self.base = FCModule(state_dim, embedding_size)
