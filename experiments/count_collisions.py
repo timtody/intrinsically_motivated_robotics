@@ -2,6 +2,7 @@ from .experiment import BaseExperiment
 import plotly.graph_objects as go
 import numpy as np
 import torch
+import time
 
 
 class Experiment(BaseExperiment):
@@ -86,6 +87,7 @@ class Experiment(BaseExperiment):
     def run(self):
         state = self.env.reset()
         for i in range(self.cnf.main.n_steps):
+            it_start = time.time()
             self.ppo_timestep += 1
             self.global_step += 1
 
@@ -157,6 +159,7 @@ class Experiment(BaseExperiment):
                 ) * (batch_reward - prev_mean)
 
                 # if we don't train we still want to log all the relevant data
+                pre_log_time = time.time()
                 self.wandb.log(
                     {
                         "n collisions self": self.n_collisions_self,
@@ -170,8 +173,12 @@ class Experiment(BaseExperiment):
                         "batch reward": batch_reward,
                         "policy loss": train_results["ploss"],
                         "value loss": train_results["vloss"],
+                        "iteration time": time.time() - it_start,
                     },
                     step=self.global_step,
+                )
+                self.wandb.log(
+                    {"logging time": time.time() - pre_log_time}, step=self.global_step
                 )
 
             state = next_state
