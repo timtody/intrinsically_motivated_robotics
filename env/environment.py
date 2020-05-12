@@ -298,6 +298,15 @@ class Env(gym.Env):
             *self.skin_wrist,
         ]
 
+    def get_joint_intervals(self):
+        limits = []
+        for joint in self._arm.joints:
+            limits.append(joint.get_joint_interval()[1])
+        return limits
+
+    def get_joint_angles(self):
+        return self._arm.get_joint_positions()
+
     def get_skin_info(self):
         """
         Retrieves the XYZ-forces of the skin sensors. Since the read method
