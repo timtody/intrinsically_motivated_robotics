@@ -47,6 +47,29 @@ class Agent:
         action, *_ = self.ppo.policy_old.act(state, self.ppo_mem)
         return action
 
+    def train_with_inverse_reward(self):
+        """Trains the inverse model of the agent and uses its loss as the
+        intrinsic reward"""
+        results = {"ploss": 0, "vloss": 0, "imloss": torch.tensor([0])}
+
+        state_batch, next_state_batch, action_batch = zip(*self.icm_buffer)
+        im_loss_batch = self.icm.train_inverse(
+            state_batch, next_state_batch, action_batch,
+        )
+        results["imloss"] = im_loss_batch
+
+        self.ppo_mem.rewards = im_loss_batch
+
+        ploss, vloss = self.ppo.update(self.ppo_mem)
+        results["ploss"] = ploss
+        results["vloss"] = vloss
+
+        # reset buffers
+        self.ppo_mem.clear_memory()
+        self.icm_buffer = []
+
+        return results
+
     def train(
         self, train_fw=True, train_ppo=True, freeze_fw_model=False, random_reward=False
     ) -> dict:

@@ -2,7 +2,7 @@ import os
 import sys
 import importlib
 import multiprocessing as mp
-from exp_runner import Runner
+from mp_runner import Runner
 from utils import get_conf
 
 if __name__ == "__main__":

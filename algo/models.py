@@ -50,7 +50,7 @@ class FCModule(nn.Module):
         self.fc2 = nn.Linear(embedding_size, embedding_size)
         # self.bnorm1 = nn.BatchNorm1d(128)
         # self.bnorm2 = nn.BatchNorm1d(embedding_size)
-        self.eval()
+        # self.eval()
 
     def forward(self, x):
         x = self.fc1(x)
@@ -94,20 +94,31 @@ class InverseModule(nn.Module):
     Module for learning the inverse mapping of state x next state -> action.
     """
 
-    def __init__(self, embedding_size, action_dim, base):
+    def __init__(self, embedding_size, action_dim, base, lr=0.001):
         super().__init__()
         self.base = base
         # * 2 because we concatenate two states
-        self.linear = nn.Linear(embedding_size * 2, 256)
+        self.linear = nn.Linear(embedding_size * 2, action_dim)
         self.head = nn.Linear(256, action_dim)
+        self.opt = optim.Adam(self.parameters(), lr=lr)
 
     def forward(self, x, y):
         x = self.base(x)
         y = self.base(y)
-        x = torch.cat([x, y])
+        x = torch.cat([x, y], dim=1)
         x = self.linear(x)
-        x = self.head(x)
+        # x = self.head(x)
         return x
+
+    def train(self, this_state, next_state, action):
+        action = torch.stack(action).float().to(device)
+        this_state = torch.tensor(this_state).float().to(device)
+        next_state = torch.tensor(next_state).float().to(device)
+        predicted_action = self.forward(this_state, next_state)
+        loss = F.mse_loss(predicted_action, action, reduction="none")
+        self.opt.zero_grad()
+        loss.mean().backward()
+        return loss.mean(dim=1).detach()
 
 
 class ICModule(nn.Module):
@@ -123,7 +134,7 @@ class ICModule(nn.Module):
         self._inverse = InverseModule(embedding_size, action_dim, self.base)
         self._forward = ForwardModule(embedding_size, action_dim, self.base, n_layers)
 
-        self.opt = optim.Adam(self.parameters(), lr=1e-4)
+        self.opt = optim.Adam(self.parameters(), lr=lr)
         self.running_return_std = None
         self.alpha = alpha
 
@@ -188,6 +199,9 @@ class ICModule(nn.Module):
         # return loss.mean(dim=1).detach() / 2.5
         return loss.mean(dim=1).detach()
         # --------------------------------------
+
+    def train_inverse(self, this_state, next_state, action):
+        return self._inverse.train(this_state, next_state, action)
 
     def _process_loss(self, loss):
         self.loss_buffer.push(loss)

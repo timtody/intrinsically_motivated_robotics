@@ -1,8 +1,6 @@
 import os
 import sys
 import importlib
-import multiprocessing as mp
-from exp_runner import Runner
 from utils import get_conf
 
 from mpi4py import MPI
