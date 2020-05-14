@@ -4,7 +4,7 @@ import torch
 import pickle
 
 
-class MeasureForgetting(BaseExperiment):
+class Experiment(BaseExperiment):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
