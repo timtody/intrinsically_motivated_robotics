@@ -53,7 +53,7 @@ class Experiment(BaseExperiment):
             if i % self.train_every == self.train_every - 1:
                 # print("training")
                 results = self.agent.train()
-                self.wandb.loss({"burn-in loss": results["imloss"].mean()}, step=i)
+                self.wandb.log({"burn-in loss": results["imloss"].mean()}, step=i)
 
     def _gather_dataset(self):
         # collect data
