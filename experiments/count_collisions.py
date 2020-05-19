@@ -35,6 +35,11 @@ class Experiment(BaseExperiment):
         self.running_mean = 0
         self.running_std = 0
 
+        # watch models
+        self.wandb.watch(self.agent.icm, log_freq=1)
+        self.wandb.watch(self.agent.ppo.policy, log_freq=1)
+        self.wandb.watch(self.agent.ppo.policy_old, log_freq=1)
+
     def make_pointclouds(self, step):
 
         gripx, gripy, gripz = zip(*self.gripper_positions)

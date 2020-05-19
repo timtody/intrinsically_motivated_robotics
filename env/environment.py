@@ -16,7 +16,6 @@ import numpy as np
 class Env(gym.Env):
     def __init__(self, cnf):
         self.cnf = cnf.env
-        self.owd = cnf.log.owd
         self._launch()
         self._setup_robot()
         self._setup_shapes()
@@ -50,7 +49,7 @@ class Env(gym.Env):
         return obs
 
     def _launch(self):
-        scene_path = os.path.join(self.owd, "scenes", self.cnf.scene_path)
+        scene_path = os.path.join("scenes", self.cnf.scene_path)
         self._pr = PyRep()
         self._pr.launch(os.path.abspath(scene_path), headless=self.cnf.headless)
         self._pr.start()
@@ -591,8 +590,7 @@ class Env(gym.Env):
 
     def load_state(self, path):
         print("loading env state")
-        abspath = os.path.abspath(os.environ["owd"])
-        with open(os.path.join(abspath, path, "env_state.json"), "r") as f:
+        with open(os.path.join(path, "env_state.json"), "r") as f:
             state = json.load(f)
         self._set_vel_control(False)
         self._arm.set_joint_positions(state["joint_positions"])

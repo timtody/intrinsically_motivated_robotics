@@ -23,11 +23,6 @@ env:
   torch_seed: 42
   np_seed: 42
 
-log:
-  name: ""
-  owd: ""
-  checkpoint: ""
-
 wandb:
   project: test
   name: testname
@@ -38,14 +33,6 @@ icm:
   alpha: 0.001
   n_layers: 2
   lr: 0.0001
-
-MMModel:
-  prop_dim: 14
-  tac_dim: 15
-  audio_dim: 12
-  latent_dim: 32
-  lstm_hidden_size: 20
-  lstm_layers: 2
 
 mp:
   n_procs: 1
