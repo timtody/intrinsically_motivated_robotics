@@ -75,7 +75,7 @@ class Agent:
     ) -> dict:
         """
         Trains the ICM of the agent. This method clears the buffer which was filled by
-        this.append_icm_transition
+        this.append_icm_transition.
         """
         results = {"ploss": 0, "vloss": 0, "imloss": torch.tensor([0])}
 
@@ -89,7 +89,9 @@ class Agent:
         # train actor
         if train_ppo:
             self.ppo_mem.rewards = (
-                im_loss_batch if not random_reward else im_loss_batch.normal_()
+                im_loss_batch
+                if not random_reward
+                else im_loss_batch.normal_(mean=28, std=140)
             )
             ploss, vloss = self.ppo.update(self.ppo_mem)
             results["ploss"] = ploss

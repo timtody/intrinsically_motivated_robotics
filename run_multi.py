@@ -19,7 +19,14 @@ if __name__ == "__main__":
         os.environ["WANDB_MODE"] = "dryrun"
         os.environ["WANDB_DISABLE_CODE"] = "true"
 
-    modes = ["tac", "prop", "tac,prop", "tac,prop,mobile"]
+    modes = [
+        "tac",
+        "prop",
+        "tac,prop",
+        "tac,prop,mobile",
+        "tac,prop,mobile,random_reward",
+    ]
+
     for mode in modes:
         print("starting mode", mode)
         cnf.env.state = mode
