@@ -36,9 +36,9 @@ class Experiment(BaseExperiment):
         self.running_std = 0
 
         # watch models
-        self.wandb.watch(self.agent.icm, log_freq=1)
-        self.wandb.watch(self.agent.ppo.policy, log_freq=1)
-        self.wandb.watch(self.agent.ppo.policy_old, log_freq=1)
+        self.wandb.watch(self.agent.icm)
+        self.wandb.watch(self.agent.ppo.policy)
+        self.wandb.watch(self.agent.ppo.policy_old)
 
     def make_pointclouds(self, step):
 
