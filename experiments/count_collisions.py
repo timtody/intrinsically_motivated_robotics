@@ -119,6 +119,23 @@ class Experiment(BaseExperiment):
             ranges.append(dist / (max_dist + 0.0001))
         return ranges
 
+    def _make_pointclouds(self, step):
+        # record pointcloud stuff
+        if step % self.gripper_freq_0 == 0:
+            self.gripper_positions.append(self.env._gripper.get_position())
+
+        if step % self.gripper_freq_1 == self.gripper_freq_1 - 1:
+            self.gripper_positions_means.append(
+                self.gripper_positions_acc / self.gripper_freq_1
+            )
+            self.gripper_positions_acc = 0
+
+        self.gripper_positions_acc += np.array(self.env._gripper.get_position())
+
+        # save the clouds
+        if step % self.pointcloud_every == self.pointcloud_every - 1:
+            self.make_pointclouds(step)
+
     def run(self):
         joint_intervals = self.env.get_joint_intervals()
         joint_angles = []
@@ -129,21 +146,7 @@ class Experiment(BaseExperiment):
             self.ppo_timestep += 1
             self.global_step += 1
 
-            # record pointcloud stuff
-            if i % self.gripper_freq_0 == 0:
-                self.gripper_positions.append(self.env._gripper.get_position())
-
-            if i % self.gripper_freq_1 == self.gripper_freq_1 - 1:
-                self.gripper_positions_means.append(
-                    self.gripper_positions_acc / self.gripper_freq_1
-                )
-                self.gripper_positions_acc = 0
-
-            self.gripper_positions_acc += np.array(self.env._gripper.get_position())
-
-            # save the clouds
-            if i % self.pointcloud_every == self.pointcloud_every - 1:
-                self.make_pointclouds(i)
+            self._make_pointclouds()
 
             if not self.cnf.main.train:
                 action = torch.tensor(self.env.action_space.sample())
