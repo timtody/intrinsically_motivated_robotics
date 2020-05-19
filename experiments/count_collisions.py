@@ -146,7 +146,8 @@ class Experiment(BaseExperiment):
             self.ppo_timestep += 1
             self.global_step += 1
 
-            self._make_pointclouds()
+            if self.cnf.main.record_pc:
+                self._make_pointclouds()
 
             if not self.cnf.main.train:
                 action = torch.tensor(self.env.action_space.sample())

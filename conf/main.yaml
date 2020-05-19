@@ -2,6 +2,7 @@ main:
   n_steps: 35000
   train_each: 200
   train: True
+  record_pc: False
 
 ppo:
   n_latent_var: 128
