@@ -27,8 +27,10 @@ if __name__ == "__main__":
         "tac,prop,mobile,random_reward",
     ]
 
+    wandb_basename = cnf.wandb.name
     for mode in modes:
         print("starting mode", mode)
         cnf.env.state = mode
+        cnf.wandb.name = wandb_basename + f"_{mode}"
         runner = Runner(exp, cnf)
         runner.run()

@@ -36,7 +36,7 @@ class BaseExperiment:
         )
         # setup agent
         self.action_dim = cnf.env.action_dim
-        self.state_dim = env.observation_space.shape[0]
+        self.state_dim = self.env.observation_space.shape[0]
 
         self.agent = Agent(self.action_dim, self.state_dim, self.cnf, self.device)
 
