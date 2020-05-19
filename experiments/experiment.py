@@ -16,7 +16,6 @@ from torch.utils.tensorboard import SummaryWriter
 from collections import defaultdict
 from abc import abstractmethod
 import plotly.graph_objects as go
-from utils import nostdout
 
 
 class BaseExperiment:
