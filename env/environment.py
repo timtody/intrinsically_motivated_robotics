@@ -12,7 +12,6 @@ import gym
 import math
 import json
 import numpy as np
-from utils import nostdout
 
 
 class Env(gym.Env):
