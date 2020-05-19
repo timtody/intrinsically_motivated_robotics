@@ -19,13 +19,6 @@ def get_conf(path):
     return cnf
 
 
-def prepare_wandb(cnf, *args):
-    if cnf.wandb.use:
-        wandb.init(project=cnf.wandb.project, name=cnf.wandb.name, config=cnf)
-        wandb.watch(args[0].policy, log="all")
-        wandb.watch(args[1]._forward, log="all")
-
-
 class PointCloud:
     def get_outer(self):
         radius = 0.9285090706636693

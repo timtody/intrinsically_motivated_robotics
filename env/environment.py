@@ -6,11 +6,13 @@ from pyrep.objects.shape import Shape
 from pyrep.objects.joint import Joint
 from pyrep.backend import sim
 from observation import Observation
+
 import os
 import gym
 import math
 import json
 import numpy as np
+from utils import nostdout
 
 
 class Env(gym.Env):

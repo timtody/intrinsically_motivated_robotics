@@ -16,6 +16,7 @@ from torch.utils.tensorboard import SummaryWriter
 from collections import defaultdict
 from abc import abstractmethod
 import plotly.graph_objects as go
+from utils import nostdout
 
 
 class BaseExperiment:
@@ -28,10 +29,7 @@ class BaseExperiment:
         torch.manual_seed(cnf.env.torch_seed)
 
         # setup env
-        env = Env(cnf)
-        # skip_wrapper = SkipWrapper(cnf.env.skip)
-        # self.env = skip_wrapper(env)
-        self.env = env
+        self.env = Env(cnf)
 
         # pytorch device
         self.device = (
