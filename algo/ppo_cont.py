@@ -118,12 +118,25 @@ class PPO:
         self.K_epochs = K_epochs
 
         self.policy = ActorCritic(
-            action_dim, observation_dim, n_latent_var, max_action, action_std, device
+            action_dim,
+            observation_dim,
+            n_latent_var,
+            max_action,
+            action_std,
+            self.device,
         ).to(self.device)
+
         self.optimizer = torch.optim.Adam(self.policy.parameters(), lr=lr, betas=betas)
+
         self.policy_old = ActorCritic(
-            action_dim, observation_dim, n_latent_var, max_action, action_std, device
+            action_dim,
+            observation_dim,
+            n_latent_var,
+            max_action,
+            action_std,
+            self.device,
         ).to(self.device)
+
         self.policy_old.load_state_dict(self.policy.state_dict())
 
         self.MseLoss = nn.MSELoss()
