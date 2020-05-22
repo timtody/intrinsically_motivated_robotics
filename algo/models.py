@@ -138,6 +138,21 @@ class ICModule(nn.Module):
         self.running_return_std = None
         self.alpha = alpha
 
+        # reward normalization
+        self.running_mean = 0
+        self.running_var = 0
+
+    def _update_running_stats(self, reward):
+        """
+        Updates the exponentially weighted averages of variance and mean of the reward.
+        This is used to z-score the reward from the ICM.
+        """
+        self.running_var = (1 - self.alpha) * self.running_var + self.alpha * (
+            self.running_mean - reward
+        ) ** 2
+
+        self.running_mean = (1 - self.alpha) * self.running_mean + self.alpha * reward
+
     def forward(self, x):
         raise NotImplementedError
 
@@ -191,14 +206,19 @@ class ICModule(nn.Module):
         loss = F.mse_loss(
             next_state_embed_pred, next_state_embed_true, reduction="none"
         )
+
         if not freeze:
             loss.mean().backward()
             self.opt.step()
+
+        self._update_running_stats(loss.mean())
+        loss = loss.mean(dim=1).detach()
+        loss = (loss - self.running_mean) / self.running_var.sqrt()
+
         # TODO: RESTORE THE ORIGINAL HERE AFTER REMOVING THE
         # CONSTANT NORMALIZATION OF THE OBSERVATION
         # return loss.mean(dim=1).detach() / 2.5
-        return loss.mean(dim=1).detach()
-        # --------------------------------------
+        return loss
 
     def train_inverse(self, this_state, next_state, action):
         return self._inverse.train(this_state, next_state, action)
