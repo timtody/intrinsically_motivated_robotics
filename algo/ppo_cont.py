@@ -97,7 +97,8 @@ class PPO:
     def __init__(
         self,
         action_dim,
-        observation_dim,
+        state_dim,
+        device,
         n_latent_var,
         lr,
         betas,
@@ -106,35 +107,23 @@ class PPO:
         eps_clip,
         max_action,
         action_std,
-        gpu,
     ):
-        self.device = torch.device(
-            "cuda:0" if torch.cuda.is_available() and gpu else "cpu"
-        )
         self.lr = lr
         self.betas = betas
         self.gamma = gamma
         self.eps_clip = eps_clip
         self.K_epochs = K_epochs
 
+        self.device = device
+
         self.policy = ActorCritic(
-            action_dim,
-            observation_dim,
-            n_latent_var,
-            max_action,
-            action_std,
-            self.device,
+            action_dim, state_dim, n_latent_var, max_action, action_std, self.device,
         ).to(self.device)
 
         self.optimizer = torch.optim.Adam(self.policy.parameters(), lr=lr, betas=betas)
 
         self.policy_old = ActorCritic(
-            action_dim,
-            observation_dim,
-            n_latent_var,
-            max_action,
-            action_std,
-            self.device,
+            action_dim, state_dim, n_latent_var, max_action, action_std, self.device,
         ).to(self.device)
 
         self.policy_old.load_state_dict(self.policy.state_dict())

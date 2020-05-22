@@ -112,6 +112,7 @@ class InverseModule(nn.Module):
         action = torch.stack(action).float().to(self.device)
         this_state = torch.tensor(this_state).float().to(self.device)
         next_state = torch.tensor(next_state).float().to(self.device)
+
         predicted_action = self.forward(this_state, next_state)
         loss = F.mse_loss(predicted_action, action, reduction="none")
         self.opt.zero_grad()
@@ -128,25 +129,23 @@ class ICModule(nn.Module):
         self,
         action_dim,
         state_dim,
+        device,
         embedding_size,
         alpha,
         n_layers,
         lr,
         standardize_loss,
-        gpu,
     ):
         super().__init__()
-        self.device = (
-            torch.device("cuda")
-            if torch.cuda.is_available() and gpu
-            else torch.device("cpu")
-        )
         # self._conv_base = ConvModule()
+        self.device = device
         self.base = FCModule(state_dim, embedding_size)
+
         # define forward and inverse modules
         self._inverse = InverseModule(
             embedding_size, action_dim, self.base, self.device
         )
+
         self._forward = ForwardModule(embedding_size, action_dim, self.base, n_layers)
 
         self.opt = optim.Adam(self.parameters(), lr=lr)

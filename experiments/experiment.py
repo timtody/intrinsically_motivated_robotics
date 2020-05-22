@@ -7,7 +7,7 @@ import wandb
 import collections
 import numpy as np
 from observation import Observation
-from env.environment import Env
+from environment import Env
 from agent import Agent
 from utils import RewardQueue, ValueQueue
 from algo.ppo_cont import PPO, Memory
@@ -32,7 +32,9 @@ class BaseExperiment:
 
         # pytorch device
         self.device = (
-            torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+            torch.device("cuda")
+            if torch.cuda.is_available() and cnf.main.gpu
+            else torch.device("cpu")
         )
         # setup agent
         self.action_dim = cnf.env.action_dim

@@ -14,11 +14,11 @@ from algo.models import ICModule
 class Agent:
     def __init__(self, action_dim, state_dim, cnf, device):
         # PPO related stuff
-        self.ppo = PPO(action_dim, state_dim, **cnf.ppo)
+        self.ppo = PPO(action_dim, state_dim, device, **cnf.ppo)
         self.ppo_mem = Memory()
 
         # ICM related stuff
-        self.icm = ICModule(action_dim, state_dim, **cnf.icm).to(device)
+        self.icm = ICModule(action_dim, state_dim, device, **cnf.icm).to(device)
         self.icm_buffer = []
 
     def append_icm_transition(self, this_state, next_state, action) -> None:
