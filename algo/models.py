@@ -126,7 +126,16 @@ class ICModule(nn.Module):
     Intrinsic curiosity module.
     """
 
-    def __init__(self, action_dim, state_dim, embedding_size, alpha, n_layers, lr):
+    def __init__(
+        self,
+        action_dim,
+        state_dim,
+        embedding_size,
+        alpha,
+        n_layers,
+        lr,
+        standardize_loss,
+    ):
         super().__init__()
         # self._conv_base = ConvModule()
         self.base = FCModule(state_dim, embedding_size)
@@ -141,6 +150,7 @@ class ICModule(nn.Module):
         # reward normalization
         self.running_mean = 0
         self.running_var = 0
+        self.standardize_loss = standardize_loss
 
     def _update_running_stats(self, reward):
         """
@@ -213,7 +223,9 @@ class ICModule(nn.Module):
 
         self._update_running_stats(loss.mean())
         loss = loss.mean(dim=1).detach()
-        loss = (loss - self.running_mean) / self.running_var.sqrt()
+
+        if self.standardize_loss:
+            loss = (loss - self.running_mean) / self.running_var.sqrt()
 
         # TODO: RESTORE THE ORIGINAL HERE AFTER REMOVING THE
         # CONSTANT NORMALIZATION OF THE OBSERVATION
