@@ -3,10 +3,6 @@ import torch
 import torch.nn as nn
 from torch.distributions import MultivariateNormal
 
-device = 
-# device = torch.device("cpu")
-# torch.manual_seed(42)
-
 
 class Memory:
     def __init__(self):
@@ -112,7 +108,9 @@ class PPO:
         action_std,
         gpu,
     ):
-        self.device = torch.device("cuda:0" if torch.cuda.is_available() and gpu else "cpu")
+        self.device = torch.device(
+            "cuda:0" if torch.cuda.is_available() and gpu else "cpu"
+        )
         self.lr = lr
         self.betas = betas
         self.gamma = gamma
