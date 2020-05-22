@@ -9,9 +9,6 @@ import torch.optim as optim
 import torch.nn.functional as F
 from itertools import chain
 
-torch.manual_seed(1)
-device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-
 
 class ConvModule(nn.Module):
     """
@@ -94,9 +91,10 @@ class InverseModule(nn.Module):
     Module for learning the inverse mapping of state x next state -> action.
     """
 
-    def __init__(self, embedding_size, action_dim, base, lr=0.001):
+    def __init__(self, embedding_size, action_dim, base, device, lr=0.001):
         super().__init__()
         self.base = base
+        self.device = device
         # * 2 because we concatenate two states
         self.linear = nn.Linear(embedding_size * 2, action_dim)
         self.head = nn.Linear(256, action_dim)
@@ -111,9 +109,9 @@ class InverseModule(nn.Module):
         return x
 
     def train(self, this_state, next_state, action):
-        action = torch.stack(action).float().to(device)
-        this_state = torch.tensor(this_state).float().to(device)
-        next_state = torch.tensor(next_state).float().to(device)
+        action = torch.stack(action).float().to(self.device)
+        this_state = torch.tensor(this_state).float().to(self.device)
+        next_state = torch.tensor(next_state).float().to(self.device)
         predicted_action = self.forward(this_state, next_state)
         loss = F.mse_loss(predicted_action, action, reduction="none")
         self.opt.zero_grad()
@@ -135,12 +133,20 @@ class ICModule(nn.Module):
         n_layers,
         lr,
         standardize_loss,
+        gpu,
     ):
         super().__init__()
+        self.device = (
+            torch.device("cuda")
+            if torch.cuda.is_available() and gpu
+            else torch.device("cpu")
+        )
         # self._conv_base = ConvModule()
         self.base = FCModule(state_dim, embedding_size)
         # define forward and inverse modules
-        self._inverse = InverseModule(embedding_size, action_dim, self.base)
+        self._inverse = InverseModule(
+            embedding_size, action_dim, self.base, self.device
+        )
         self._forward = ForwardModule(embedding_size, action_dim, self.base, n_layers)
 
         self.opt = optim.Adam(self.parameters(), lr=lr)
@@ -188,7 +194,7 @@ class ICModule(nn.Module):
         Returns the state embedding from the shared convolutional base.
         From numpy.
         """
-        state = torch.tensor(state).float().to(device)
+        state = torch.tensor(state).float().to(self.device)
         return self.base(state)
 
     def next_state(self, state, action):
@@ -204,9 +210,9 @@ class ICModule(nn.Module):
         return self._inverse(this_state, next_state)
 
     def train_forward(self, this_state, next_state, action, freeze=False):
-        action = torch.stack(action).float().to(device)
-        this_state = torch.tensor(this_state).float().to(device)
-        next_state = torch.tensor(next_state).float().to(device)
+        action = torch.stack(action).float().to(self.device)
+        this_state = torch.tensor(this_state).float().to(self.device)
+        next_state = torch.tensor(next_state).float().to(self.device)
         next_state_embed_pred = self.next_state(this_state, action)
         next_state_embed_true = self.embed(next_state)
 

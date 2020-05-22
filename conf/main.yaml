@@ -13,6 +13,7 @@ ppo:
   gamma: 0.95
   max_action: 1
   action_std: 0.5
+  gpu: False
 
 env:
   scene_path: base.ttt
@@ -33,6 +34,7 @@ icm:
   n_layers: 2
   lr: 0.0001
   standardize_loss: False
+  gpu: False
 
 mp:
   n_procs: 1
