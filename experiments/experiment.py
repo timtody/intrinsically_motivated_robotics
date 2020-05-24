@@ -53,6 +53,7 @@ class BaseExperiment:
             project=self.cnf.wandb.project,
             name=f"{self.cnf.wandb.name}_rank{self.rank}",
             group=f"{self.cnf.wandb.name}",
+            resume=bool(self.cnf.main.checkpoint),
         )
 
     @abstractmethod

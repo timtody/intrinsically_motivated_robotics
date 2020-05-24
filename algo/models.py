@@ -252,14 +252,11 @@ class ICModule(nn.Module):
         return loss / self.running_return_std
 
     def save_state(self, path):
-        torch.save(self.state_dict(), path + "icm.pt")
+        print("icm saving sate to path", path)
+        torch.save(self.state_dict(), os.path.join(path, "icm.pt"))
+        torch.save(self.opt.state_dict(), os.path.join(path, "icm_opt.pt"))
 
     def load_state(self, path):
-        path = os.path.join(path, "icm.pt")
-        print("loading model state from", path)
-        self.load_state_dict(torch.load(path))
-
-
-if __name__ == "__main__":
-    icm = ICModule(10, 10, 200)
-    print(len(icm.parameters()))
+        print("icm loading state from path", path)
+        self.load_state_dict(torch.load(os.path.join(path, "icm.pt")))
+        self.opt.load_state_dict(torch.load(os.path.join(path, "icm_opt.pt")))

@@ -188,12 +188,13 @@ class PPO:
         return loss.mean(), value_loss
 
     def load_state(self, path):
-        print("loading ppo from path", path)
+        print("ppo loading model from path", path)
         self.policy.load_state_dict(torch.load(os.path.join(path, "policy.pt")))
         self.optimizer.load_state_dict(torch.load(os.path.join(path, "opt.pt")))
         self.policy_old.load_state_dict(torch.load(os.path.join(path, "policy_old.pt")))
 
     def save_state(self, path):
-        torch.save(self.policy.state_dict(), path + "policy.pt")
-        torch.save(self.policy_old.state_dict(), path + "policy_old.pt")
-        torch.save(self.optimizer.state_dict(), path + "opt.pt")
+        print("ppo saving model to path", path)
+        torch.save(self.policy.state_dict(), os.path.join(path, "policy.pt"))
+        torch.save(self.policy_old.state_dict(), os.path.join(path, "policy_old.pt"))
+        torch.save(self.optimizer.state_dict(), os.path.join(path, "opt.pt"))

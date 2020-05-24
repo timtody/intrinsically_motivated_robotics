@@ -4,6 +4,8 @@ main:
   train: True
   record_pc: False
   gpu: False
+  save_state: True
+  checkpoint: ""
 
 ppo:
   n_latent_var: 128

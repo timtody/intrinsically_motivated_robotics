@@ -20,9 +20,7 @@ if __name__ == "__main__":
         os.environ["WANDB_DISABLE_CODE"] = "true"
 
     modes = [
-        "tac",
         "prop",
-        "tac,prop",
     ]
 
     wandb_basename = cnf.wandb.name

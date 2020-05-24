@@ -3,6 +3,7 @@ import plotly.graph_objects as go
 import numpy as np
 import torch
 import time
+import os
 
 
 class Experiment(BaseExperiment):
@@ -39,6 +40,19 @@ class Experiment(BaseExperiment):
         self.wandb.watch(self.agent.icm)
         self.wandb.watch(self.agent.ppo.policy)
         self.wandb.watch(self.agent.ppo.policy_old)
+
+        # saving and loading
+        if self.cnf.main.checkpoint:
+            self.load_state(
+                os.path.join(self.cnf.main.checkpoint, "rank" + str(self.rank))
+            )
+
+        if self.cnf.main.save_state:
+            self.checkpoint_path = os.path.join(
+                "out", self.cnf.wandb.name, time.strftime("%B-%d:%H-%M-%S"),
+            )
+            if not os.path.exists(self.checkpoint_path):
+                os.makedirs(os.path.join(self.checkpoint_path))
 
     def make_pointclouds(self, step):
 
@@ -263,6 +277,10 @@ class Experiment(BaseExperiment):
 
             state = next_state
 
+            # save state
+            if self.global_step % 5000 == 4999 and self.cnf.main.save_state:
+                self.save_state()
+
         self.wandb.log(
             {
                 "running mean": self.running_mean,
@@ -270,3 +288,25 @@ class Experiment(BaseExperiment):
             }
         )
         self.env.close()
+
+    def save_state(self):
+        print("saving state to", self.checkpoint_path)
+        cp_path = os.path.join(
+            self.checkpoint_path, str(self.global_step), "rank" + str(self.rank),
+        )
+        if not os.path.exists(cp_path):
+            os.makedirs(cp_path)
+
+        state = {
+            "global_step": self.global_step,
+            "reward_sum": self.reward_sum,
+        }
+        torch.save(state, os.path.join(cp_path, "exp_state.p"))
+        self.agent.save_state(cp_path)
+
+    def load_state(self, path):
+        print("loading state from", path)
+        exp_state = torch.load(os.path.join(path, "exp_state.p"))
+        self.global_step = exp_state["global_step"]
+        self.reward_sum = exp_state["reward_sum"]
+        self.agent.load_state(path)
