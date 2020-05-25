@@ -226,7 +226,7 @@ class ICModule(nn.Module):
             loss.mean().backward()
             self.opt.step()
 
-        self._update_running_stats(loss.mean())
+        self._update_running_stats(loss.mean().item())
         loss = loss.mean(dim=1).detach()
 
         if self.standardize_loss:

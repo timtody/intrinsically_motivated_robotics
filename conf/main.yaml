@@ -1,6 +1,6 @@
 main:
-  n_steps: 35000
-  train_each: 200
+  n_steps: 1000000
+  train_each: 500
   train: True
   record_pc: False
   gpu: False
