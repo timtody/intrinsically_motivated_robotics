@@ -1,11 +1,12 @@
 main:
-  n_steps: 1000000
-  train_each: 500
+  n_steps: 6000000
+  train_each: 5000
   train: True
   record_pc: False
   gpu: False
   save_state: True
   checkpoint: ""
+  save_every: 100000
 
 ppo:
   n_latent_var: 128

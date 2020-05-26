@@ -41,18 +41,11 @@ class Experiment(BaseExperiment):
         self.wandb.watch(self.agent.ppo.policy)
         self.wandb.watch(self.agent.ppo.policy_old)
 
-        # saving and loading
         if self.cnf.main.checkpoint:
             self.load_state(
                 os.path.join(self.cnf.main.checkpoint, "rank" + str(self.rank))
             )
 
-        if self.cnf.main.save_state:
-            self.checkpoint_path = os.path.join(
-                "out", self.cnf.wandb.name, time.strftime("%B-%d:%H-%M-%S"),
-            )
-            if not os.path.exists(self.checkpoint_path):
-                os.makedirs(os.path.join(self.checkpoint_path))
 
     def make_pointclouds(self, step):
 
@@ -278,7 +271,11 @@ class Experiment(BaseExperiment):
             state = next_state
 
             # save state
-            if self.global_step % 5000 == 4999 and self.cnf.main.save_state:
+            if (
+                self.global_step % self.cnf.main.save_every
+                == self.cnf.main.save_every - 1
+                and self.cnf.main.save_state
+            ):
                 self.save_state()
 
         self.wandb.log(

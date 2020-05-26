@@ -23,6 +23,19 @@ class BaseExperiment:
         self.cnf = cnf
         self.rank = rank
 
+        self.create_checkpoint_path()
+        self.create_checkpoint_dirs()
+
+        # saving and loading
+        if self.cnf.main.checkpoint:
+            self.cnf = self.load_conf_from_checkpoint()
+
+        if self.cnf.main.save_state and not self.cnf.main.checkpoint:
+            self.save_conf_to_checkpoint()
+
+        print(self.cnf.pretty())
+        exit(1)
+
         # set random seeds
         np.random.seed(cnf.env.np_seed)
         torch.manual_seed(cnf.env.torch_seed)
@@ -46,6 +59,10 @@ class BaseExperiment:
         self.global_step = 0
         self.ppo_timestep = 0
 
+        self.init_wandb()
+
+    def init_wandb(self):
+        # actually dont need to bind this here
         self.wandb = wandb
 
         self.wandb.init(
@@ -55,6 +72,22 @@ class BaseExperiment:
             group=f"{self.cnf.wandb.name}",
             resume=bool(self.cnf.main.checkpoint),
         )
+
+    def create_checkpoint_dirs(self):
+        if not os.path.exists(self.checkpoint_path):
+            os.makedirs(self.checkpoint_path)
+
+    def create_checkpoint_path(self):
+        if self.cnf.main.save_state:
+            self.checkpoint_path = os.path.join(
+                "out", self.cnf.wandb.name, time.strftime("%B-%d:%H-%M-%S"),
+            )
+
+    def load_conf_from_checkpoint(self):
+        return torch.load(os.path.join(self.cnf.main.checkpoint, "cnf.p"))
+
+    def save_conf_to_checkpoint(self):
+        torch.save(self.cnf, os.path.join(self.checkpoint_path, "cnf.p"))
 
     @abstractmethod
     def run(self):

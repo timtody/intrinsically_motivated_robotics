@@ -4,6 +4,7 @@ https://pathak22.github.io/noreward-rl/resources/icml17.pdf
 """
 import os
 import torch
+import numpy as np
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
@@ -230,7 +231,7 @@ class ICModule(nn.Module):
         loss = loss.mean(dim=1).detach()
 
         if self.standardize_loss:
-            loss = (loss - self.running_mean) / self.running_var.sqrt()
+            loss = (loss - self.running_mean) / np.sqrt(self.running_var)
 
         # TODO: RESTORE THE ORIGINAL HERE AFTER REMOVING THE
         # CONSTANT NORMALIZATION OF THE OBSERVATION
