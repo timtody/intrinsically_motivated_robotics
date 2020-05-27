@@ -46,7 +46,6 @@ class Experiment(BaseExperiment):
                 os.path.join(self.cnf.main.checkpoint, "rank" + str(self.rank))
             )
 
-
     def make_pointclouds(self, step):
 
         gripx, gripy, gripz = zip(*self.gripper_positions)
@@ -154,6 +153,10 @@ class Experiment(BaseExperiment):
         actions_norms = []
         state = self.env.reset()
         for i in range(self.cnf.main.n_steps):
+            self_collisions_batch = 0
+            ext_collisions_batch = 0
+            dyn_collisions_batch = 0
+
             it_start = time.time()
             self.ppo_timestep += 1
             self.global_step += 1
@@ -185,6 +188,9 @@ class Experiment(BaseExperiment):
             self.n_collisions_self += info["collided_self"]
             self.n_collisions_other += info["collided_other"]
             self.n_collisions_dynamic += info["collided_dyn"]
+            self_collisions_batch = info["collided_self"]
+            ext_collisions_batch = info["collided_other"]
+            dyn_collisions_batch = info["collided_dyn"]
 
             # TODO: reintroduce this
             # self.n_sounds += info["sound"]
@@ -243,6 +249,9 @@ class Experiment(BaseExperiment):
                         "col rate self": self.n_collisions_self / self.global_step,
                         "col rate other": self.n_collisions_other / self.global_step,
                         "col rate dyn": self.n_collisions_dynamic / self.global_step,
+                        "batch col self": self_collisions_batch,
+                        "batch col ext": ext_collisions_batch,
+                        "batch col dyn": dyn_collisions_batch,
                         # "n sounds": self.n_sounds,
                         "cum reward": self.reward_sum,
                         "batch reward": batch_reward,

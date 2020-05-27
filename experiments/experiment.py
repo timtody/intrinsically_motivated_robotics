@@ -71,7 +71,6 @@ class BaseExperiment:
         )
 
     def create_checkpoint_dirs(self):
-        print(self.checkpoint_path)
         if not os.path.exists(self.checkpoint_path):
             os.makedirs(self.checkpoint_path)
 
