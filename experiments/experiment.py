@@ -33,9 +33,6 @@ class BaseExperiment:
         if self.cnf.main.save_state and not self.cnf.main.checkpoint:
             self.save_conf_to_checkpoint()
 
-        print(self.cnf.pretty())
-        exit(1)
-
         # set random seeds
         np.random.seed(cnf.env.np_seed)
         torch.manual_seed(cnf.env.torch_seed)
