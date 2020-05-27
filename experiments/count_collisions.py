@@ -175,12 +175,9 @@ class Experiment(BaseExperiment):
 
             # reset environment
             if self.global_step % self.episode_len == 0:
-                done = True
-                # -------------
-                self.env.reset()
-                # TODO: change back
-                # if self.cnf.main.train:
-                #     self.env.reset()
+                if self.cnf.main.reset:
+                    done = True
+                    self.env.reset()
 
             self.agent.set_is_done(done)
 
