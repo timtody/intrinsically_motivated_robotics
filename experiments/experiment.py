@@ -28,7 +28,9 @@ class BaseExperiment:
 
         # saving and loading
         if self.cnf.main.checkpoint:
+            checkpoint = self.cnf.main.checkpoint
             self.cnf = self.load_conf_from_checkpoint()
+            self.cnf.main.checkpoint = checkpoint
 
         if self.cnf.main.save_state and not self.cnf.main.checkpoint:
             self.save_conf_to_checkpoint()

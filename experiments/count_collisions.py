@@ -175,9 +175,9 @@ class Experiment(BaseExperiment):
 
             # reset environment
             if self.global_step % self.episode_len == 0:
-                if self.cnf.main.reset:
-                    done = True
-                    self.env.reset()
+                # if self.cnf.main.reset:
+                done = True
+                self.env.reset()
 
             self.agent.set_is_done(done)
 
