@@ -74,14 +74,15 @@ class BaseExperiment:
         )
 
     def create_checkpoint_dirs(self):
+        print(self.checkpoint_path)
         if not os.path.exists(self.checkpoint_path):
             os.makedirs(self.checkpoint_path)
 
     def create_checkpoint_path(self):
-        if self.cnf.main.save_state:
-            self.checkpoint_path = os.path.join(
-                "out", self.cnf.wandb.name, time.strftime("%B-%d:%H-%M-%S"),
-            )
+        # TODO: make this thread safe by moving it up in run.py
+        self.checkpoint_path = os.path.join(
+            "out", self.cnf.wandb.name, time.strftime("%B-%d:%H-%M-%S"),
+        )
 
     def load_conf_from_checkpoint(self):
         return torch.load(os.path.join(self.cnf.main.checkpoint, "cnf.p"))
