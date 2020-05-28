@@ -250,7 +250,7 @@ class Experiment(BaseExperiment):
 
                 touch_map_entropy = torch.distributions.categorical.Categorical(
                     logits=self.touch_map
-                )
+                ).entropy()
 
                 # if we don't train we still want to log all the relevant data
                 self.wandb.log(
