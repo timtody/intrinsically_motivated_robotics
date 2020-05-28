@@ -267,7 +267,7 @@ class Experiment(BaseExperiment):
                         "joint entropy mean": joint_entropies_mean,
                         "joint ranges mean": joint_ranges_mean,
                         "mean action norm": actions_norms,
-                        "touch map": self.touch_map,
+                        "touch map": wandb.Histogram(self.touch_map),
                         **{
                             f"joint {i} ent": ent
                             for i, ent in enumerate(joint_entropies)
