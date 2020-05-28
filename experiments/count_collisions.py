@@ -17,6 +17,8 @@ class Experiment(BaseExperiment):
         self.n_sounds = 0
         self.reward_sum = 0
 
+        self.touch_map = torch.zeros(28)
+
         # experiment parameters
         self.episode_len = 500
         self.episode_reward = 0
@@ -96,6 +98,23 @@ class Experiment(BaseExperiment):
         self.gripper_positions_means = []
         self.gripper_positions_acc = 0
 
+    def _make_pointclouds(self, step):
+        # record pointcloud stuff
+        if step % self.gripper_freq_0 == 0:
+            self.gripper_positions.append(self.env._gripper.get_position())
+
+        if step % self.gripper_freq_1 == self.gripper_freq_1 - 1:
+            self.gripper_positions_means.append(
+                self.gripper_positions_acc / self.gripper_freq_1
+            )
+            self.gripper_positions_acc = 0
+
+        self.gripper_positions_acc += np.array(self.env._gripper.get_position())
+
+        # save the clouds
+        if step % self.pointcloud_every == self.pointcloud_every - 1:
+            self.make_pointclouds(step)
+
     def get_joint_entropies(self, joint_angles, joint_intervals):
         """
         This function makes an estimate of the distribution of joint angles
@@ -130,27 +149,15 @@ class Experiment(BaseExperiment):
             ranges.append(dist / (max_dist + 0.0001))
         return ranges
 
-    def _make_pointclouds(self, step):
-        # record pointcloud stuff
-        if step % self.gripper_freq_0 == 0:
-            self.gripper_positions.append(self.env._gripper.get_position())
-
-        if step % self.gripper_freq_1 == self.gripper_freq_1 - 1:
-            self.gripper_positions_means.append(
-                self.gripper_positions_acc / self.gripper_freq_1
-            )
-            self.gripper_positions_acc = 0
-
-        self.gripper_positions_acc += np.array(self.env._gripper.get_position())
-
-        # save the clouds
-        if step % self.pointcloud_every == self.pointcloud_every - 1:
-            self.make_pointclouds(step)
+    def update_touch_map(self):
+        self.touch_map += self.env.get_touch_map() / self.env.OBS_SCALER
 
     def run(self):
+
         joint_intervals = self.env.get_joint_intervals()
         joint_angles = []
         actions_norms = []
+
         state = self.env.reset()
         for i in range(self.cnf.main.n_steps):
             self_collisions_batch = 0
@@ -170,6 +177,8 @@ class Experiment(BaseExperiment):
                 action = self.agent.get_action(state)
 
             next_state, _, done, info = self.env.step(action)
+
+            self.update_touch_map()
 
             self.agent.append_icm_transition(state, next_state, action)
 
@@ -258,6 +267,7 @@ class Experiment(BaseExperiment):
                         "joint entropy mean": joint_entropies_mean,
                         "joint ranges mean": joint_ranges_mean,
                         "mean action norm": actions_norms,
+                        "touch map": self.touch_map,
                         **{
                             f"joint {i} ent": ent
                             for i, ent in enumerate(joint_entropies)

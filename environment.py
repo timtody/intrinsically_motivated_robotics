@@ -27,6 +27,8 @@ class Env(gym.Env):
         self._setup_skin_fs()
         self._setup_skin_contacts()
 
+        self.OBS_SCALER = 10
+
         self.action_space = gym.spaces.Box(low=-1, high=1, shape=(self.cnf.action_dim,))
         # TODO: need to be made more general for vision space
         obs = self._init_step()
@@ -424,6 +426,11 @@ class Env(gym.Env):
         )
         return info
 
+    def get_touch_map(self):
+        obs = []
+        [obs.append(touch) for touch in self.get_skin_touch_map()]
+        return np.array(obs) * self.OBS_SCALER
+
     def _get_observation(self):
         obs = []
         if "prop" in self.cnf.state:
@@ -456,7 +463,7 @@ class Env(gym.Env):
         # TODO: REMOVE THE NORAMLIZATION OF THE OBSERVATION AFTER
         # EVALUATING FWMODEL
         # return np.array(obs)
-        return np.array(obs) * 10
+        return np.array(obs) * self.OBS_SCALER
         # ---------------------------
 
     def _set_objects_collidable(self):
