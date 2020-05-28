@@ -248,12 +248,11 @@ class Experiment(BaseExperiment):
                 # compute the mean norm of the actions
                 actions_norms = torch.tensor(actions_norms).mean()
 
-                # if we don't train we still want to log all the relevant data
-                plt.bar(
-                    range(len(self.touch_map)),
-                    self.touch_map,
-                    tick_label=range(len(self.touch_map)),
+                touch_map_entropy = torch.distributions.categorical.Categorical(
+                    logits=self.touch_map
                 )
+
+                # if we don't train we still want to log all the relevant data
                 self.wandb.log(
                     {
                         "n collisions self": self.n_collisions_self,
@@ -274,7 +273,7 @@ class Experiment(BaseExperiment):
                         "joint entropy mean": joint_entropies_mean,
                         "joint ranges mean": joint_ranges_mean,
                         "mean action norm": actions_norms,
-                        "touch map": plt,
+                        "touch_map_entropy": touch_map_entropy,
                         **{
                             f"joint {i} ent": ent
                             for i, ent in enumerate(joint_entropies)
@@ -288,7 +287,6 @@ class Experiment(BaseExperiment):
                     },
                     step=self.global_step,
                 )
-                plt.clf()
                 joint_angles = []
                 actions_norms = []
 
