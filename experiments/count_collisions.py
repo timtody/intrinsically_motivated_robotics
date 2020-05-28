@@ -1,6 +1,7 @@
 from .experiment import BaseExperiment
 import plotly.graph_objects as go
 import numpy as np
+import wandb
 import torch
 import time
 import os
