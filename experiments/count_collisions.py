@@ -206,13 +206,12 @@ class Experiment(BaseExperiment):
             # train agent
             if self.ppo_timestep % self.cnf.main.train_each == 0:
                 # train and log resulting metrics
-                with torch.autograd.detect_anomaly():
-                    train_results = self.agent.train(
-                        train_ppo=self.cnf.main.train,
-                        random_reward=True
-                        if "random_reward" in self.cnf.env.state
-                        else False,
-                    )
+                train_results = self.agent.train(
+                    train_ppo=self.cnf.main.train,
+                    random_reward=True
+                    if "random_reward" in self.cnf.env.state
+                    else False,
+                )
 
                 batch_reward = train_results["imloss"].sum().item()
                 self.reward_sum += batch_reward
