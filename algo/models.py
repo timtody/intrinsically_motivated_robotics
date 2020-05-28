@@ -231,7 +231,7 @@ class ICModule(nn.Module):
         loss = loss.mean(dim=1).detach()
 
         if self.standardize_loss:
-            loss = (loss - self.running_mean) / np.sqrt(self.running_var)
+            loss = (loss - self.running_mean) / (np.sqrt(self.running_var) + 0.001)
 
         # TODO: RESTORE THE ORIGINAL HERE AFTER REMOVING THE
         # CONSTANT NORMALIZATION OF THE OBSERVATION
