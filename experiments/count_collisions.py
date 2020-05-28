@@ -175,6 +175,7 @@ class Experiment(BaseExperiment):
                 print("##########################")
                 print("Nan in coppelia sim state")
                 print("##########################")
+                print(next_state)
                 exit(1)
 
             self.agent.append_icm_transition(state, next_state, action)
