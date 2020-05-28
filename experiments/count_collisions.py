@@ -205,7 +205,7 @@ class Experiment(BaseExperiment):
             # train agent
             if self.ppo_timestep % self.cnf.main.train_each == 0:
                 # train and log resulting metrics
-                with torch.autograd.detect_anomaly:
+                with torch.autograd.detect_anomaly():
                     train_results = self.agent.train(
                         train_ppo=self.cnf.main.train,
                         random_reward=True
