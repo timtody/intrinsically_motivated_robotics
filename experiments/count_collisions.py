@@ -170,8 +170,11 @@ class Experiment(BaseExperiment):
                 action = self.agent.get_action(state)
 
             next_state, _, done, info = self.env.step(action)
+
             if np.isnan(next_state).any():
+                print("##########################")
                 print("Nan in coppelia sim state")
+                print("##########################")
                 exit(1)
 
             self.agent.append_icm_transition(state, next_state, action)
@@ -202,12 +205,13 @@ class Experiment(BaseExperiment):
             # train agent
             if self.ppo_timestep % self.cnf.main.train_each == 0:
                 # train and log resulting metrics
-                train_results = self.agent.train(
-                    train_ppo=self.cnf.main.train,
-                    random_reward=True
-                    if "random_reward" in self.cnf.env.state
-                    else False,
-                )
+                with torch.autograd.detect_anomaly:
+                    train_results = self.agent.train(
+                        train_ppo=self.cnf.main.train,
+                        random_reward=True
+                        if "random_reward" in self.cnf.env.state
+                        else False,
+                    )
 
                 batch_reward = train_results["imloss"].sum().item()
                 self.reward_sum += batch_reward
