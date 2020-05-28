@@ -175,9 +175,9 @@ class Experiment(BaseExperiment):
 
             # reset environment
             if self.global_step % self.episode_len == 0:
-                # if self.cnf.main.reset:
-                done = True
-                self.env.reset()
+                if self.cnf.main.reset:
+                    done = True
+                    self.env.reset()
 
             self.agent.set_is_done(done)
 
@@ -185,9 +185,9 @@ class Experiment(BaseExperiment):
             self.n_collisions_self += info["collided_self"]
             self.n_collisions_other += info["collided_other"]
             self.n_collisions_dynamic += info["collided_dyn"]
-            self_collisions_batch = info["collided_self"]
-            ext_collisions_batch = info["collided_other"]
-            dyn_collisions_batch = info["collided_dyn"]
+            self_collisions_batch += info["collided_self"]
+            ext_collisions_batch += info["collided_other"]
+            dyn_collisions_batch += info["collided_dyn"]
 
             # TODO: reintroduce this
             # self.n_sounds += info["sound"]
