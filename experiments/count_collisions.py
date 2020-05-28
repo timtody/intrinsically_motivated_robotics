@@ -170,6 +170,9 @@ class Experiment(BaseExperiment):
                 action = self.agent.get_action(state)
 
             next_state, _, done, info = self.env.step(action)
+            if np.isnan(next_state).any():
+                print("Nan in coppelia sim state")
+                exit(1)
 
             self.agent.append_icm_transition(state, next_state, action)
 
