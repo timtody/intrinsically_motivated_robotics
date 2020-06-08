@@ -7,7 +7,7 @@ import pickle
 class Experiment(BaseExperiment):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.n_steps = 100
+        self.n_steps = 100000
 
     def run(self):
         # first make the data set
@@ -15,6 +15,8 @@ class Experiment(BaseExperiment):
         state = self.env.reset()
 
         for i in range(self.n_steps):
+            if i % 10000 == 0:
+                print(f"rank {self.rank} at step", i)
             action = self.env.action_space.sample()
             next_state, *_ = self.env.step(action)
             dataset.append((state, next_state, action))
