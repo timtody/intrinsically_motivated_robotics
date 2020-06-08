@@ -1,5 +1,5 @@
 main:
-  n_steps: 5000000
+  n_steps: 10000000
   train_each: 500
   train: True
   record_pc: False
@@ -28,16 +28,16 @@ env:
   np_seed: 42
 
 wandb:
-  project: test
+  project: collisions-new
   name: testname
-  dryrun: True
+  dryrun: False
 
 icm:
   embedding_size: 256
   alpha: 0.001
   n_layers: 2
   lr: 0.0001
-  standardize_loss: False
+  standardize_loss: True
 
 mp:
-  n_procs: 1
+  n_procs: 3
