@@ -110,7 +110,7 @@ class InverseModule(nn.Module):
         return x
 
     def train(self, this_state, next_state, action):
-        action = torch.stack(action).float().to(self.device)
+        action = torch.tensor(action).float().to(self.device)
         this_state = torch.tensor(this_state).float().to(self.device)
         next_state = torch.tensor(next_state).float().to(self.device)
 
@@ -118,6 +118,16 @@ class InverseModule(nn.Module):
         loss = F.mse_loss(predicted_action, action, reduction="none")
         self.opt.zero_grad()
         loss.mean().backward()
+        return loss.mean(dim=1).detach()
+
+    def eval(self, this_state, next_state, action):
+        action = torch.tensor(action).float().to(self.device)
+        this_state = torch.tensor(this_state).float().to(self.device)
+        next_state = torch.tensor(next_state).float().to(self.device)
+
+        predicted_action = self.forward(this_state, next_state)
+        loss = F.mse_loss(predicted_action, action, reduction="none")
+        self.opt.zero_grad()
         return loss.mean(dim=1).detach()
 
 
@@ -238,8 +248,11 @@ class ICModule(nn.Module):
         # return loss.mean(dim=1).detach() / 2.5
         return loss
 
-    def train_inverse(self, this_state, next_state, action):
-        return self._inverse.train(this_state, next_state, action)
+    def train_inverse(self, this_state, next_state, action, eval=False):
+        if eval:
+            return self._inverse.eval(this_state, next_state, action)
+        else:
+            return self._inverse.train(this_state, next_state, action)
 
     def _process_loss(self, loss):
         self.loss_buffer.push(loss)
