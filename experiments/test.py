@@ -1,6 +1,7 @@
 from .experiment import BaseExperiment
 import numpy as np
 import torch
+import time
 
 
 class Experiment(BaseExperiment):
@@ -15,10 +16,10 @@ class Experiment(BaseExperiment):
 
         obs = self.env.reset()
 
+        start = time.time()
         for i in range(1000):
-            obs, *_, info = self.env.step(self.env.action_space.sample() * 2)
-            print("---")
-            self.update_touch_map()
-            print(self.touch_map)
+            obs, *_, info = self.env.step(self.env.action_space.sample())
+        stop = time.time()
+        print(stop - start, "s")
 
         self.env.close()
