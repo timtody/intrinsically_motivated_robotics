@@ -97,7 +97,8 @@ class InverseModule(nn.Module):
         self.base = base
         self.device = device
         # * 2 because we concatenate two states
-        self.linear = nn.Linear(embedding_size * 2, action_dim)
+        self.linear = nn.Linear(embedding_size * 2, 256)
+        self.linear2 = nn.Linear(256, 256)
         self.head = nn.Linear(256, action_dim)
         self.opt = optim.Adam(self.parameters(), lr=lr)
 
@@ -105,8 +106,9 @@ class InverseModule(nn.Module):
         x = self.base(x)
         y = self.base(y)
         x = torch.cat([x, y], dim=1)
-        x = self.linear(x)
-        # x = self.head(x)
+        x = F.relu(self.linear(x))
+        x = F.relu(self.linear2(x))
+        x = self.head(x)
         return x
 
     def train(self, this_state, next_state, action):
@@ -115,8 +117,8 @@ class InverseModule(nn.Module):
         next_state = torch.tensor(next_state).float().to(self.device)
 
         predicted_action = self.forward(this_state, next_state)
-        loss = F.mse_loss(predicted_action, action, reduction="none")
         self.opt.zero_grad()
+        loss = F.mse_loss(predicted_action, action, reduction="none")
         loss.mean().backward()
         return loss.mean(dim=1).detach()
 
@@ -157,7 +159,8 @@ class ICModule(nn.Module):
             embedding_size, action_dim, self.base, self.device
         )
 
-        self._forward = ForwardModule(embedding_size, action_dim, self.base, n_layers)
+        self._forward = ForwardModule(
+            embedding_size, action_dim, self.base, n_layers)
 
         self.opt = optim.Adam(self.parameters(), lr=lr)
         self.running_return_std = None
@@ -177,7 +180,8 @@ class ICModule(nn.Module):
             self.running_mean - reward
         ) ** 2
 
-        self.running_mean = (1 - self.alpha) * self.running_mean + self.alpha * reward
+        self.running_mean = (1 - self.alpha) * \
+            self.running_mean + self.alpha * reward
 
     def forward(self, x):
         raise NotImplementedError
@@ -219,29 +223,32 @@ class ICModule(nn.Module):
         """
         return self._inverse(this_state, next_state)
 
-    def train_forward(self, this_state, next_state, action, freeze=False):
-        action = torch.stack(action).float().to(self.device)
+    def train_forward(self, this_state, next_state, action, freeze=False, eval=True):
+        action = torch.tensor(action).float().to(self.device)
         this_state = torch.tensor(this_state).float().to(self.device)
         next_state = torch.tensor(next_state).float().to(self.device)
-        next_state_embed_pred = self.next_state(this_state, action)
-        next_state_embed_true = self.embed(next_state)
 
         if not freeze:
             self.opt.zero_grad()
+
+        next_state_embed_pred = self.next_state(this_state, action)
+        next_state_embed_true = self.embed(next_state)
 
         loss = F.mse_loss(
             next_state_embed_pred, next_state_embed_true, reduction="none"
         )
 
         if not freeze:
-            loss.mean().backward()
-            self.opt.step()
+            if not eval:
+                loss.mean().backward()
+                self.opt.step()
 
         self._update_running_stats(loss.mean().item())
         loss = loss.mean(dim=1).detach()
 
         if self.standardize_loss:
-            loss = (loss - self.running_mean) / (np.sqrt(self.running_var) + 0.001)
+            loss = ((loss - self.running_mean) /
+                    (np.sqrt(self.running_var) + 0.001))
 
         # TODO: RESTORE THE ORIGINAL HERE AFTER REMOVING THE
         # CONSTANT NORMALIZATION OF THE OBSERVATION
@@ -249,17 +256,32 @@ class ICModule(nn.Module):
         return loss
 
     def train_inverse(self, this_state, next_state, action, eval=False):
-        if eval:
-            return self._inverse.eval(this_state, next_state, action)
-        else:
-            return self._inverse.train(this_state, next_state, action)
+        action = torch.tensor(action).float().to(self.device)
+        this_state = torch.tensor(this_state).float().to(self.device)
+        next_state = torch.tensor(next_state).float().to(self.device)
+
+        self.opt.zero_grad()
+
+        predicted_action = self._inverse(this_state, next_state)
+        loss = F.mse_loss(predicted_action, action, reduction="none")
+        if not eval:
+            loss.mean().backward()
+            self.opt.step()
+        return loss.mean(dim=1).detach()
+
+    # def train_inverse(self, this_state, next_state, action, eval=False):
+    #     if eval:
+    #         return self._inverse.eval(this_state, next_state, action)
+    #     else:
+    #         return self._inverse.train(this_state, next_state, action)
 
     def _process_loss(self, loss):
         self.loss_buffer.push(loss)
         return_std = self.loss_buffer.get_std()
         if self.running_return_std is not None:
             self.running_return_std = (
-                self.alpha * return_std + (1 - self.alpha) * self.running_return_std
+                self.alpha * return_std +
+                (1 - self.alpha) * self.running_return_std
             )
         else:
             self.running_return_std = return_std
