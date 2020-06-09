@@ -41,7 +41,7 @@ class Experiment(BaseExperiment):
             loss = self.agent.icm.train_inverse(
                 state_batch, next_state_batch, action_batch, eval=False
             )
-            self.wandb.log({"training loss": loss.sum()})
+            self.wandb.log({"training loss": loss.mean()})
 
             if i % 100000 == 0:
                 print("evaluating...")
@@ -49,4 +49,4 @@ class Experiment(BaseExperiment):
                 loss = self.agent.icm.train_inverse(
                     state_batch, next_state_batch, action_batch, eval=True
                 )
-                self.wandb.log({"eval loss": loss.sum()})
+                self.wandb.log({"eval loss": loss.mean()})
