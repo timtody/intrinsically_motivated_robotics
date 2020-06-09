@@ -8,7 +8,7 @@ class Experiment(BaseExperiment):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.n_steps = 10000000
-        self.bsize = 100
+        self.bsize = 1000
 
     def _gen_dataset(self):
         # first make the data set
@@ -40,7 +40,7 @@ class Experiment(BaseExperiment):
         for i in range(self.n_steps):
             idx = np.random.randint(len(test_set), size=self.bsize)
             state_batch, next_state_batch, action_batch = zip(*train_set[idx])
-            loss = self.agent.icm.train_inverse(
+            loss = self.agent.icm.train_forward(
                 state_batch, next_state_batch, action_batch, eval=False
             )
             self.wandb.log({"training loss": loss.mean()})
@@ -48,7 +48,7 @@ class Experiment(BaseExperiment):
             if i % 1000 == 0:
                 print("evaluating...")
                 state_batch, next_state_batch, action_batch = zip(*test_set)
-                loss = self.agent.icm.train_inverse(
+                loss = self.agent.icm.train_forward(
                     state_batch, next_state_batch, action_batch, eval=True
                 )
                 self.wandb.log({"eval loss": loss.mean()})
