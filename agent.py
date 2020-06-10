@@ -43,8 +43,8 @@ class Agent:
     def set_reward(self, reward) -> None:
         self.ppo_mem.rewards.append(reward)
 
-    def get_action(self, state) -> torch.Tensor:
-        action, *_ = self.ppo.policy_old.act(state, self.ppo_mem)
+    def get_action(self, state, inverse_action=None) -> torch.Tensor:
+        action, *_ = self.ppo.policy_old.act(state, self.ppo_mem, inverse_action)
         return action
 
     def train_with_inverse_reward(self):

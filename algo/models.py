@@ -98,16 +98,20 @@ class InverseModule(nn.Module):
         self.device = device
         # * 2 because we concatenate two states
         self.linear = nn.Linear(embedding_size * 2, 256)
-        self.linear2 = nn.Linear(256, 256)
-        self.head = nn.Linear(256, action_dim)
+        self.linear2 = nn.Linear(256, 512)
+        self.head = nn.Linear(512, action_dim)
         self.opt = optim.Adam(self.parameters(), lr=lr)
 
     def forward(self, x, y):
         x = self.base(x)
         y = self.base(y)
+        if x.dim() == 1:
+            x = x.unsqueeze(0)
+        if y.dim() == 1:
+            y = y.unsqueeze(0)
         x = torch.cat([x, y], dim=1)
-        x = F.relu(self.linear(x))
-        x = F.relu(self.linear2(x))
+        x = F.elu(self.linear(x))
+        x = F.elu(self.linear2(x))
         x = self.head(x)
         return x
 
@@ -159,8 +163,7 @@ class ICModule(nn.Module):
             embedding_size, action_dim, self.base, self.device
         )
 
-        self._forward = ForwardModule(
-            embedding_size, action_dim, self.base, n_layers)
+        self._forward = ForwardModule(embedding_size, action_dim, self.base, n_layers)
 
         self.opt = optim.Adam(self.parameters(), lr=lr)
         self.running_return_std = None
@@ -180,8 +183,7 @@ class ICModule(nn.Module):
             self.running_mean - reward
         ) ** 2
 
-        self.running_mean = (1 - self.alpha) * \
-            self.running_mean + self.alpha * reward
+        self.running_mean = (1 - self.alpha) * self.running_mean + self.alpha * reward
 
     def forward(self, x):
         raise NotImplementedError
@@ -221,6 +223,8 @@ class ICModule(nn.Module):
         """
         Given two states, predicts the action taken.
         """
+        this_state = torch.tensor(this_state).float()
+        next_state = torch.tensor(next_state).float()
         return self._inverse(this_state, next_state)
 
     def train_forward(self, this_state, next_state, action, freeze=False, eval=True):
@@ -247,8 +251,7 @@ class ICModule(nn.Module):
         loss = loss.mean(dim=1).detach()
 
         if self.standardize_loss:
-            loss = ((loss - self.running_mean) /
-                    (np.sqrt(self.running_var) + 0.001))
+            loss = (loss - self.running_mean) / (np.sqrt(self.running_var) + 0.001)
 
         # TODO: RESTORE THE ORIGINAL HERE AFTER REMOVING THE
         # CONSTANT NORMALIZATION OF THE OBSERVATION
@@ -280,8 +283,7 @@ class ICModule(nn.Module):
         return_std = self.loss_buffer.get_std()
         if self.running_return_std is not None:
             self.running_return_std = (
-                self.alpha * return_std +
-                (1 - self.alpha) * self.running_return_std
+                self.alpha * return_std + (1 - self.alpha) * self.running_return_std
             )
         else:
             self.running_return_std = return_std

@@ -8,7 +8,7 @@ class Experiment(BaseExperiment):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.n_steps = 10000000
-        self.bsize = 1000
+        self.bsize = 5000
 
     def _gen_dataset(self):
         # first make the data set
@@ -27,10 +27,13 @@ class Experiment(BaseExperiment):
             pickle.dump(dataset, f)
 
     def run(self):
+        self._test_fw()
+
+    def _test_fw(self):
         with open("out/dataset.p", "rb") as f:
             dataset = np.array(pickle.load(f))
 
-        test_set = dataset[int(len(dataset) * 0.9):]
+        test_set = dataset[int(len(dataset) * 0.9) :]
         train_set = dataset[: int(len(dataset) * 0.9)]
 
         print("successfully loaded dataset of length", len(dataset))
