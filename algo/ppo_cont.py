@@ -23,9 +23,17 @@ class Memory:
 
 class ActorCritic(nn.Module):
     def __init__(
-        self, action_dim, state_dim, n_latent_var, max_action, action_std, device
+        self,
+        action_dim,
+        state_dim,
+        n_latent_var,
+        max_action,
+        action_std,
+        device,
+        alpha,
     ):
         super(ActorCritic, self).__init__()
+        self.alpha = alpha
         self.device = device
         self.action_dim = action_dim
         self.max_action = max_action
@@ -60,13 +68,19 @@ class ActorCritic(nn.Module):
     def get_value(self, state):
         return self.critic(torch.tensor(state).float().to(self.device))
 
-    def act(self, state, memory):
+    def act(self, state, memory, inverse_action=None):
         state = torch.from_numpy(state).float().to(self.device)
         action_mean = self.actor(state)
         cov_mat = torch.diag(self.action_var).to(self.device)
 
         dist = MultivariateNormal(action_mean, cov_mat)
         action = dist.sample()
+
+        if inverse_action:
+            action = (1 - self.alpha) * action + self.alpha * torch.tensor(
+                inverse_action
+            )
+
         action_logprob = dist.log_prob(action)
         entropy = dist.entropy()
 
@@ -99,6 +113,7 @@ class PPO:
         action_dim,
         state_dim,
         device,
+        alpha,
         n_latent_var,
         lr,
         betas,
@@ -117,13 +132,25 @@ class PPO:
         self.device = device
 
         self.policy = ActorCritic(
-            action_dim, state_dim, n_latent_var, max_action, action_std, self.device,
+            action_dim,
+            state_dim,
+            n_latent_var,
+            max_action,
+            action_std,
+            self.device,
+            alpha,
         ).to(self.device)
 
         self.optimizer = torch.optim.Adam(self.policy.parameters(), lr=lr, betas=betas)
 
         self.policy_old = ActorCritic(
-            action_dim, state_dim, n_latent_var, max_action, action_std, self.device,
+            action_dim,
+            state_dim,
+            n_latent_var,
+            max_action,
+            action_std,
+            self.device,
+            alpha,
         ).to(self.device)
 
         self.policy_old.load_state_dict(self.policy.state_dict())

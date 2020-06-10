@@ -1,5 +1,5 @@
 main:
-  n_steps: 10000000
+  n_steps: 1000000
   train_each: 500
   train: True
   record_pc: False
@@ -10,6 +10,7 @@ main:
   reset: False
 
 ppo:
+  alpha: 0.1
   n_latent_var: 128
   lr: 0.0003
   betas: [0.9, 0.999]
@@ -30,7 +31,7 @@ env:
 wandb:
   project: collisions-new
   name: testname
-  dryrun: False
+  dryrun: True
 
 icm:
   embedding_size: 256
