@@ -64,11 +64,11 @@ class Experiment(BaseExperiment):
         for i in range(self.cnf.main.n_steps):
             action = self.env.action_space.sample()
             next_state, *_ = self.env.step(action)
-            dataset.append((state, next_state, action))
+            dataset.append((state, next_state, torch.tensor(action)))
 
             state = next_state
 
-            if i % 1000 == 999:
+            if i % 500 == 499:
                 print("training at step", i)
                 state_batch, next_state_batch, action_batch = zip(*dataset)
                 loss = self.agent.icm.train_inverse(
@@ -77,7 +77,7 @@ class Experiment(BaseExperiment):
                 self.wandb.log({"batch loss": loss.mean()})
                 dataset = []
 
-                self._test()
+                # self._test()
                 state = self.env.reset()
 
     def _train_with_im(self):
@@ -95,7 +95,7 @@ class Experiment(BaseExperiment):
 
             state = next_state
 
-            if i % 1000 == 999:
+            if i % 500 == 499:
                 print("training at step", i)
                 state_batch, next_state_batch, action_batch = zip(*dataset)
                 loss = self.agent.icm.train_inverse(
