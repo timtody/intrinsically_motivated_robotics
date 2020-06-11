@@ -68,7 +68,7 @@ class Experiment(BaseExperiment):
 
             state = next_state
 
-            if i % 500 == 499:
+            if i % 250 == 249:
                 print("training at step", i)
                 state_batch, next_state_batch, action_batch = zip(*dataset)
                 loss = self.agent.icm.train_inverse(
@@ -95,7 +95,7 @@ class Experiment(BaseExperiment):
 
             state = next_state
 
-            if i % 500 == 499:
+            if i % 250 == 249:
                 print("training at step", i)
                 state_batch, next_state_batch, action_batch = zip(*dataset)
                 loss = self.agent.icm.train_inverse(
