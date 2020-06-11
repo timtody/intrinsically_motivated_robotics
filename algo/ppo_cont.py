@@ -76,7 +76,7 @@ class ActorCritic(nn.Module):
         dist = MultivariateNormal(action_mean, cov_mat)
         action = dist.sample()
 
-        if inverse_action:
+        if inverse_action is not None:
             action = (1 - self.alpha) * action + self.alpha * torch.tensor(
                 inverse_action
             )
