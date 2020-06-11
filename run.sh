@@ -1,0 +1,6 @@
+python run.py experiments/iv_generalization.py mp.n_procs=1 env.action_dim=2 wandb.dryrun=False wandb.project=iv-test wandb.group=with-im wandb.name=im-home-0.0 ppo.alpha=0.0 main.n_steps=250000 &
+python run.py experiments/iv_generalization.py mp.n_procs=1 env.action_dim=2 wandb.dryrun=False wandb.project=iv-test wandb.group=with-im wandb.name=im-home-0.05 ppo.alpha=0.05 main.n_steps=250000 &
+python run.py experiments/iv_generalization.py mp.n_procs=1 env.action_dim=2 wandb.dryrun=False wandb.project=iv-test wandb.group=with-im wandb.name=im-home-0.1 ppo.alpha=0.1 main.n_steps=250000 &
+python run.py experiments/iv_generalization.py mp.n_procs=1 env.action_dim=2 wandb.dryrun=False wandb.project=iv-test wandb.group=with-im wandb.name=im-home-0.15 ppo.alpha=0.15 main.n_steps=250000 &
+python run.py experiments/iv_generalization.py mp.n_procs=1 env.action_dim=2 wandb.dryrun=False wandb.project=iv-test wandb.group=with-im wandb.name=im-home-0.2 ppo.alpha=0.2 main.n_steps=250000 &
+python run.py experiments/iv_generalization.py mp.n_procs=1 env.action_dim=2 wandb.dryrun=False wandb.project=iv-test wandb.group=with-im wandb.name=im-home-0.25 ppo.alpha=0.25 main.n_steps=250000 &

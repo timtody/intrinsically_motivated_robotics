@@ -80,6 +80,38 @@ class Experiment(BaseExperiment):
                 self._test()
                 state = self.env.reset()
 
+    def _train_with_im(self):
+        print("Starting training with im")
+        dataset = []
+        state = self.env.reset()
+
+        for i in range(self.cnf.main.n_steps):
+            action = self.agent.get_action(state)
+            next_state, _, done, _ = self.env.step(action)
+
+            trans = (state, next_state, action)
+            dataset.append(trans)
+            self.agent.append_icm_transition(*trans)
+
+            state = next_state
+
+            if i % 1000 == 999:
+                print("training at step", i)
+                state_batch, next_state_batch, action_batch = zip(*dataset)
+                loss = self.agent.icm.train_inverse(
+                    state_batch, next_state_batch, action_batch, eval=False
+                )
+                self.wandb.log({"batch loss": loss.mean()})
+
+                dataset = []
+                done = True
+                self.env.reset()
+
+            self.agent.set_is_done(done)
+
+            if done:
+                results = self.agent.train()
+
     def _test(self):
         print("Starting testing...")
         state = self.env.reset()
@@ -155,6 +187,8 @@ class Experiment(BaseExperiment):
                 if dist < 1:
                     done = True
                     reward = 1
+                else:
+                    reward = -1
 
                 episode_reward += reward
 
