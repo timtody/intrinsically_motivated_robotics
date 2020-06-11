@@ -204,5 +204,5 @@ class Experiment(BaseExperiment):
             self.agent.train_ppo()
 
     def run(self):
-        self._train()
+        self._train_with_im()
         self._reach_goal()
