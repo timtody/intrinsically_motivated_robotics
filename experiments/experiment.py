@@ -68,7 +68,7 @@ class BaseExperiment:
             config=self.cnf,
             project=self.cnf.wandb.project,
             name=f"{self.cnf.wandb.name}_rank{self.rank}",
-            group=f"{self.cnf.wandb.name}",
+            group=f"{self.cnf.wandb.group}",
             resume=bool(self.cnf.main.checkpoint),
         )
 

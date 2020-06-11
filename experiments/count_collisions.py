@@ -184,7 +184,6 @@ class Experiment(BaseExperiment):
 
             self.agent.append_icm_transition(state, next_state, action)
 
-            # reset environment
             if self.global_step % self.episode_len == 0:
                 if self.cnf.main.reset:
                     done = True
