@@ -204,5 +204,8 @@ class Experiment(BaseExperiment):
             self.agent.train_ppo()
 
     def run(self):
-        self._train_with_im()
+        if self.cnf.main.with_im:
+            self._train_with_im()
+        else:
+            self._train()
         self._reach_goal()
