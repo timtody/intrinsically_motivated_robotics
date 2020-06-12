@@ -23,7 +23,7 @@ ppo:
 env:
   scene_path: base.ttt
   headless: True
-  state: prop,tac
+  state: prop
   action_dim: 7
   torch_seed: 42
   np_seed: 42
@@ -32,7 +32,7 @@ wandb:
   project: collisions-new
   name: testname
   dryrun: True
-  group: test
+  group: ""
 
 icm:
   embedding_size: 256
@@ -42,4 +42,4 @@ icm:
   standardize_loss: False
 
 mp:
-  n_procs: 3
+  n_procs: 1

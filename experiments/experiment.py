@@ -52,13 +52,16 @@ class BaseExperiment:
         self.action_dim = cnf.env.action_dim
         self.state_dim = self.env.observation_space.shape[0]
 
-        self.agent = Agent(self.action_dim, self.state_dim, self.cnf, self.device)
+        self.init_agent()
 
         # setup experiment variables
         self.global_step = 0
         self.ppo_timestep = 0
 
         self.init_wandb()
+
+    def init_agent(self):
+        self.agent = Agent(self.action_dim, self.state_dim, self.cnf, self.device)
 
     def init_wandb(self):
         # actually dont need to bind this here

@@ -78,7 +78,7 @@ class ActorCritic(nn.Module):
 
         if inverse_action is not None:
             action = (1 - self.alpha) * action + self.alpha * torch.tensor(
-                inverse_action
+                inverse_action.detach()
             )
 
         action_logprob = dist.log_prob(action)
