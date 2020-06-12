@@ -74,7 +74,7 @@ class Experiment(BaseExperiment):
                 loss = self.agent.icm.train_inverse(
                     state_batch, next_state_batch, action_batch, eval=False
                 )
-                self.wandb.log({"batch loss": loss.mean()})
+                self.wandb.log({"batch loss": loss.mean()}, step=i)
                 dataset = []
 
                 # self._test()
@@ -101,7 +101,7 @@ class Experiment(BaseExperiment):
                 loss = self.agent.icm.train_inverse(
                     state_batch, next_state_batch, action_batch, eval=False
                 )
-                self.wandb.log({"batch loss": loss.mean()})
+                self.wandb.log({"batch loss": loss.mean()}, step=i)
 
                 dataset = []
                 done = True
@@ -161,6 +161,9 @@ class Experiment(BaseExperiment):
         self.wandb.log({"generalization loss": plt})
         plt.clf()
 
+    def _compute_proxy_reward(self, state, goal):
+        return -((state - goal) ** 2).sum()
+
     def _reach_goal(self):
         # define goal
         state = self.env.reset()
@@ -171,20 +174,23 @@ class Experiment(BaseExperiment):
 
         goal = state
 
-        for _ in range(1000):
+        for i in range(1000):
             state = self.env.reset()
             done = False
             episode_len = 0
             episode_reward = 0
+            episode_proxy_reward = 0
 
-            for _ in range(500):
+            for j in range(500):
                 episode_len += 1
-                inverse_action = self.agent.icm.get_action(state, goal)
+                inverse_action = self.agent.icm.get_action(state, goal).squeeze()
                 action = self.agent.get_action(state, inverse_action=inverse_action)
                 state, reward, *_ = self.env.step(action)
 
+                episode_proxy_reward += self._compute_proxy_reward(goal, state)
+
                 dist = ((state - goal) ** 2).sum()
-                if dist < 1:
+                if dist < 2:
                     done = True
                     reward = 1
                 else:
@@ -199,13 +205,79 @@ class Experiment(BaseExperiment):
                     break
 
             self.wandb.log(
-                {"episode length": episode_len, "episode reward": episode_reward}
+                {
+                    "episode length": episode_len,
+                    "episode reward": episode_reward,
+                    "episode reward proxy": episode_proxy_reward,
+                },
+                step=i + self.cnf.main.n_steps,
+            )
+            self.agent.train_ppo()
+
+    def _test_alpha_decrement(self):
+        # define goal
+        print("Starting alpha test")
+        state = self.env.reset()
+        proto_action = [1] * self.cnf.env.action_dim
+
+        for _ in range(70):
+            state, *_ = self.env.step(proto_action)
+
+        goal = state
+
+        for i in range(1000):
+            state = self.env.reset()
+            done = False
+            episode_len = 0
+            episode_reward = 0
+            episode_proxy_reward = 0
+
+            if i == 50:
+                # turn off action mixing after a set number of steps
+                # to check if learning still works
+                print("turning off alpha")
+                self.agent.alpha = 0
+
+            for j in range(500):
+                episode_len += 1
+                # inverse_action = self.agent.icm.get_action(state, goal).squeeze()
+                action = self.agent.get_action(
+                    state, inverse_action=torch.tensor(proto_action)
+                )
+                state, reward, *_ = self.env.step(action)
+
+                episode_proxy_reward += self._compute_proxy_reward(goal, state)
+
+                dist = ((state - goal) ** 2).sum()
+                if dist < 5:
+                    done = True
+                    reward = 10
+                else:
+                    reward = 0
+
+                episode_reward += reward
+
+                self.agent.set_reward(reward)
+                self.agent.set_is_done(done)
+
+                if done:
+                    break
+
+            self.wandb.log(
+                {
+                    "episode length": episode_len,
+                    "episode reward": episode_reward,
+                    "episode reward proxy": episode_proxy_reward,
+                },
+                step=i,
             )
             self.agent.train_ppo()
 
     def run(self):
+        # self._test_alpha_decrement()
         if self.cnf.main.with_im:
             self._train_with_im()
         else:
             self._train()
+        self.agent.init_ppo()
         self._reach_goal()
