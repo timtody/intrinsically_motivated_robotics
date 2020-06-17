@@ -29,10 +29,10 @@ env:
   np_seed: 42
 
 wandb:
-  project: collisions-new
+  project: test
   name: testname
   dryrun: True
-  group: ""
+  group: ${wandb.name}
 
 icm:
   embedding_size: 256

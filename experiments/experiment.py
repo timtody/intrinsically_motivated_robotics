@@ -149,3 +149,7 @@ class BaseExperiment:
         # set random seeds
         torch.manual_seed(state["torch_seed"])
         np.random.seed(state["np_seed"])
+
+    @staticmethod
+    def plot(results):
+        pass
