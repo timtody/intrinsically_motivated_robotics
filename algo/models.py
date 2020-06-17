@@ -259,7 +259,9 @@ class ICModule(nn.Module):
         return loss
 
     def train_inverse(self, this_state, next_state, action, eval=False):
-        action = torch.stack(action).float().to(self.device)
+        # TODO: REVERT THIS
+        # action = torch.stack(action).float().to(self.device)
+        ########################
         this_state = torch.tensor(this_state).float().to(self.device)
         next_state = torch.tensor(next_state).float().to(self.device)
 

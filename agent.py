@@ -44,6 +44,10 @@ class Agent:
         self.icm_buffer = []
         self.ppo_mem.clear_memory()
 
+    def set_alpha(self, val) -> None:
+        self.ppo.policy.alpha = val
+        self.ppo.policy_old.alpha = val
+
     def train_ppo(self) -> None:
         self.ppo.update(self.ppo_mem)
         self.ppo_mem.clear_memory()
@@ -54,9 +58,15 @@ class Agent:
     def set_reward(self, reward) -> None:
         self.ppo_mem.rewards.append(reward)
 
-    def get_action(self, state, inverse_action=None) -> torch.Tensor:
+    def get_action(self, state, goal=None, inverse_action=None) -> torch.Tensor:
+        if goal is not None:
+            inverse_action = self.get_inverse_action(state, goal)
+
         action, *_ = self.ppo.policy_old.act(state, self.ppo_mem, inverse_action)
         return action
+
+    def get_inverse_action(self, state, goal) -> torch.Tensor:
+        return self.icm.get_action(state, goal).squeeze()
 
     def train_with_inverse_reward(self):
         """Trains the inverse model of the agent and uses its loss as the
