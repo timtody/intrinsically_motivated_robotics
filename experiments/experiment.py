@@ -9,13 +9,10 @@ import numpy as np
 from observation import Observation
 from environment import Env
 from agent import Agent
-from utils import RewardQueue, ValueQueue
 from algo.ppo_cont import PPO, Memory
 from algo.models import ICModule
-from torch.utils.tensorboard import SummaryWriter
 from collections import defaultdict
 from abc import abstractmethod
-import plotly.graph_objects as go
 
 
 class BaseExperiment:
@@ -23,11 +20,11 @@ class BaseExperiment:
         self.cnf = cnf
         self.rank = rank
 
-        self.create_checkpoint_path()
-        self.create_checkpoint_dirs()
-
         # saving and loading
         if self.cnf.main.checkpoint:
+            self.create_checkpoint_path()
+            self.create_checkpoint_dirs()
+
             checkpoint = self.cnf.main.checkpoint
             self.cnf = self.load_conf_from_checkpoint()
             self.cnf.main.checkpoint = checkpoint

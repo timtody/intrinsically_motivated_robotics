@@ -5,7 +5,7 @@ main:
   record_pc: False
   gpu: False
   save_state: False
-  checkpoint: ""
+  checkpoint: False
   save_every: 100000
   reset: False
 
@@ -30,8 +30,7 @@ env:
 
 wandb:
   project: test
-  name: testname
-  dryrun: True
+  name: ""
   group: ${wandb.name}
 
 icm:

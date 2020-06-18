@@ -110,8 +110,8 @@ class InverseModule(nn.Module):
         if y.dim() == 1:
             y = y.unsqueeze(0)
         x = torch.cat([x, y], dim=1)
-        x = F.elu(self.linear(x))
-        x = F.elu(self.linear2(x))
+        x = F.relu(self.linear(x))
+        x = F.relu(self.linear2(x))
         x = self.head(x)
         return x
 
@@ -187,6 +187,12 @@ class ICModule(nn.Module):
 
     def forward(self, x):
         raise NotImplementedError
+
+    def save_inverse_state(self, path) -> None:
+        torch.save(self._inverse.state_dict(), path)
+
+    def load_inverse_state(self, state_dict) -> None:
+        self._inverse.load_state_dict(torch.load(state_dict))
 
     def parameters(self):
         """

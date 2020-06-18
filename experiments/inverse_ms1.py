@@ -94,4 +94,5 @@ class Experiment(BaseExperiment):
             x=alt.X(("mean(alpha_off)"), axis=alt.Axis(title="Episode",),)
         )
 
-        (chart + band + line_on + line_off).show()
+        # (chart + band + line_on + line_off).show()
+        df.to_csv("out/result_ms1.csv")
