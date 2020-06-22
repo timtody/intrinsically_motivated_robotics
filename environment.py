@@ -434,10 +434,11 @@ class Env(gym.Env):
     def _get_observation(self):
         obs = []
         if "prop" in self.cnf.state:
-            [obs.append(vel) for vel in self._arm.get_joint_velocities()]
+            # TODO: remove comments
+            # [obs.append(vel) for vel in self._arm.get_joint_velocities()]
             [obs.append(pos) for pos in self._arm.get_joint_positions()]
-            [obs.append(pos) for pos in self._gripper.get_joint_positions()]
-            [obs.append(open_amount) for open_amount in self._gripper.get_open_amount()]
+            # [obs.append(pos) for pos in self._gripper.get_joint_positions()]
+            # [obs.append(open_amount) for open_amount in self._gripper.get_open_amount()]
 
         if "tac" in self.cnf.state:
             # switch = lambda x: 1 if x > 0.01 else 0

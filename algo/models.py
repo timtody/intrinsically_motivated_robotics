@@ -110,8 +110,8 @@ class InverseModule(nn.Module):
         if y.dim() == 1:
             y = y.unsqueeze(0)
         x = torch.cat([x, y], dim=1)
-        x = F.relu(self.linear(x))
-        x = F.relu(self.linear2(x))
+        x = F.elu(self.linear(x))
+        x = F.elu(self.linear2(x))
         x = self.head(x)
         return x
 

@@ -25,8 +25,8 @@ env:
   headless: True
   state: prop
   action_dim: 7
-  torch_seed: 42
-  np_seed: 42
+  torch_seed: 2020
+  np_seed: 2020
 
 wandb:
   project: test
