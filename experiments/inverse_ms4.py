@@ -8,17 +8,17 @@ import pickle
 
 class Experiment(BaseExperiment):
     """
-    Implements milestone 3 of the inverse experiments.
+    Implements milestone 4 of the inverse experiments.
 
-    Test how the inverse model generalizes by supplying a range
-    of states around the goal state and inspecting the suggested
-    actions. Do these actions take the agent closer towards the
-    goal or are they just noise?
+    Put the approach to test in a scenario with 2DOF and a
+    static goal. The aim of this experiment is to show the
+    benefits of the method vs. random exploration and do some
+    hyperparameter tuning (4.1).
 
-    Plot: Show heatmap of values which indicate the quality of
-    the prediction i.e. a good prediction would be an action which
-    took the agent closter to the goal than it is currently.
-
+    Plot: Show the episode length of an agent with inverse actions
+    vs. an agent with random actions. The agent with iv-actions should
+    converge way faster since it has access to the simulated environment
+    dynamics.
     """
 
     grid_size = 17
@@ -113,8 +113,7 @@ class Experiment(BaseExperiment):
             while not done:
                 reward = -0.05
 
-                action = self.agent.get_action(state, goal=goal)
-                state, *_ = self.env.step(action)
+                action = self.agent.gethttps://github.com/timtody/curious/blob/master/experiments/inverse_ms4.pyep(action)
                 dist = self.compute_dist(state, goal)
 
                 reward_proxy -= dist
