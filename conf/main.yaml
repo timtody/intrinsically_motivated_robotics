@@ -1,5 +1,5 @@
 main:
-  n_steps: 1000000
+  n_steps: 100
   train_each: 500
   train: True
   record_pc: False
@@ -8,6 +8,8 @@ main:
   checkpoint: False
   save_every: 100000
   reset: False
+
+  iv_train_steps: 10
 
 ppo:
   alpha: 0.1
@@ -24,7 +26,7 @@ env:
   scene_path: base.ttt
   headless: True
   state: prop
-  action_dim: 7
+  action_dim: 2
   torch_seed: 2020
   np_seed: 2020
 

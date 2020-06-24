@@ -25,7 +25,8 @@ class Experiment(BaseExperiment):
 
     def __init__(self, cnf, rank):
         super().__init__(cnf, rank)
-        self.results = []
+        self.results_iv_train = []
+        self.results_p_train = []
 
     def _gen_dataset(self):
         # first make the data set
@@ -56,7 +57,8 @@ class Experiment(BaseExperiment):
         print("successfully loaded dataset of length", len(dataset))
         return train_set, test_set
 
-    def train_inverse_model(self, train_set, test_set):
+    def train_inverse_model(self):
+        train_set, test_set = self._load_dataset()
         print("Training inverse model")
         _state = self.env.reset()
 
@@ -81,84 +83,62 @@ class Experiment(BaseExperiment):
             if i % 50 == 0:
                 self.wandb.log({"training loss": loss.mean()}, step=i)
 
-            # self.save_iv_state()
+            self.save_iv_state()
 
     def save_iv_state(self):
         self.agent.icm.save_inverse_state(
-            f"out/inverse_state/rank{self.rank}_exp0_2dof.pt"
+            f"out/inverse_state/rank{self.rank}_ms4_2dof.pt"
         )
 
-    def compute_reward(self, state, goal):
-        return ((goal - state) ** 2).sum()
+    def load_iv_state(self):
+        self.agent.icm.load_inverse_state(
+            f"out/inverse_state/rank{self.rank}_ms4_2dof.pt"
+        )
 
-    def compute_act_seq(self):
-        """
-        Computes the sequence of actions needed to check all
-        positions around the agent in a square with side length
-        Experiment.grid_size.
-        """
-
-        actions = []
-        start_idx = Experiment.grid_size // 2
-        for i in range(-start_idx, start_idx + 1):
-            for j in range(-start_idx, start_idx + 1):
-                actions += list(np.sign(i) * np.array(abs(i) * [[0, -1]]))
-                actions += list(np.sign(j) * np.array(abs(j) * [[1, 0]]))
-                actions += ["stop"]
-        return actions
-
-    def compute_matrix(self):
-        goal = state = self.env.reset()
-        action_sequence = self.compute_act_seq()
-
-        results = np.zeros(Experiment.grid_size ** 2)
-        i = 0
-        for act in action_sequence:
-            if act == "stop":
-                dist_pre = self.compute_reward(state, goal)
-                iv_action = self.agent.get_inverse_action(state, goal)
-                self.env.step(iv_action * 0)
-                self.env.step(iv_action * 0)
-                state, *_ = self.env.step(iv_action)
-                dist_post = self.compute_reward(state, goal)
-                results[i] = -(dist_pre - dist_post)
-                i += 1
-                state = self.env.reset()
-            else:
-                state, *_ = self.env.step(1 * np.array(act))
-        return results
+    def compute_dist(self, state, goal):
+        return ((goal - state) ** 2).mean()
 
     def run(self):
-        train_set, test_set = self._load_dataset()
-        self.train_inverse_model(train_set, test_set)
-        results = self.compute_matrix()
-        return results
+        self.train_inverse_model()
+        # acquire goal
+        for i in range(100):
+            goal, *_ = self.env.step([1] * self.cnf.env.action_dim)
+
+        for i in range(self.cnf.main.n_steps):
+            state = self.env.reset()
+
+            ep_len = 0
+            reward_proxy = 0
+            done = False
+            while not done:
+                reward = -0.05
+
+                action = self.agent.get_action(state, goal=goal)
+                state, *_ = self.env.step(action)
+                dist = self.compute_dist(state, goal)
+
+                reward_proxy -= dist
+                ep_len += 1
+
+                if dist < 0.5:
+                    done = True
+                    reward = 10
+
+                if ep_len > 100:
+                    done = True
+                    reward = 0
+
+                self.agent.set_reward(reward)
+                self.agent.set_is_done(done)
+
+            self.agent.train_ppo()
+            self.results_p_train.append((self.rank, i, ep_len,))
+            self.wandb.log({"episode_length": ep_len, "reward proxy": reward_proxy})
+
+        return ()
 
     @staticmethod
     def plot(results):
-        x, y = np.meshgrid(
-            range(-Experiment.grid_size // 2 + 1, Experiment.grid_size // 2 + 1),
-            range(-Experiment.grid_size // 2 + 1, Experiment.grid_size // 2 + 1),
-        )
-        z = results[0]
-        source = pd.DataFrame({"x": x.ravel(), "y": y.ravel(), "Distance to goal": z})
-
-        # saving
-        run_name = "train"
         results_folder = "/home/julius/projects/curious/results/ms3/"
-        # save pandas
-        source.to_csv(results_folder + run_name + ".csv")
-        chart = (
-            alt.Chart(source)
-            .mark_rect()
-            .encode(
-                x="x:O",
-                y="y:O",
-                color=alt.Color("Distance to goal:Q", scale=alt.Scale(domain=[-8, 2])),
-            )
-        )
-        # chart.save(results_folder + run_name + ".png")
-        # chart.save(results_folder + run_name + ".svg")
-        # chart.save(results_folder + run_name + ".html")
-        chart.show()
-
+        with open(results_folder + "config.yaml", "w") as f:
+            pickle.dump(Experiment.cnf, f)
