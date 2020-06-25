@@ -1,5 +1,5 @@
 main:
-  n_steps: 100
+  n_steps: 500
   train_each: 500
   train: True
   record_pc: False
@@ -9,26 +9,26 @@ main:
   save_every: 100000
   reset: False
 
-  iv_train_steps: 10
+  iv_train_steps: 25000
 
 ppo:
   alpha: 0.1
   n_latent_var: 128
-  lr: 0.0003
+  lr: 0.000005
   betas: [0.9, 0.999]
   K_epochs: 4
   eps_clip: 0.3
-  gamma: 0.95
+  gamma: 0.6
   max_action: 1
-  action_std: 0.5
+  action_std: 0.7
 
 env:
   scene_path: base.ttt
   headless: True
   state: prop
   action_dim: 2
-  torch_seed: 2020
-  np_seed: 2020
+  torch_seed: 42069
+  np_seed: 42069
 
 wandb:
   project: test

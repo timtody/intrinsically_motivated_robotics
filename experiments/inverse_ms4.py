@@ -2,8 +2,11 @@ from .experiment import BaseExperiment
 import altair as alt
 import pandas as pd
 import numpy as np
+from omegaconf import OmegaConf
 import torch
 import pickle
+import json
+import time
 
 
 class Experiment(BaseExperiment):
@@ -25,8 +28,8 @@ class Experiment(BaseExperiment):
 
     def __init__(self, cnf, rank):
         super().__init__(cnf, rank)
-        self.results_iv_train = []
-        self.results_p_train = []
+        self.results = []
+        self.iv_state_template = f"out/inverse_state/rank{self.rank}_ms4_2dof_0.pt"
 
     def _gen_dataset(self):
         # first make the data set
@@ -69,7 +72,7 @@ class Experiment(BaseExperiment):
                 state_batch, next_state_batch, torch.tensor(action_batch), eval=False,
             )
 
-            if i % 500 == 0:
+            if i % 1000 == 0:
                 print("evaluating...")
                 state_batch, next_state_batch, action_batch = zip(*test_set)
                 loss = self.agent.icm.train_inverse(
@@ -83,24 +86,29 @@ class Experiment(BaseExperiment):
             if i % 50 == 0:
                 self.wandb.log({"training loss": loss.mean()}, step=i)
 
-            self.save_iv_state()
+        # self.save_iv_state()
 
     def save_iv_state(self):
-        self.agent.icm.save_inverse_state(
-            f"out/inverse_state/rank{self.rank}_ms4_2dof.pt"
-        )
+        print("Saving inverse state...")
+        self.agent.icm.save_inverse_state(self.iv_state_template)
 
     def load_iv_state(self):
-        self.agent.icm.load_inverse_state(
-            f"out/inverse_state/rank{self.rank}_ms4_2dof.pt"
-        )
+        print("Loading inverse state...")
+        self.agent.icm.load_inverse_state(self.iv_state_template)
 
     def compute_dist(self, state, goal):
         return ((goal - state) ** 2).mean()
 
     def run(self):
-        self.train_inverse_model()
+        alpha = 1
+        # if self.rank % 2 == 0:
+        #     alpha = 0
+        #     self.agent.set_alpha(alpha)
+        # else:
+        #     alpha = self.cnf.ppo.alpha
+        self.load_iv_state()
         # acquire goal
+        print("generating goal")
         for i in range(100):
             goal, *_ = self.env.step([1] * self.cnf.env.action_dim)
 
@@ -108,36 +116,61 @@ class Experiment(BaseExperiment):
             state = self.env.reset()
 
             ep_len = 0
-            reward_proxy = 0
+            reward_sum = 0
             done = False
             while not done:
-                reward = -0.05
+                reward = 0
 
-                action = self.agent.gethttps://github.com/timtody/curious/blob/master/experiments/inverse_ms4.pyep(action)
+                action = self.agent.get_action(state, goal)
+                state, *_ = self.env.step(action)
                 dist = self.compute_dist(state, goal)
 
-                reward_proxy -= dist
                 ep_len += 1
-
                 if dist < 0.5:
                     done = True
                     reward = 10
 
-                if ep_len > 100:
+                if ep_len > 200:
                     done = True
                     reward = 0
 
+                reward_sum += reward
                 self.agent.set_reward(reward)
                 self.agent.set_is_done(done)
 
             self.agent.train_ppo()
-            self.results_p_train.append((self.rank, i, ep_len,))
-            self.wandb.log({"episode_length": ep_len, "reward proxy": reward_proxy})
+            if i % 10 == 0:
+                self.results.append((self.rank, i, ep_len, alpha,))
+            self.wandb.log({"episode_length": ep_len, "reward sum": reward_sum})
 
-        return ()
+        self.save_config()
+
+        return self.results
+
+    def save_config(self):
+        if self.rank == 0:
+            results_folder = "/home/julius/projects/curious/results/ms4/"
+            with open(results_folder + "config.json", "w") as f:
+                json.dump(OmegaConf.to_container(self.cnf, resolve=True), f)
 
     @staticmethod
     def plot(results):
-        results_folder = "/home/julius/projects/curious/results/ms3/"
-        with open(results_folder + "config.yaml", "w") as f:
-            pickle.dump(Experiment.cnf, f)
+        results_folder = "/home/julius/projects/curious/results/ms4/"
+        p_results_as_list = []
+        for key, value_p in results.items():
+            p_results_as_list += value_p
+
+        df_p = pd.DataFrame(
+            p_results_as_list, columns=["Rank", "Episode", "Episode length", "Alpha",],
+        )
+
+        base_p = alt.Chart(df_p)
+        chart_p = (
+            base_p.mark_line()
+            .transform_window(rolling_mean="mean(Episode length)", frame=[-10, 10])
+            .encode(x="Episode", y="mean(Episode length)", color=alt.Color("Alpha:N"),)
+        )
+        band_p = base_p.mark_errorband(extent="stdev").encode(
+            x="Episode", y="Episode length", color=alt.Color("Alpha:N"),
+        )
+        (chart_p + band_p).show()

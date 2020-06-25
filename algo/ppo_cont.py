@@ -71,6 +71,7 @@ class ActorCritic(nn.Module):
     def act(self, state, memory, inverse_action=None):
         state = torch.from_numpy(state).float().to(self.device)
         action_mean = self.actor(state)
+        # print(action_mean)
         cov_mat = torch.diag(self.action_var).to(self.device)
 
         dist = MultivariateNormal(action_mean, cov_mat)
@@ -161,7 +162,7 @@ class PPO:
     def update(self, memory):
         # Monte Carlo estimate of state rewards:
         rewards = []
-        discounted_reward = self.policy.critic(memory.states[-1])
+        discounted_reward = 0  # self.policy.critic(memory.states[-1])
 
         for reward, is_terminal in zip(
             reversed(memory.rewards), reversed(memory.is_terminals)
@@ -192,6 +193,7 @@ class PPO:
 
             # Finding Surrogate Loss:
             advantages = rewards - state_values.detach()
+            # print(advantages.mean())
             # for now don't normalize advantages
             # advantages = (advantages - advantages.mean()) / (advantages.std()+
             #                                                  1e-5)

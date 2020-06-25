@@ -71,6 +71,7 @@ class BaseExperiment:
             group=f"{self.cnf.wandb.group}",
             resume=bool(self.cnf.main.checkpoint),
         )
+        wandb.watch(self.agent.ppo.policy)
 
     def create_checkpoint_dirs(self):
         if not os.path.exists(self.checkpoint_path):
