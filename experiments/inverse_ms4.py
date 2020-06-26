@@ -182,5 +182,6 @@ class Experiment(BaseExperiment):
             y=alt.Y("rolling mean:Q", title="Episode length"),
             color=alt.Color("Alpha:N"),
         )
-        (chart + band).show()
+        (chart + band).save("episode_len.json")
+        # (chart + band).show()
 
