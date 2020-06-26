@@ -100,12 +100,11 @@ class Experiment(BaseExperiment):
         return ((goal - state) ** 2).mean()
 
     def run(self):
-        alpha = 1
-        # if self.rank % 2 == 0:
-        #     alpha = 0
-        #     self.agent.set_alpha(alpha)
-        # else:
-        #     alpha = self.cnf.ppo.alpha
+        if self.rank % 2 == 0:
+            alpha = 0
+            self.agent.set_alpha(alpha)
+        else:
+            alpha = self.cnf.ppo.alpha
         self.load_iv_state()
         # acquire goal
         print("generating goal")
@@ -139,7 +138,7 @@ class Experiment(BaseExperiment):
                 self.agent.set_is_done(done)
 
             self.agent.train_ppo()
-            if i % 10 == 0:
+            if i % 1 == 0:
                 self.results.append((self.rank, i, ep_len, alpha,))
             self.wandb.log({"episode_length": ep_len, "reward sum": reward_sum})
 
@@ -156,21 +155,32 @@ class Experiment(BaseExperiment):
     @staticmethod
     def plot(results):
         results_folder = "/home/julius/projects/curious/results/ms4/"
-        p_results_as_list = []
+        results_as_list = []
         for key, value_p in results.items():
-            p_results_as_list += value_p
+            results_as_list += value_p
 
-        df_p = pd.DataFrame(
-            p_results_as_list, columns=["Rank", "Episode", "Episode length", "Alpha",],
+        df = pd.DataFrame(
+            results_as_list, columns=["Rank", "Episode", "ep_len", "Alpha",],
         )
 
-        base_p = alt.Chart(df_p)
-        chart_p = (
-            base_p.mark_line()
-            .transform_window(rolling_mean="mean(Episode length)", frame=[-10, 10])
-            .encode(x="Episode", y="mean(Episode length)", color=alt.Color("Alpha:N"),)
+        df["rolling mean"] = (
+            df.groupby("Rank")
+            .rolling(15, min_periods=1)["ep_len"]
+            .mean()
+            .reset_index(level=0, drop=True)
         )
-        band_p = base_p.mark_errorband(extent="stdev").encode(
-            x="Episode", y="Episode length", color=alt.Color("Alpha:N"),
+
+        df.to_csv(results_folder + time.strftime("%b %-d %H:%M:%S") + ".csv")
+        base = alt.Chart(df)
+        chart = base.mark_line().encode(
+            x="Episode",
+            y=alt.Y("mean(rolling mean):Q", title="Episode length"),
+            color=alt.Color("Alpha:N"),
         )
-        (chart_p + band_p).show()
+        band = base.mark_errorband(extent="stdev").encode(
+            x="Episode",
+            y=alt.Y("rolling mean:Q", title="Episode length"),
+            color=alt.Color("Alpha:N"),
+        )
+        (chart + band).show()
+
