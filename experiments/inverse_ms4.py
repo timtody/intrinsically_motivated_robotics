@@ -8,6 +8,8 @@ import pickle
 import json
 import time
 
+alt.data_transformers.disable_max_rows()
+
 
 class Experiment(BaseExperiment):
     """
@@ -138,7 +140,7 @@ class Experiment(BaseExperiment):
                 self.agent.set_is_done(done)
 
             self.agent.train_ppo()
-            if i % 1 == 0:
+            if i % 10 == 0:
                 self.results.append((self.rank, i, ep_len, alpha,))
             self.wandb.log({"episode_length": ep_len, "reward sum": reward_sum})
 
@@ -154,6 +156,7 @@ class Experiment(BaseExperiment):
 
     @staticmethod
     def plot(results):
+        current_time = time.strftime("%b %-d %H:%M:%S")
         results_folder = "/home/julius/projects/curious/results/ms4/"
         results_as_list = []
         for key, value_p in results.items():
@@ -170,7 +173,7 @@ class Experiment(BaseExperiment):
             .reset_index(level=0, drop=True)
         )
 
-        df.to_csv(results_folder + time.strftime("%b %-d %H:%M:%S") + ".csv")
+        df.to_csv(results_folder + current_time + ".csv")
         base = alt.Chart(df)
         chart = base.mark_line().encode(
             x="Episode",
@@ -182,6 +185,6 @@ class Experiment(BaseExperiment):
             y=alt.Y("rolling mean:Q", title="Episode length"),
             color=alt.Color("Alpha:N"),
         )
-        (chart + band).save("episode_len.json")
-        # (chart + band).show()
+        (chart + band).save(results_folder + current_time + "-episode_len.json")
+        (chart + band).show()
 

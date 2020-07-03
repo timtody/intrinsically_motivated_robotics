@@ -14,7 +14,7 @@ main:
 ppo:
   alpha: 0.1
   n_latent_var: 128
-  lr: 0.000005
+  lr: 0.0005
   betas: [0.9, 0.999]
   K_epochs: 4
   eps_clip: 0.3
@@ -39,7 +39,7 @@ icm:
   embedding_size: 256
   alpha: 0.001
   n_layers: 2
-  lr: 0.0001
+  lr: 0.001
   standardize_loss: False
 
 mp:
