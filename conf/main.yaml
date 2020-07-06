@@ -10,6 +10,7 @@ main:
   reset: False
 
   iv_train_steps: 25000
+  with_im: True
 
 ppo:
   alpha: 0.1
@@ -20,13 +21,13 @@ ppo:
   eps_clip: 0.3
   gamma: 0.6
   max_action: 1
-  action_std: 0.7
+  action_std: 0.5
 
 env:
   scene_path: base.ttt
   headless: True
   state: prop
-  action_dim: 2
+  action_dim: 7
   torch_seed: 42069
   np_seed: 42069
 

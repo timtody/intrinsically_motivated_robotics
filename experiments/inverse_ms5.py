@@ -29,7 +29,7 @@ class Experiment(BaseExperiment):
     def __init__(self, cnf, rank):
         super().__init__(cnf, rank)
         self.episode_len = 200
-        self.dataset_len = 1000000
+        self.dataset_len = 200000
         self.results = []
         self.iv_state_template = f"out/inverse_state/rank{self.rank}_ms4_2dof_0.pt"
 
@@ -47,9 +47,8 @@ class Experiment(BaseExperiment):
             action = self.agent.get_action(state)
 
             next_state, _, done, _ = self.env.step(action)
-            transition = (state, next_state, action)
-            self.agent.append_icm_transition(*transition)
-            dataset.append(transition)
+            self.agent.append_icm_transition(state, next_state, action)
+            dataset.append((state, next_state, action.tolist()))
 
             if self.global_step % self.episode_len == self.episode_len - 1:
                 done = True
@@ -61,7 +60,7 @@ class Experiment(BaseExperiment):
             if done:
                 self.agent.train()
 
-        ds_name = f"out/ds/iv_gen_dataset_prop_7dof_with-im_rank{self.rank}.p"
+        ds_name = f"out/db/iv_gen_dataset_prop_7dof_with-im_rank{self.rank}.p"
         print("Data set generation: write data (with im) set to", ds_name)
         with open(ds_name, "wb") as f:
             pickle.dump(dataset, f)
@@ -78,14 +77,14 @@ class Experiment(BaseExperiment):
             action = self.env.action_space.sample()
 
             next_state, *_ = self.env.step(action)
-            dataset.append((state, next_state, action))
+            dataset.append((state, next_state, list(action)))
 
             if self.global_step % self.episode_len == self.episode_len - 1:
                 self.env.reset()
 
             state = next_state
 
-        ds_name = f"out/ds/iv_gen_dataset_prop_7dof_no-im_rank{self.rank}.p"
+        ds_name = f"out/db/iv_gen_dataset_prop_7dof_no-im_rank{self.rank}.p"
         print("Data set generation: write data (no im) set to", ds_name)
         with open(ds_name, "wb") as f:
             pickle.dump(dataset, f)
@@ -143,7 +142,10 @@ class Experiment(BaseExperiment):
         return ((goal - state) ** 2).mean()
 
     def run(self):
-        self._gen_dataset_noim()
+        if self.cnf.main.with_im:
+            self._gen_dataset_im()
+        else:
+            self._gen_dataset_noim()
         return ()
 
     def save_config(self):
