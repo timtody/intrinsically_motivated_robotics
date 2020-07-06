@@ -126,7 +126,8 @@ class Experiment(BaseExperiment):
                 self.env.step(iv_action * 0)
                 state, *_ = self.env.step(iv_action)
                 dist_post = self.compute_reward(state, goal)
-                results[i] = -(dist_pre - dist_post)
+                delta = -(dist_pre - dist_post)
+                results[i] = delta / (dist_pre + 0.001)
                 results_norm[i] = iv_action.norm()
                 i += 1
                 state = self.env.reset()
@@ -143,6 +144,7 @@ class Experiment(BaseExperiment):
 
     @staticmethod
     def plot(results):
+        print(results)
         current_time = time.strftime("%b %-d %H:%M:%S")
         results_folder = "/home/julius/projects/curious/results/ms3/"
         run_name = "ticky-flanger"
@@ -199,7 +201,11 @@ class Experiment(BaseExperiment):
 
         fig.tight_layout()
         cb = fig.colorbar(axs[0][1].collections[0], ax=axs.ravel().tolist(),)
-        cb.set_label(label=r"$d(s_{x,y}, g)$", weight="bold", size=16)
+        cb.set_label(
+            label=r"$\frac{\Delta d(s_{x,y}, g)}{d(s_{x,y}, g)}$",
+            weight="bold",
+            size=16,
+        )
 
         plt.savefig("test.pdf", bbox_inches="tight")
         plt.show()

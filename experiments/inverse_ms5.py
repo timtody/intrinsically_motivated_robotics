@@ -143,7 +143,7 @@ class Experiment(BaseExperiment):
         return ((goal - state) ** 2).mean()
 
     def run(self):
-        self._gen_dataset_im()
+        self._gen_dataset_noim()
         return ()
 
     def save_config(self):

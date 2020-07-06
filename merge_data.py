@@ -1,11 +1,14 @@
 import pickle
+import torch
 
 datasets = []
-for i in range(10):
-    path = f"out/ds/iv_gen_dataset_prop_rank{i}_2dof.p"
+for i in range(7):
+    path = f"out/ds/iv_gen_dataset_prop_7dof_with-im_rank{i}.p"
     print("opening", path)
     with open(path, "rb") as f:
-        datasets += pickle.load(f)
+        file = pickle.load(f)
+        datasets += file
+        del f
+        del file
 
-with open("out/dataset0_2dof_prop.p", "wb") as f:
-    pickle.dump(datasets, f)
+torch.save(datasets, "out/dataset0_7dof_im.p")
