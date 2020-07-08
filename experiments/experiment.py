@@ -58,7 +58,8 @@ class BaseExperiment:
         self.init_wandb()
 
     def init_agent(self):
-        self.agent = Agent(self.action_dim, self.state_dim, self.cnf, self.device)
+        self.agent = Agent(self.action_dim, self.state_dim,
+                           self.cnf, self.device)
 
     def init_wandb(self):
         # actually dont need to bind this here
@@ -88,6 +89,10 @@ class BaseExperiment:
 
     def save_conf_to_checkpoint(self):
         torch.save(self.cnf, os.path.join(self.checkpoint_path, "cnf.p"))
+
+    @abstractmethod
+    def pre_run_hook(self):
+        pass
 
     @abstractmethod
     def run(self):

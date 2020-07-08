@@ -127,7 +127,10 @@ class Experiment(BaseExperiment):
                 state, *_ = self.env.step(iv_action)
                 dist_post = self.compute_reward(state, goal)
                 delta = -(dist_pre - dist_post)
-                results[i] = delta / (dist_pre + 0.001)
+                if i == (Experiment.grid_size ** 2) // 2:
+                    results[i] = dist_post
+                else:
+                    results[i] = dist_post / dist_pre
                 results_norm[i] = iv_action.norm()
                 i += 1
                 state = self.env.reset()
@@ -144,11 +147,10 @@ class Experiment(BaseExperiment):
 
     @staticmethod
     def plot(results):
-        print(results)
         current_time = time.strftime("%b %-d %H:%M:%S")
         results_folder = "/home/julius/projects/curious/results/ms3/"
         run_name = "ticky-flanger"
-        n_procs = 4
+        n_procs = 2
 
         fig, axs = plt.subplots(ncols=n_procs, nrows=2, figsize=(16, 7))
         x, y = np.meshgrid(

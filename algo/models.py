@@ -163,7 +163,8 @@ class ICModule(nn.Module):
             embedding_size, action_dim, self.base, self.device
         )
 
-        self._forward = ForwardModule(embedding_size, action_dim, self.base, n_layers)
+        self._forward = ForwardModule(
+            embedding_size, action_dim, self.base, n_layers)
 
         self.opt = optim.Adam(self.parameters(), lr=lr)
         self.running_return_std = None
@@ -183,7 +184,8 @@ class ICModule(nn.Module):
             self.running_mean - reward
         ) ** 2
 
-        self.running_mean = (1 - self.alpha) * self.running_mean + self.alpha * reward
+        self.running_mean = (1 - self.alpha) * \
+            self.running_mean + self.alpha * reward
 
     def forward(self, x):
         raise NotImplementedError
@@ -257,7 +259,8 @@ class ICModule(nn.Module):
         loss = loss.mean(dim=1).detach()
 
         if self.standardize_loss:
-            loss = (loss - self.running_mean) / (np.sqrt(self.running_var) + 0.001)
+            loss = (loss - self.running_mean) / \
+                (np.sqrt(self.running_var) + 0.001)
 
         # TODO: RESTORE THE ORIGINAL HERE AFTER REMOVING THE
         # CONSTANT NORMALIZATION OF THE OBSERVATION
@@ -291,7 +294,8 @@ class ICModule(nn.Module):
         return_std = self.loss_buffer.get_std()
         if self.running_return_std is not None:
             self.running_return_std = (
-                self.alpha * return_std + (1 - self.alpha) * self.running_return_std
+                self.alpha * return_std +
+                (1 - self.alpha) * self.running_return_std
             )
         else:
             self.running_return_std = return_std

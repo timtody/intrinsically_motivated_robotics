@@ -56,7 +56,7 @@ class Experiment(BaseExperiment):
         split = 0.95
         dataset = np.array(dataset)
         np.random.shuffle(dataset)
-        test_set = dataset[int(len(dataset) * split) :]
+        test_set = dataset[int(len(dataset) * split):]
         train_set = dataset[: int(len(dataset) * split)]
 
         print("successfully loaded dataset of length", len(dataset))
@@ -142,7 +142,8 @@ class Experiment(BaseExperiment):
             self.agent.train_ppo()
             if i % 10 == 0:
                 self.results.append((self.rank, i, ep_len, alpha,))
-            self.wandb.log({"episode_length": ep_len, "reward sum": reward_sum})
+            self.wandb.log({"episode_length": ep_len,
+                            "reward sum": reward_sum})
 
         self.save_config()
 
@@ -163,7 +164,7 @@ class Experiment(BaseExperiment):
             results_as_list += value_p
 
         df = pd.DataFrame(
-            results_as_list, columns=["Rank", "Episode", "ep_len", "Alpha",],
+            results_as_list, columns=["Rank", "Episode", "ep_len", "Alpha", ],
         )
 
         df["rolling mean"] = (
@@ -187,4 +188,3 @@ class Experiment(BaseExperiment):
         )
         (chart + band).save(results_folder + current_time + "-episode_len.json")
         (chart + band).show()
-

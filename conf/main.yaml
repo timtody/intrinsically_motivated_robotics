@@ -13,13 +13,13 @@ main:
   with_im: True
 
 ppo:
-  alpha: 0.1
+  alpha: 0.2
   n_latent_var: 128
-  lr: 0.0005
+  lr: 0.0001
   betas: [0.9, 0.999]
   K_epochs: 4
   eps_clip: 0.3
-  gamma: 0.6
+  gamma: 0.8
   max_action: 1
   action_std: 0.5
 
