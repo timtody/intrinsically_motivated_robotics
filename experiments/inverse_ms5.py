@@ -203,8 +203,10 @@ class Experiment(BaseExperiment):
             self.cnf.main.with_im = False
 
         if self.cnf.main.with_im:
+            print("starting dataset generation")
             self._gen_dataset_im()
         else:
+            print("starting dataset generation")
             self._gen_dataset_noim()
 
         # self.train_models(pre_run_results)
