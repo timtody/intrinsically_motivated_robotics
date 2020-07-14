@@ -167,6 +167,7 @@ class Experiment(BaseExperiment):
     @staticmethod
     def pre_run_hook():
         return
+        print("falsely not skipping hook")
         # do loading of dataset here
         print("pre run hook: loading data sets")
         ds_im = Experiment._load_dataset_im()
