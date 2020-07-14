@@ -20,17 +20,17 @@ class Experiment(BaseExperiment):
 
     Plot: Show the episode length of an agent with inverse actions
     vs. an agent with random actions vs an agent with inverse actions
-    trained from intrinsic motivations.
-    """
+    trained from intrinsic motivations.  """
 
     grid_size = 17
 
     def __init__(self, cnf, rank):
         super().__init__(cnf, rank)
-        self.episode_len = 200
-        self.dataset_len = 1000000
-        self.results = []
-        self.iv_state_template = f"out/inverse_state/ms5/rank{self.rank}_7dof{self.cnf.main.iv_train_steps}steps.p"
+        self.episode_len = 200 self.dataset_len = 1000000 self.results = []
+        self.iv_state_template = (
+            f"out/inverse_state/ms5/rank{self.rank}_7dof"
+            + f"{self.cnf.main.iv_train_steps}steps.p"
+        )
 
     def _gen_dataset_im(self):
         if not self.rank:
@@ -90,37 +90,37 @@ class Experiment(BaseExperiment):
 
     @staticmethod
     def _load_dataset_im():
-        print('loading dataset im')
+        print("loading dataset im")
         ds = []
-        file_names = glob.glob('out/db/iv_gen_dataset_prop_7dof_with*')
+        file_names = glob.glob("out/db/iv_gen_dataset_prop_7dof_with*")
         for fname in file_names:
-            with open(fname, 'rb') as f:
+            with open(fname, "rb") as f:
                 ds += pickle.load(f)
-        print('done loading')
+        print("done loading")
         return ds
 
     @staticmethod
     def _load_dataset_noim():
-        print('loading dataset noim')
+        print("loading dataset noim")
         ds = []
-        file_names = glob.glob('out/db/iv_gen_dataset_prop_7dof_no*')
+        file_names = glob.glob("out/db/iv_gen_dataset_prop_7dof_no*")
         for fname in file_names:
-            with open(fname, 'rb') as f:
+            with open(fname, "rb") as f:
                 ds += pickle.load(f)
-        print('done loading')
+        print("done loading")
         return ds
 
     def _split_dataset(self, dataset):
         print("splitting dataset")
         split = 0.99
-        test_set = dataset[int(len(dataset) * split):]
+        test_set = dataset[int(len(dataset) * split) :]
         train_set = dataset[: int(len(dataset) * split)]
 
         print("successfully loaded and splitted dataset of length", len(dataset))
         return train_set, test_set
 
     def train_inverse_model(self, train_set, test_set):
-        print("Training inverse model")
+        print("rank", self.rank, "Training inverse model")
         self.env.reset()
 
         for i in range(self.cnf.main.iv_train_steps):
@@ -129,24 +129,24 @@ class Experiment(BaseExperiment):
             loss = self.agent.icm.train_inverse(
                 torch.tensor(state_batch),
                 torch.tensor(next_state_batch),
-                torch.tensor(action_batch), eval=False,
+                torch.tensor(action_batch),
+                eval=False,
             )
 
             if i % 1000 == 0:
-                print("evaluating...")
+                print("Rank", self.rank, "evaluating")
                 state_batch, next_state_batch, action_batch = zip(*test_set)
                 loss = self.agent.icm.train_inverse(
-                    state_batch,
-                    next_state_batch,
-                    torch.tensor(action_batch),
-                    eval=True,
+                    state_batch, next_state_batch, torch.tensor(action_batch), eval=True
                 )
                 self.wandb.log(
-                    {f"im: {self.cnf.main.with_im} eval loss": loss.mean()}, step=i)
+                    {f"im: {self.cnf.main.with_im} eval loss": loss.mean()}, step=i
+                )
 
             if i % 50 == 0:
                 self.wandb.log(
-                    {f"im: {self.cnf.main.with_im} training loss": loss.mean()}, step=i)
+                    {f"im: {self.cnf.main.with_im} training loss": loss.mean()}, step=i
+                )
 
         self.save_iv_state()
 
@@ -156,6 +156,7 @@ class Experiment(BaseExperiment):
 
     def load_iv_state(self):
         print("Loading inverse state...")
+        print(self.iv_state_template)
         self.agent.icm.load_inverse_state(self.iv_state_template)
 
     def compute_dist(self, state, goal):
@@ -163,6 +164,7 @@ class Experiment(BaseExperiment):
 
     @staticmethod
     def pre_run_hook():
+        return
         # do loading of dataset here
         print("pre run hook: loading data sets")
         ds_im = Experiment._load_dataset_im()
@@ -178,10 +180,8 @@ class Experiment(BaseExperiment):
 
     def train_models(self, pre_run_results):
         print("making objects from buffers")
-        dataset_im = np.frombuffer(
-            pre_run_results[0].get_obj(), dtype=np.float32)
-        dataset_noim = np.frombuffer(
-            pre_run_results[1].get_obj(), dtype=np.float32)
+        dataset_im = np.frombuffer(pre_run_results[0].get_obj(), dtype=np.float32)
+        dataset_noim = np.frombuffer(pre_run_results[1].get_obj(), dtype=np.float32)
 
         print("reshaping data sets")
 
@@ -199,17 +199,22 @@ class Experiment(BaseExperiment):
         else:
             self.cnf.main.with_im = False
 
-        self.train_models(pre_run_results)
+        if self.cnf.main.with_im:
+            self._gen_dataset_im()
+        else:
+            self._gen_dataset_noim()
+
+        # self.train_models(pre_run_results)
         # self.load_iv_state()
         # self.test_performance()
         return ()
 
     def test_performance(self):
         # acquire goal first
-        for i in range(30):
+        for i in range(50):
             self.env.step([1, 0, 0, 0, 0, 0, 0])
         for i in range(40):
-            goal, *_ = self.env.step([0, 1, 0, 0, 0, 0, 0])
+            goal, *_ = self.env.step([0, 1, 0, 0, 1, 1, 0])
 
         for i in range(self.cnf.main.n_steps):
             state = self.env.reset()
@@ -223,15 +228,15 @@ class Experiment(BaseExperiment):
                 action = self.agent.get_action(state, goal)
                 state, *_ = self.env.step(action)
                 dist = self.compute_dist(state, goal)
-                print(dist)
+                # print(dist)
 
                 ep_len += 2
-                if dist < 1:
+                if dist < 5:
                     print("we did it!!!!!!!!!!11")
                     done = True
                     reward = 10
 
-                if ep_len > 500:
+                if ep_len > 1000:
                     done = True
                     reward = 0
 
@@ -241,11 +246,9 @@ class Experiment(BaseExperiment):
 
             self.agent.train_ppo()
             if i % 10 == 0:
-                self.results.append(
-                    (self.rank, i, ep_len, self.cnf.main.with_im,))
+                self.results.append((self.rank, i, ep_len, self.cnf.main.with_im))
 
-            self.wandb.log(
-                {f"im: {self.cnf.main.with_im} episode length": ep_len})
+            self.wandb.log({f"im: {self.cnf.main.with_im} episode length": ep_len})
 
         self.save_config()
 

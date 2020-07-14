@@ -8,7 +8,6 @@ import numpy as np
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
-from itertools import chain
 
 
 class ConvModule(nn.Module):
@@ -92,14 +91,15 @@ class InverseModule(nn.Module):
     Module for learning the inverse mapping of state x next state -> action.
     """
 
-    def __init__(self, embedding_size, action_dim, base, device, lr=0.001):
+    def __init__(self, embedding_size, action_dim, base, device, lr=0.0005):
         super().__init__()
         self.base = base
         self.device = device
         # * 2 because we concatenate two states
         self.linear = nn.Linear(embedding_size * 2, 256)
-        self.linear2 = nn.Linear(256, 512)
-        self.head = nn.Linear(512, action_dim)
+        self.linear2 = nn.Linear(256, 1024)
+        self.linear3 = nn.Linear(1024, 1024)
+        self.head = nn.Linear(1024, action_dim)
         self.opt = optim.Adam(self.parameters(), lr=lr)
 
     def forward(self, x, y):
@@ -110,8 +110,9 @@ class InverseModule(nn.Module):
         if y.dim() == 1:
             y = y.unsqueeze(0)
         x = torch.cat([x, y], dim=1)
-        x = F.elu(self.linear(x))
-        x = F.elu(self.linear2(x))
+        x = F.relu(self.linear(x))
+        x = F.relu(self.linear2(x))
+        x = F.relu(self.linear3(x))
         x = self.head(x)
         return x
 
@@ -163,8 +164,7 @@ class ICModule(nn.Module):
             embedding_size, action_dim, self.base, self.device
         )
 
-        self._forward = ForwardModule(
-            embedding_size, action_dim, self.base, n_layers)
+        self._forward = ForwardModule(embedding_size, action_dim, self.base, n_layers)
 
         self.opt = optim.Adam(self.parameters(), lr=lr)
         self.running_return_std = None
@@ -184,8 +184,7 @@ class ICModule(nn.Module):
             self.running_mean - reward
         ) ** 2
 
-        self.running_mean = (1 - self.alpha) * \
-            self.running_mean + self.alpha * reward
+        self.running_mean = (1 - self.alpha) * self.running_mean + self.alpha * reward
 
     def forward(self, x):
         raise NotImplementedError
@@ -259,8 +258,7 @@ class ICModule(nn.Module):
         loss = loss.mean(dim=1).detach()
 
         if self.standardize_loss:
-            loss = (loss - self.running_mean) / \
-                (np.sqrt(self.running_var) + 0.001)
+            loss = (loss - self.running_mean) / (np.sqrt(self.running_var) + 0.001)
 
         # TODO: RESTORE THE ORIGINAL HERE AFTER REMOVING THE
         # CONSTANT NORMALIZATION OF THE OBSERVATION
@@ -294,8 +292,7 @@ class ICModule(nn.Module):
         return_std = self.loss_buffer.get_std()
         if self.running_return_std is not None:
             self.running_return_std = (
-                self.alpha * return_std +
-                (1 - self.alpha) * self.running_return_std
+                self.alpha * return_std + (1 - self.alpha) * self.running_return_std
             )
         else:
             self.running_return_std = return_std
