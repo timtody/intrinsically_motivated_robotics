@@ -26,7 +26,9 @@ class Experiment(BaseExperiment):
 
     def __init__(self, cnf, rank):
         super().__init__(cnf, rank)
-        self.episode_len = 200 self.dataset_len = 1000000 self.results = []
+        self.episode_len = 500
+        self.dataset_len = 100000
+        self.results = []
         self.iv_state_template = (
             f"out/inverse_state/ms5/rank{self.rank}_7dof"
             + f"{self.cnf.main.iv_train_steps}steps.p"
@@ -39,7 +41,7 @@ class Experiment(BaseExperiment):
         dataset = []
         state = self.env.reset()
 
-        for i in range(self.dataset_len):
+        for i in range(self.cnf.main.dataset_len):
             self.global_step += 1
             if i % 10000 == 0:
                 print(f"Data set generation: rank {self.rank} at step", i)
@@ -59,7 +61,7 @@ class Experiment(BaseExperiment):
             if done:
                 self.agent.train()
 
-        ds_name = f"out/db/iv_gen_dataset_prop_7dof_with-im_rank{self.rank}.p"
+        ds_name = f"out/db/newdb_4dof_with-im_rank{self.rank}.p"
         print("Data set generation: write data (with im) set to", ds_name)
         with open(ds_name, "wb") as f:
             pickle.dump(dataset, f)
@@ -70,7 +72,7 @@ class Experiment(BaseExperiment):
         dataset = []
         state = self.env.reset()
 
-        for i in range(self.dataset_len):
+        for i in range(self.cnf.main.dataset_len):
             if i % 10000 == 0:
                 print(f"Data set generation: rank {self.rank} at step", i)
             action = self.env.action_space.sample()
@@ -83,7 +85,7 @@ class Experiment(BaseExperiment):
 
             state = next_state
 
-        ds_name = f"out/db/iv_gen_dataset_prop_7dof_no-im_rank{self.rank}.p"
+        ds_name = f"out/db/newdb_4dof_no-im_rank{self.rank}.p"
         print("Data set generation: write data (no im) set to", ds_name)
         with open(ds_name, "wb") as f:
             pickle.dump(dataset, f)
