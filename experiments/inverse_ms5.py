@@ -5,7 +5,6 @@ from omegaconf import OmegaConf
 import torch
 import pickle
 import json
-import glob
 from multiprocessing import Array
 import ctypes
 
@@ -26,17 +25,16 @@ class Experiment(BaseExperiment):
 
     def __init__(self, cnf, rank):
         super().__init__(cnf, rank)
-        self.episode_len = 500
-        self.dataset_len = 100000
+        self.episode_len = 1000
         self.results = []
         self.iv_state_template = (
-            f"out/inverse_state/ms5/rank{self.rank}_7dof"
+            f"out/inverse_state/ms5/brandnew-rank{self.rank}_{self.cnf.env.action_dim}dof"
             + f"{self.cnf.main.iv_train_steps}steps.p"
         )
 
     def _gen_dataset_im(self):
         if not self.rank:
-            print("generating data set with length", self.dataset_len)
+            print("generating data set with length", self.cnf.main.dataset_len)
         # first make the data set
         dataset = []
         state = self.env.reset()
@@ -49,67 +47,78 @@ class Experiment(BaseExperiment):
 
             next_state, _, done, _ = self.env.step(action)
             self.agent.append_icm_transition(state, next_state, action)
-            dataset.append((state, next_state, action.tolist()))
-
-            if self.global_step % self.episode_len == self.episode_len - 1:
-                done = True
-                self.env.reset()
-
+            dataset.append(
+                (
+                    state,
+                    next_state,
+                    np.array(list(action) + [0] * (7 - self.cnf.env.action_dim)),
+                )
+            )
             self.agent.set_is_done(done)
             state = next_state
 
-            if done:
+            if self.global_step % self.episode_len == self.episode_len - 1:
                 self.agent.train()
 
-        ds_name = f"out/db/newdb_4dof_with-im_rank{self.rank}.p"
+        ds_name = f"out/db/long/noreset-2newdb_4dof_with-im_rank{self.rank}.p"
         print("Data set generation: write data (with im) set to", ds_name)
         with open(ds_name, "wb") as f:
             pickle.dump(dataset, f)
 
     def _gen_dataset_noim(self):
         if not self.rank:
-            print("generating data set (no im) with length", self.dataset_len)
+            print("generating data set (no im) with length", self.cnf.main.dataset_len)
         dataset = []
         state = self.env.reset()
 
         for i in range(self.cnf.main.dataset_len):
+            self.global_step += 1
             if i % 10000 == 0:
                 print(f"Data set generation: rank {self.rank} at step", i)
             action = self.env.action_space.sample()
 
             next_state, *_ = self.env.step(action)
-            dataset.append((state, next_state, list(action)))
+            dataset.append(
+                (
+                    state,
+                    next_state,
+                    np.array(list(action) + [0] * (7 - self.cnf.env.action_dim)),
+                )
+            )
 
             if self.global_step % self.episode_len == self.episode_len - 1:
-                self.env.reset()
+                pass
+                # self.env.reset()
 
             state = next_state
 
-        ds_name = f"out/db/newdb_4dof_no-im_rank{self.rank}.p"
+        ds_name = f"out/db/long/noreset-2newdb_4dof_no-im_rank{self.rank}.p"
         print("Data set generation: write data (no im) set to", ds_name)
         with open(ds_name, "wb") as f:
             pickle.dump(dataset, f)
 
     @staticmethod
-    def _load_dataset_im():
+    def _load_dataset_im(cnf):
         print("loading dataset im")
-        ds = []
-        file_names = glob.glob("out/db/iv_gen_dataset_prop_7dof_with*")
-        for fname in file_names:
-            with open(fname, "rb") as f:
-                ds += pickle.load(f)
-        print("done loading")
+        ds = torch.load("out/db-noreset-im.p")
+        # ds = []
+        # file_names = glob.glob("out/db/iv_gen_dataset_prop_7dof_with*")
+        # for fname in file_names:
+        #     with open(fname, "rb") as f:
+        #         ds += pickle.load(f)
+        # print("done loading")
         return ds
 
     @staticmethod
-    def _load_dataset_noim():
+    def _load_dataset_noim(cnf):
         print("loading dataset noim")
-        ds = []
-        file_names = glob.glob("out/db/iv_gen_dataset_prop_7dof_no*")
-        for fname in file_names:
-            with open(fname, "rb") as f:
-                ds += pickle.load(f)
-        print("done loading")
+        ds = torch.load("out/db-noreset-noim.p")
+        # ds = []
+        # file_names = glob.glob("out/db/iv_gen_dataset_prop_7dof_no*")
+        # for fname in file_names:
+        #     with open(fname, "rb") as f:
+        #         ds += pickle.load(f)
+        # print("done loading")
         return ds
 
     def _split_dataset(self, dataset):
@@ -128,6 +137,7 @@ class Experiment(BaseExperiment):
         for i in range(self.cnf.main.iv_train_steps):
             idx = np.random.randint(len(train_set), size=1000)
             state_batch, next_state_batch, action_batch = zip(*train_set[idx])
+            action_batch = np.array(action_batch)[:, : self.cnf.env.action_dim]
             loss = self.agent.icm.train_inverse(
                 torch.tensor(state_batch),
                 torch.tensor(next_state_batch),
@@ -138,6 +148,7 @@ class Experiment(BaseExperiment):
             if i % 1000 == 0:
                 print("Rank", self.rank, "evaluating")
                 state_batch, next_state_batch, action_batch = zip(*test_set)
+                action_batch = np.array(action_batch)[:, : self.cnf.env.action_dim]
                 loss = self.agent.icm.train_inverse(
                     state_batch, next_state_batch, torch.tensor(action_batch), eval=True
                 )
@@ -165,13 +176,11 @@ class Experiment(BaseExperiment):
         return ((goal - state) ** 2).mean()
 
     @staticmethod
-    def pre_run_hook():
-        return
-        print("falsely not skipping hook")
+    def pre_run_hook(*args):
         # do loading of dataset here
         print("pre run hook: loading data sets")
-        ds_im = Experiment._load_dataset_im()
-        ds_noim = Experiment._load_dataset_noim()
+        ds_im = Experiment._load_dataset_im(args[0])
+        ds_noim = Experiment._load_dataset_noim(args[0])
         print("pre run hook: converting to numpy")
         ds_im = np.array(ds_im)
         ds_noim = np.array(ds_noim)
@@ -202,24 +211,24 @@ class Experiment(BaseExperiment):
         else:
             self.cnf.main.with_im = False
 
-        if self.cnf.main.with_im:
-            print("starting dataset generation")
-            self._gen_dataset_im()
-        else:
-            print("starting dataset generation")
-            self._gen_dataset_noim()
+        # if self.cnf.main.with_im:
+        #     print("starting dataset generation")
+        #     self._gen_dataset_im()
+        # else:
+        #     print("starting dataset generation")
+        #     self._gen_dataset_noim()
 
-        # self.train_models(pre_run_results)
+        self.train_models(pre_run_results)
         # self.load_iv_state()
         # self.test_performance()
         return ()
 
     def test_performance(self):
         # acquire goal first
-        for i in range(50):
-            self.env.step([1, 0, 0, 0, 0, 0, 0])
-        for i in range(40):
-            goal, *_ = self.env.step([0, 1, 0, 0, 1, 1, 0])
+        for i in range(0):
+            self.env.step([1, 0, 0, 0])
+        for i in range(30):
+            goal, *_ = self.env.step([0, 1, 0, 1])
 
         for i in range(self.cnf.main.n_steps):
             state = self.env.reset()

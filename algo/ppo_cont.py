@@ -78,9 +78,7 @@ class ActorCritic(nn.Module):
         action = dist.sample()
 
         if inverse_action is not None:
-            action = (
-                1 - self.alpha
-            ) * action + self.alpha * inverse_action.detach().clamp(-1, 1)
+            action = (1 - self.alpha) * action + self.alpha * inverse_action.detach()
 
         action_logprob = dist.log_prob(action)
         entropy = dist.entropy()
@@ -164,7 +162,7 @@ class PPO:
     def update(self, memory):
         # Monte Carlo estimate of state rewards:
         rewards = []
-        discounted_reward = 0  # self.policy.critic(memory.states[-1])
+        discounted_reward = self.policy.critic(memory.states[-1])
 
         for reward, is_terminal in zip(
             reversed(memory.rewards), reversed(memory.is_terminals)
