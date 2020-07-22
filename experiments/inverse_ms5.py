@@ -25,7 +25,7 @@ class Experiment(BaseExperiment):
 
     def __init__(self, cnf, rank):
         super().__init__(cnf, rank)
-        self.episode_len = 1000
+        self.episode_len = 500
         self.results = []
         self.iv_state_template = (
             f"out/inverse_state/ms5/brandnew-rank{self.rank}_{self.cnf.env.action_dim}dof"
@@ -58,9 +58,10 @@ class Experiment(BaseExperiment):
             state = next_state
 
             if self.global_step % self.episode_len == self.episode_len - 1:
+                self.env.reset()
                 self.agent.train()
 
-        ds_name = f"out/db/long/noreset-2newdb_4dof_with-im_rank{self.rank}.p"
+        ds_name = f"out/db/long/noreset-0newdb_3dof_with-im_rank{self.rank}.p"
         print("Data set generation: write data (with im) set to", ds_name)
         with open(ds_name, "wb") as f:
             pickle.dump(dataset, f)
@@ -87,12 +88,11 @@ class Experiment(BaseExperiment):
             )
 
             if self.global_step % self.episode_len == self.episode_len - 1:
-                pass
-                # self.env.reset()
+                self.env.reset()
 
             state = next_state
 
-        ds_name = f"out/db/long/noreset-2newdb_4dof_no-im_rank{self.rank}.p"
+        ds_name = f"out/db/long/noreset-0newdb_3dof_no-im_rank{self.rank}.p"
         print("Data set generation: write data (no im) set to", ds_name)
         with open(ds_name, "wb") as f:
             pickle.dump(dataset, f)
@@ -177,6 +177,7 @@ class Experiment(BaseExperiment):
 
     @staticmethod
     def pre_run_hook(*args):
+        return
         # do loading of dataset here
         print("pre run hook: loading data sets")
         ds_im = Experiment._load_dataset_im(args[0])
@@ -211,23 +212,23 @@ class Experiment(BaseExperiment):
         else:
             self.cnf.main.with_im = False
 
-        # if self.cnf.main.with_im:
-        #     print("starting dataset generation")
-        #     self._gen_dataset_im()
-        # else:
-        #     print("starting dataset generation")
-        #     self._gen_dataset_noim()
+        if self.cnf.main.with_im:
+            print("starting dataset generation")
+            self._gen_dataset_im()
+        else:
+            print("starting dataset generation")
+            self._gen_dataset_noim()
 
-        self.train_models(pre_run_results)
+        # self.train_models(pre_run_results)
         # self.load_iv_state()
         # self.test_performance()
-        return ()
+        # return ()
 
     def test_performance(self):
         # acquire goal first
         for i in range(0):
             self.env.step([1, 0, 0, 0])
-        for i in range(30):
+        for i in range(20):
             goal, *_ = self.env.step([0, 1, 0, 1])
 
         for i in range(self.cnf.main.n_steps):
