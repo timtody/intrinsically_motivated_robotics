@@ -41,9 +41,9 @@ class Experiment(BaseExperiment):
         self.running_std = 0
 
         # watch models
-        self.wandb.watch(self.agent.icm)
-        self.wandb.watch(self.agent.ppo.policy)
-        self.wandb.watch(self.agent.ppo.policy_old)
+        # self.wandb.watch(self.agent.icm)
+        # self.wandb.watch(self.agent.ppo.policy)
+        # self.wandb.watch(self.agent.ppo.policy_old)
 
         if self.cnf.main.checkpoint:
             self.load_state(
