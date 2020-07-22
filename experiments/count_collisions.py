@@ -154,7 +154,7 @@ class Experiment(BaseExperiment):
     def update_touch_map(self):
         self.touch_map += self.env.get_touch_map() / self.env.OBS_SCALER
 
-    def run(self):
+    def run(self, pre_run_results):
 
         joint_intervals = self.env.get_joint_intervals()
         joint_angles = []
