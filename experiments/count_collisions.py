@@ -170,8 +170,8 @@ class Experiment(BaseExperiment):
             self.ppo_timestep += 1
             self.global_step += 1
 
-            if self.cnf.main.record_pc:
-                self._make_pointclouds()
+            # if self.cnf.main.record_pc:
+            #     self._make_pointclouds()
 
             if not self.cnf.main.train:
                 action = torch.tensor(self.env.action_space.sample())
@@ -229,65 +229,66 @@ class Experiment(BaseExperiment):
                     batch_reward - self.running_mean
                 ) * (batch_reward - prev_mean)
 
-                ## general movements stuff
-
-                # cumpute joint angle histograms
-                # this is done to assess the range of motion
-                joint_angles = list(zip(*joint_angles))
-                # joint_min_max = self.get_joint_min_max(joint_angles)
-                joint_ranges = self.get_joint_range_in_percent(
-                    joint_angles, joint_intervals
-                )
-                joint_entropies = self.get_joint_entropies(
-                    joint_angles, joint_intervals
-                )
-                joint_entropies_mean = sum(joint_entropies) / 7
-                joint_ranges_mean = sum(joint_ranges) / 7
-
-                # compute the mean norm of the actions
-                actions_norms = torch.tensor(actions_norms).mean()
-
-                touch_map_entropy = torch.distributions.categorical.Categorical(
-                    logits=self.touch_map
-                ).entropy()
-
                 # if we don't train we still want to log all the relevant data
-                self.wandb.log(
-                    {
-                        "n collisions self": self.n_collisions_self,
-                        "n collisions other": self.n_collisions_other,
-                        "n collisions dyn": self.n_collisions_dynamic,
-                        "col rate self": self.n_collisions_self / self.global_step,
-                        "col rate other": self.n_collisions_other / self.global_step,
-                        "col rate dyn": self.n_collisions_dynamic / self.global_step,
-                        "batch col self": self_collisions_batch,
-                        "batch col ext": ext_collisions_batch,
-                        "batch col dyn": dyn_collisions_batch,
-                        # "n sounds": self.n_sounds,
-                        "cum reward": self.reward_sum,
-                        "batch reward": batch_reward,
-                        "policy loss": train_results["ploss"],
-                        "value loss": train_results["vloss"],
-                        "iteration time": time.time() - it_start,
-                        "joint entropy mean": joint_entropies_mean,
-                        "joint ranges mean": joint_ranges_mean,
-                        "mean action norm": actions_norms,
-                        "touch_map_entropy": touch_map_entropy,
-                        **{
-                            f"joint {i} ent": ent
-                            for i, ent in enumerate(joint_entropies)
+                if self.global_step % (self.cnf.main.train_each * 10) == 0:
+                    ## general movements stuff
+                    # cumpute joint angle histograms
+                    # this is done to assess the range of motion
+                    joint_angles = list(zip(*joint_angles))
+                    # joint_min_max = self.get_joint_min_max(joint_angles)
+                    joint_ranges = self.get_joint_range_in_percent(
+                        joint_angles, joint_intervals
+                    )
+                    joint_entropies = self.get_joint_entropies(
+                        joint_angles, joint_intervals
+                    )
+                    joint_entropies_mean = sum(joint_entropies) / 7
+                    joint_ranges_mean = sum(joint_ranges) / 7
+
+                    # compute the mean norm of the actions
+                    actions_norms = torch.tensor(actions_norms).mean()
+
+                    touch_map_entropy = torch.distributions.categorical.Categorical(
+                        logits=self.touch_map
+                    ).entropy()
+                    self.wandb.log(
+                        {
+                            "n collisions self": self.n_collisions_self,
+                            "n collisions other": self.n_collisions_other,
+                            "n collisions dyn": self.n_collisions_dynamic,
+                            "col rate self": self.n_collisions_self / self.global_step,
+                            "col rate other": self.n_collisions_other
+                            / self.global_step,
+                            "col rate dyn": self.n_collisions_dynamic
+                            / self.global_step,
+                            "batch col self": self_collisions_batch,
+                            "batch col ext": ext_collisions_batch,
+                            "batch col dyn": dyn_collisions_batch,
+                            # "n sounds": self.n_sounds,
+                            "cum reward": self.reward_sum,
+                            "batch reward": batch_reward,
+                            "policy loss": train_results["ploss"],
+                            "value loss": train_results["vloss"],
+                            "iteration time": time.time() - it_start,
+                            "joint entropy mean": joint_entropies_mean,
+                            "joint ranges mean": joint_ranges_mean,
+                            "mean action norm": actions_norms,
+                            "touch_map_entropy": touch_map_entropy,
+                            **{
+                                f"joint {i} ent": ent
+                                for i, ent in enumerate(joint_entropies)
+                            },
+                            # **{f"joint {i} min": min_max[0] for min_max in joint_min_max},
+                            # **{f"joint {i} max": min_max[1] for min_max in joint_min_max},
+                            **{
+                                f"joint {i} range": joint_range
+                                for i, joint_range in enumerate(joint_ranges)
+                            },
                         },
-                        # **{f"joint {i} min": min_max[0] for min_max in joint_min_max},
-                        # **{f"joint {i} max": min_max[1] for min_max in joint_min_max},
-                        **{
-                            f"joint {i} range": joint_range
-                            for i, joint_range in enumerate(joint_ranges)
-                        },
-                    },
-                    step=self.global_step,
-                )
-                joint_angles = []
-                actions_norms = []
+                        step=self.global_step,
+                    )
+                    joint_angles = []
+                    actions_norms = []
 
             state = next_state
 
