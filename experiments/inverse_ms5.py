@@ -213,7 +213,7 @@ class Experiment(BaseExperiment):
             self.train_inverse_model(*self._split_dataset(dataset_im))
         else:
             self.train_inverse_model(*self._split_dataset(dataset_noim))
-    
+
     def generate_goals(self, easy=20, medium=20, hard=20):
         easy_range = [0, 7]
         med_range = [8, 14]
@@ -270,6 +270,7 @@ class Experiment(BaseExperiment):
             while not done:
                 reward = 0
 
+                print(state, goal)
                 action = self.agent.get_action(state, goal)
                 state, *_ = self.env.step(action)
                 dist = self.compute_dist(state, goal)
