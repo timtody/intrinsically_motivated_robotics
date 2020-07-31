@@ -257,16 +257,12 @@ class Experiment(BaseExperiment):
         return ()
 
     def test_performance(self):
-        goals = self.generate_goals(easy=1, medium=1, hard=1)
-        exit(1)
-        # acquire goal first
-        for i in range(20):
-            self.env.step([1, 0, 0])
-        for i in range(40):
-            goal, *_ = self.env.step([0, 1, 0])
+        goals = self.generate_goals(easy=5, medium=0, hard=0)
 
         for i in range(self.cnf.main.n_steps):
             state = self.env.reset()
+            # choose goal
+            goal = np.random.choice(goals)
 
             ep_len = 0
             reward_sum = 0
