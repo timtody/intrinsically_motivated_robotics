@@ -234,7 +234,7 @@ class Experiment(BaseExperiment):
             for _ in range(horizontal_draw):
                 self.env.step([sign_draw, 0, 0])
             for _ in range(20):
-                goal = self.env.step([0, 1, 0])
+                goal, *_ = self.env.step([0, 1, 0])
             goals.append(goal)
         return goals
 
