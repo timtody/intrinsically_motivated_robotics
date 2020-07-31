@@ -26,9 +26,9 @@ class Experiment(BaseExperiment):
     def compute_reward(self, goal, state):
         return -((goal - state) ** 2).sum()
 
-    def run(self):
+    def run(self, res):
         self.env.reset()
-        proto_action = [1] * self.cnf.env.action_dim
+        proto_action = [0.9, 1]
 
         # acquire goal
         for i in range(100):
@@ -79,21 +79,22 @@ class Experiment(BaseExperiment):
         for key, value in results.items():
             resuts_as_list += value
         df = pd.DataFrame(
-            resuts_as_list, columns=["rank", "x", "ep_len", "alpha_on", "alpha_off"]
+            resuts_as_list,
+            columns=["rank", "Episode", "Episode length", "alpha_on", "alpha_off"],
         )
 
-        base = alt.Chart(df)
-        chart = base.mark_line().encode(x="x:Q", y=alt.Y("ep_len", aggregate="mean",),)
-        band = base.mark_errorband(extent="stdev").encode(
-            alt.X("x:Q", title="Episode"), y=alt.Y("ep_len:Q", title="Episode length",),
-        )
-        line_on = base.mark_rule(color="green").encode(
-            x=alt.X(("mean(alpha_on)"), axis=alt.Axis(title="Episode",),)
-        )
-        line_off = base.mark_rule(color="red").encode(
-            x=alt.X(("mean(alpha_off)"), axis=alt.Axis(title="Episode",),)
-        )
+        # base = alt.Chart(df)
+        # chart = base.mark_line().encode(x="x:Q", y=alt.Y("ep_len", aggregate="mean",),)
+        # band = base.mark_errorband(extent="stdev").encode(
+        #     alt.X("x:Q", title="Episode"), y=alt.Y("ep_len:Q", title="Episode length",),
+        # )
+        # line_on = base.mark_rule(color="green").encode(
+        #     x=alt.X(("mean(alpha_on)"), axis=alt.Axis(title="Episode",),)
+        # )
+        # line_off = base.mark_rule(color="red").encode(
+        #     x=alt.X(("mean(alpha_off)"), axis=alt.Axis(title="Episode",),)
+        # )
 
         # (chart + band + line_on + line_off).show()
-        df.to_csv("out/result_ms1.csv")
+        df.to_csv("results/ms1/result_ms1_long_8.csv")
         # (chart + band + line_on + line_off).show()

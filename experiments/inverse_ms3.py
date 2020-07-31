@@ -25,7 +25,7 @@ class Experiment(BaseExperiment):
 
     """
 
-    grid_size = 13
+    grid_size = 29
 
     def __init__(self, cnf, rank):
         super().__init__(cnf, rank)
@@ -65,13 +65,17 @@ class Experiment(BaseExperiment):
         _state = self.env.reset()
 
         for i in range(self.cnf.main.iv_train_steps):
-            idx = np.random.randint(len(train_set), size=500)
+            idx = np.random.randint(len(train_set), size=1000)
             state_batch, next_state_batch, action_batch = zip(*train_set[idx])
             loss = self.agent.icm.train_inverse(
-                state_batch, next_state_batch, torch.tensor(action_batch), eval=False,
+                state_batch,
+                next_state_batch,
+                torch.tensor(action_batch).to(self.device),
+                eval=False,
             )
 
-            # if i % 500 == 0:
+            if i % 500 == 0:
+                print("At step", i)
             #     print("evaluating...")
             #     state_batch, next_state_batch, action_batch = zip(*test_set)
             #     loss = self.agent.icm.train_inverse(
@@ -121,14 +125,17 @@ class Experiment(BaseExperiment):
         for act in action_sequence:
             if act == "stop":
                 dist_pre = self.compute_reward(state, goal)
-                iv_action = self.agent.get_inverse_action(state, goal)
+                iv_action = self.agent.get_inverse_action(
+                    torch.tensor(state).to(self.device),
+                    torch.tensor(goal).to(self.device),
+                )
                 self.env.step(iv_action * 0)
                 self.env.step(iv_action * 0)
                 state, *_ = self.env.step(iv_action)
                 dist_post = self.compute_reward(state, goal)
                 delta = -(dist_pre - dist_post)
                 if i == (Experiment.grid_size ** 2) // 2:
-                    results[i] = dist_post
+                    results[i] = dist_post + 1
                 else:
                     results[i] = dist_post / dist_pre
                 results_norm[i] = iv_action.norm()
@@ -138,7 +145,7 @@ class Experiment(BaseExperiment):
                 state, *_ = self.env.step(1 * np.array(act))
         return results
 
-    def run(self):
+    def run(self, pre):
         train_set, test_set = self._load_dataset()
         results_pre = self.compute_matrix()
         self.train_inverse_model(train_set, test_set)
@@ -150,9 +157,10 @@ class Experiment(BaseExperiment):
         current_time = time.strftime("%b %-d %H:%M:%S")
         results_folder = "/home/julius/projects/curious/results/ms3/"
         run_name = "ticky-flanger"
-        n_procs = 2
+        n_procs = 3
+        print(results)
 
-        fig, axs = plt.subplots(ncols=n_procs, nrows=2, figsize=(16, 7))
+        # fig, axs = plt.subplots(ncols=n_procs, nrows=2, figsize=(16, 7))
         x, y = np.meshgrid(
             range(-Experiment.grid_size // 2 + 1, Experiment.grid_size // 2 + 1),
             range(-Experiment.grid_size // 2 + 1, Experiment.grid_size // 2 + 1),
@@ -175,39 +183,41 @@ class Experiment(BaseExperiment):
         for i in range(n_procs):
             data_pre = process_data(results[i][0])
             data_post = process_data(results[i][1])
-            if i > 0:
-                data_pre.index.name = " "
-                data_post.index.name = " "
-                yticklabels = False
-            else:
-                yticklabels = True
+            data_pre.to_csv(f"results/ms3/bigresult_rank{i}_pre.csv")
+            data_post.to_csv(f"results/ms3/bigresult_rank{i}_post.csv")
+            # data_pre.to_csv(f"results/ms3/test_rnd{i+12}_post.csv")
 
-            sns.heatmap(
-                data_pre,
-                vmin=vmin,
-                vmax=vmax,
-                yticklabels=yticklabels,
-                cbar=False,
-                ax=axs[0][i],
-                cmap="viridis_r",
-            )
-            sns.heatmap(
-                data_post,
-                vmin=vmin,
-                vmax=vmax,
-                yticklabels=yticklabels,
-                cbar=False,
-                ax=axs[1][i],
-                cmap="viridis_r",
-            )
+        #     if i > 0:
+        #         data_pre.index.name = " "
+        #         data_post.index.name = " "
+        #         yticklabels = False
+        #     else:
+        #         yticklabels = True
 
-        fig.tight_layout()
-        cb = fig.colorbar(axs[0][1].collections[0], ax=axs.ravel().tolist(),)
-        cb.set_label(
-            label=r"$\frac{\Delta d(s_{x,y}, g)}{d(s_{x,y}, g)}$",
-            weight="bold",
-            size=16,
-        )
+        #     sns.heatmap(
+        #         data_pre,
+        #         vmin=vmin,
+        #         vmax=vmax,
+        #         yticklabels=yticklabels,
+        #         cbar=False,
+        #         ax=axs[0][i],
+        #         cmap="viridis_r",
+        #     )
+        #     sns.heatmap(
+        #         data_post,
+        #         vmin=vmin,to(self.device
+        #         cbar=False,
+        #         ax=axs[1][i],
+        #         cmap="viridis_r",
+        #     )
 
-        plt.savefig("test.pdf", bbox_inches="tight")
-        plt.show()
+        # fig.tight_layout()
+        # cb = fig.colorbar(axs[0][1].collections[0], ax=axs.ravel().tolist(),)
+        # cb.set_label(
+        #     label=r"$\frac{\Delta d(s_{x,y}, g)}{d(s_{x,y}, g)}$",
+        #     weight="bold",
+        #     size=16,
+        # )
+
+        # plt.savefig("test.pdf", bbox_inches="tight")
+        # plt.show()

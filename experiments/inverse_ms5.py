@@ -28,7 +28,7 @@ class Experiment(BaseExperiment):
         self.episode_len = 500
         self.results = []
         self.iv_state_template = (
-            f"out/inverse_state/ms5/brandnew-rank{self.rank}_{self.cnf.env.action_dim}dof"
+            f"out/inverse_state/ms5/db-{self.rank}_{self.cnf.env.action_dim}dof"
             + f"{self.cnf.main.iv_train_steps}steps.p"
         )
 
@@ -100,7 +100,7 @@ class Experiment(BaseExperiment):
     @staticmethod
     def _load_dataset_im(cnf):
         print("loading dataset im")
-        ds = torch.load("out/db-noreset-im.p")
+        ds = torch.load("out/db-noreset-3dof-im.p")
         # ds = []
         # file_names = glob.glob("out/db/iv_gen_dataset_prop_7dof_with*")
         # for fname in file_names:
@@ -112,13 +112,12 @@ class Experiment(BaseExperiment):
     @staticmethod
     def _load_dataset_noim(cnf):
         print("loading dataset noim")
-        ds = torch.load("out/db-noreset-noim.p")
+        ds = torch.load("out/db-noreset-3dof-noim.p")
         # ds = []
         # file_names = glob.glob("out/db/iv_gen_dataset_prop_7dof_no*")
         # for fname in file_names:
         #     with open(fname, "rb") as f:
-        #         ds += pickle.load(f)
-        # print("done loading")
+        #    deviceint("done loading")
         return ds
 
     def _split_dataset(self, dataset):
@@ -139,9 +138,9 @@ class Experiment(BaseExperiment):
             state_batch, next_state_batch, action_batch = zip(*train_set[idx])
             action_batch = np.array(action_batch)[:, : self.cnf.env.action_dim]
             loss = self.agent.icm.train_inverse(
-                torch.tensor(state_batch),
-                torch.tensor(next_state_batch),
-                torch.tensor(action_batch),
+                state_batch,
+                next_state_batch,
+                torch.tensor(action_batch).to(self.device),
                 eval=False,
             )
 
@@ -150,7 +149,10 @@ class Experiment(BaseExperiment):
                 state_batch, next_state_batch, action_batch = zip(*test_set)
                 action_batch = np.array(action_batch)[:, : self.cnf.env.action_dim]
                 loss = self.agent.icm.train_inverse(
-                    state_batch, next_state_batch, torch.tensor(action_batch), eval=True
+                    state_batch,
+                    next_state_batch,
+                    torch.tensor(action_batch).to(self.device),
+                    eval=True,
                 )
                 self.wandb.log(
                     {f"im: {self.cnf.main.with_im} eval loss": loss.mean()}, step=i
@@ -177,8 +179,8 @@ class Experiment(BaseExperiment):
 
     @staticmethod
     def pre_run_hook(*args):
-        return
         # do loading of dataset here
+        return
         print("pre run hook: loading data sets")
         ds_im = Experiment._load_dataset_im(args[0])
         ds_noim = Experiment._load_dataset_noim(args[0])
@@ -197,6 +199,12 @@ class Experiment(BaseExperiment):
         dataset_noim = np.frombuffer(pre_run_results[1].get_obj(), dtype=np.float32)
 
         print("reshaping data sets")
+        # if self.cnf.main.with_im:
+        #     print("starting dataset generation")
+        #     self._gen_dataset_im()
+        # else:
+        #     print("starting dataset generation")
+        #     self._ge
 
         dataset_im = dataset_im.reshape(-1, 3, 7)
         dataset_noim = dataset_noim.reshape(-1, 3, 7)
@@ -212,24 +220,24 @@ class Experiment(BaseExperiment):
         else:
             self.cnf.main.with_im = False
 
-        if self.cnf.main.with_im:
-            print("starting dataset generation")
-            self._gen_dataset_im()
-        else:
-            print("starting dataset generation")
-            self._gen_dataset_noim()
+        # if self.cnf.main.with_im:
+        #     print("starting dataset generation")
+        #     self._gen_dataset_im()
+        # else:
+        #     print("starting dataset generation")
+        #     self._gen_dataset_noim()
 
         # self.train_models(pre_run_results)
-        # self.load_iv_state()
-        # self.test_performance()
-        # return ()
+        self.load_iv_state()
+        self.test_performance()
+        return ()
 
     def test_performance(self):
         # acquire goal first
-        for i in range(0):
-            self.env.step([1, 0, 0, 0])
         for i in range(20):
-            goal, *_ = self.env.step([0, 1, 0, 1])
+            self.env.step([1, 0, 0])
+        for i in range(40):
+            goal, *_ = self.env.step([0, 1, 0])
 
         for i in range(self.cnf.main.n_steps):
             state = self.env.reset()
@@ -245,8 +253,8 @@ class Experiment(BaseExperiment):
                 dist = self.compute_dist(state, goal)
                 # print(dist)
 
-                ep_len += 2
-                if dist < 5:
+                ep_len += 1
+                if dist < 1:
                     print("we did it!!!!!!!!!!11")
                     done = True
                     reward = 10

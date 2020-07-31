@@ -3,7 +3,7 @@ import torch
 
 datasets = []
 for i in range(0, 20):
-    path = f"out/db/long/noreset-2newdb_4dof_no-im_rank{i}.p"
+    path = f"out/db/long/noreset-0newdb_3dof_with-im_rank{i}.p"
     print("opening", path)
     try:
         with open(path, "rb") as f:
@@ -14,4 +14,4 @@ for i in range(0, 20):
     except:
         print("path not found")
 
-torch.save(datasets, "out/db-noreset-noim.p")
+torch.save(datasets, "out/db-noreset-3dof-im.p")

@@ -14,7 +14,6 @@ class Runner:
         d = manager.dict()
         print("executing pre run hook")
         pre_run_results = self.exp.pre_run_hook(self.cnf)
-        print("done with pre run hook")
         for rank in range(self.cnf.mp.n_procs):
             p = mp.Process(target=self._start_env, args=(rank, d, pre_run_results))
             p.start()

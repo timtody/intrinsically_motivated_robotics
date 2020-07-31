@@ -30,6 +30,7 @@ class Agent:
         self.icm = ICModule(
             self.action_dim, self.state_dim, self.device, **self.cnf.icm
         ).to(self.device)
+        self.icm.to(self.device)
         self.icm_buffer = []
 
     def append_icm_transition(self, this_state, next_state, action) -> None:
