@@ -257,6 +257,8 @@ class Experiment(BaseExperiment):
         return ()
 
     def test_performance(self):
+        goals = self.generate_goals(easy=1, medium=1, hard=1)
+        exit(1)
         # acquire goal first
         for i in range(20):
             self.env.step([1, 0, 0])
