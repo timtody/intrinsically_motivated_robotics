@@ -213,6 +213,30 @@ class Experiment(BaseExperiment):
             self.train_inverse_model(*self._split_dataset(dataset_im))
         else:
             self.train_inverse_model(*self._split_dataset(dataset_noim))
+    
+    def generate_goals(self, easy=20, medium=20, hard=20):
+        easy_range = [0, 7]
+        med_range = [8, 14]
+        hard_range = [15, 20]
+        goals = []
+        # append easy goals
+        goals += self._generate_goals(easy, easy_range)
+        goals += self._generate_goals(medium, med_range)
+        goals += self._generate_goals(hard, hard_range)
+        return goals
+
+    def _generate_goals(self, n, goal_range):
+        goals = []
+        for _ in range(n):
+            self.env.reset()
+            sign_draw = np.random.choice([-1, 1])
+            horizontal_draw = np.random.randint(goal_range[0], high=goal_range[1])
+            for _ in range(horizontal_draw):
+                self.env.step([sign_draw, 0, 0])
+            for _ in range(20):
+                goal = self.env.step([0, 1, 0])
+            goals.append(goal)
+        return goals
 
     def run(self, pre_run_results):
         if self.rank % 2 == 0:
