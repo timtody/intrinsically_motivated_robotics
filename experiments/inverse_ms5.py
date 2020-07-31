@@ -223,7 +223,7 @@ class Experiment(BaseExperiment):
         goals += self._generate_goals(easy, easy_range)
         goals += self._generate_goals(medium, med_range)
         goals += self._generate_goals(hard, hard_range)
-        return goals
+        return np.concatenate(goals)
 
     def _generate_goals(self, n, goal_range):
         goals = []
