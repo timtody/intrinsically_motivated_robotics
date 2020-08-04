@@ -6,24 +6,27 @@ towards it's environment like the table, itself and a pendulum which is in the s
 import os
 import torch
 import collections
+import numpy as np
 
 from algo.ppo_cont import PPO, Memory
 from algo.models import ICModule
 
 
 class Agent:
-    def __init__(self, action_dim, state_dim, cnf, device):
+    def __init__(self, action_dim, state_dim, cnf, device, is_goal_based=False):
         # PPO related stuff
         self.action_dim = action_dim
         self.state_dim = state_dim
         self.device = device
         self.cnf = cnf
+        self.is_goal_based = is_goal_based
 
         self.init_ppo()
         self.init_icm()
 
     def init_ppo(self):
-        self.ppo = PPO(self.action_dim, self.state_dim, self.device, **self.cnf.ppo)
+        state_dim = self.state_dim if not self.is_goal_based else 2 * self.state_dim
+        self.ppo = PPO(self.action_dim, state_dim, self.device, **self.cnf.ppo)
         self.ppo_mem = Memory()
 
     def init_icm(self):
@@ -62,6 +65,9 @@ class Agent:
     def get_action(self, state, goal=None, inverse_action=None) -> torch.Tensor:
         if goal is not None:
             inverse_action = self.get_inverse_action(state, goal)
+
+        if self.is_goal_based:
+            state = np.concatenate([state, goal])
 
         action, *_ = self.ppo.policy_old.act(state, self.ppo_mem, inverse_action)
         return action

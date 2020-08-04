@@ -26,8 +26,6 @@ class Experiment(BaseExperiment):
     dynamics.
     """
 
-    grid_size = 17
-
     def __init__(self, cnf, rank):
         super().__init__(cnf, rank)
         self.results = []
@@ -56,7 +54,7 @@ class Experiment(BaseExperiment):
         split = 0.95
         dataset = np.array(dataset)
         np.random.shuffle(dataset)
-        test_set = dataset[int(len(dataset) * split):]
+        test_set = dataset[int(len(dataset) * split) :]
         train_set = dataset[: int(len(dataset) * split)]
 
         print("successfully loaded dataset of length", len(dataset))
@@ -101,12 +99,7 @@ class Experiment(BaseExperiment):
     def compute_dist(self, state, goal):
         return ((goal - state) ** 2).mean()
 
-    def run(self):
-        if self.rank % 2 == 0:
-            alpha = 0
-            self.agent.set_alpha(alpha)
-        else:
-            alpha = self.cnf.ppo.alpha
+    def run(self, res):
         self.load_iv_state()
         # acquire goal
         print("generating goal")
@@ -140,12 +133,10 @@ class Experiment(BaseExperiment):
                 self.agent.set_is_done(done)
 
             self.agent.train_ppo()
-            if i % 10 == 0:
-                self.results.append((self.rank, i, ep_len, alpha,))
-            self.wandb.log({"episode_length": ep_len,
-                            "reward sum": reward_sum})
+            self.results.append((self.rank, i, ep_len, self.cnf.ppo.alpha))
+            # self.wandb.log({"episode_length": ep_len, "reward sum": reward_sum})
 
-        self.save_config()
+        # self.save_config()
 
         return self.results
 
@@ -156,7 +147,7 @@ class Experiment(BaseExperiment):
                 json.dump(OmegaConf.to_container(self.cnf, resolve=True), f)
 
     @staticmethod
-    def plot(results):
+    def plot(results, cnf):
         current_time = time.strftime("%b %-d %H:%M:%S")
         results_folder = "/home/julius/projects/curious/results/ms4/"
         results_as_list = []
@@ -164,27 +155,14 @@ class Experiment(BaseExperiment):
             results_as_list += value_p
 
         df = pd.DataFrame(
-            results_as_list, columns=["Rank", "Episode", "ep_len", "Alpha", ],
+            results_as_list, columns=["Rank", "Episode", "ep_len", "Alpha",],
         )
 
-        df["rolling mean"] = (
-            df.groupby("Rank")
-            .rolling(15, min_periods=1)["ep_len"]
-            .mean()
-            .reset_index(level=0, drop=True)
-        )
+        # df["rolling mean"] = (
+        #     df.groupby("Rank")
+        #     .rolling(15, min_periods=1)["ep_len"]
+        #     .mean()
+        #     .reset_index(level=0, drop=True)
+        # )
 
-        df.to_csv(results_folder + current_time + ".csv")
-        base = alt.Chart(df)
-        chart = base.mark_line().encode(
-            x="Episode",
-            y=alt.Y("mean(rolling mean):Q", title="Episode length"),
-            color=alt.Color("Alpha:N"),
-        )
-        band = base.mark_errorband(extent="stdev").encode(
-            x="Episode",
-            y=alt.Y("rolling mean:Q", title="Episode length"),
-            color=alt.Color("Alpha:N"),
-        )
-        (chart + band).save(results_folder + current_time + "-episode_len.json")
-        (chart + band).show()
+        df.to_csv(results_folder + current_time + f"alpha:{cnf.ppo.alpha}" + ".csv")

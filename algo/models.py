@@ -97,9 +97,19 @@ class InverseModule(nn.Module):
         self.device = device
         # * 2 because we concatenate two states
         self.linear = nn.Linear(embedding_size * 2, 256)
-        self.linear2 = nn.Linear(256, 1024)
-        self.linear3 = nn.Linear(1024, 1024)
-        self.head = nn.Linear(1024, action_dim)
+        self.linear2 = nn.Linear(256, 512)
+        self.head = nn.Linear(512, action_dim)
+        self.opt = optim.Adam(self.parameters(), lr=lr)
+
+        # def __init__(self, embedding_size, action_dim, base, device, lr=0.0005):
+        #         super().__init__()
+        #         self.base = base
+        #         self.device = device
+        #         # * 2 because we concatenate two states
+        #         self.linear = nn.Linear(embedding_size * 2, 256)
+        #         self.linear2 = nn.Linear(256, 1024)
+        #         self.linear3 = nn.Linear(1024, 1024)
+        #         self.head = nn.Linear(1024, action_dim)
         self.opt = optim.Adam(self.parameters(), lr=lr)
 
     def forward(self, x, y):
@@ -112,7 +122,7 @@ class InverseModule(nn.Module):
         x = torch.cat([x, y], dim=1)
         x = F.relu(self.linear(x))
         x = F.relu(self.linear2(x))
-        x = F.relu(self.linear3(x))
+        # (self.linear3(x))
         x = self.head(x)
         return x
 

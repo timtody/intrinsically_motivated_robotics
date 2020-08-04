@@ -11,17 +11,11 @@ import ctypes
 
 class Experiment(BaseExperiment):
     """
-    Implements milestone 5 of the inverse experiments.
-
-    This experiments test the approach with the full 7-DOF
-    and analyzes if the approach can actually benefit from intrinsic
-    motivations.
-
-    Plot: Show the episode length of an agent with inverse actions
-    vs. an agent with random actions vs an agent with inverse actions
-    trained from intrinsic motivations.  """
-
-    grid_size = 17
+    Milestone 6: explore if IM can improve inverse model learning.
+    
+    Plots: Bar plot showing mean episode length for alpha = 1
+    Bar plots for easy, medium and hard goal sets.
+    """
 
     def __init__(self, cnf, rank):
         super().__init__(cnf, rank)
@@ -29,75 +23,7 @@ class Experiment(BaseExperiment):
         self.init_agent(is_goal_based=True)
         self.episode_len = 500
         self.results = []
-        self.iv_state_template = (
-            f"out/inverse_state/ms5/db-{self.rank % 2}_{self.cnf.env.action_dim}dof"
-            + f"{self.cnf.main.iv_train_steps}steps.p"
-        )
-
-    def _gen_dataset_im(self):
-        if not self.rank:
-            print("generating data set with length", self.cnf.main.dataset_len)
-        # first make the data set
-        dataset = []
-        state = self.env.reset()
-
-        for i in range(self.cnf.main.dataset_len):
-            self.global_step += 1
-            if i % 10000 == 0:
-                print(f"Data set generation: rank {self.rank} at step", i)
-            action = self.agent.get_action(state)
-
-            next_state, _, done, _ = self.env.step(action)
-            self.agent.append_icm_transition(state, next_state, action)
-            dataset.append(
-                (
-                    state,
-                    next_state,
-                    np.array(list(action) + [0] * (7 - self.cnf.env.action_dim)),
-                )
-            )
-            self.agent.set_is_done(done)
-            state = next_state
-
-            if self.global_step % self.episode_len == self.episode_len - 1:
-                self.env.reset()
-                self.agent.train()
-
-        ds_name = f"out/db/long/noreset-0newdb_3dof_with-im_rank{self.rank}.p"
-        print("Data set generation: write data (with im) set to", ds_name)
-        with open(ds_name, "wb") as f:
-            pickle.dump(dataset, f)
-
-    def _gen_dataset_noim(self):
-        if not self.rank:
-            print("generating data set (no im) with length", self.cnf.main.dataset_len)
-        dataset = []
-        state = self.env.reset()
-
-        for i in range(self.cnf.main.dataset_len):
-            self.global_step += 1
-            if i % 10000 == 0:
-                print(f"Data set generation: rank {self.rank} at step", i)
-            action = self.env.action_space.sample()
-
-            next_state, *_ = self.env.step(action)
-            dataset.append(
-                (
-                    state,
-                    next_state,
-                    np.array(list(action) + [0] * (7 - self.cnf.env.action_dim)),
-                )
-            )
-
-            if self.global_step % self.episode_len == self.episode_len - 1:
-                self.env.reset()
-
-            state = next_state
-
-        ds_name = f"out/db/long/noreset-0newdb_3dof_no-im_rank{self.rank}.p"
-        print("Data set generation: write data (no im) set to", ds_name)
-        with open(ds_name, "wb") as f:
-            pickle.dump(dataset, f)
+        self.iv_state_template = f"out/inverse_state/ms5/inverse_state_{'im' if self.cnf.main.with_im else 'noim'}.p"
 
     @staticmethod
     def _load_dataset_im(cnf):
@@ -218,8 +144,8 @@ class Experiment(BaseExperiment):
 
     def generate_goals(self, easy=20, medium=20, hard=20):
         easy_range = [0, 7]
-        med_range = [8, 14]
-        hard_range = [15, 20]
+        med_range = [8, 20]
+        hard_range = [20, 30]
         goals = []
         # append easy goals
         goals += self._generate_goals(easy, easy_range)
@@ -235,41 +161,32 @@ class Experiment(BaseExperiment):
             horizontal_draw = np.random.randint(goal_range[0], high=goal_range[1])
             for _ in range(horizontal_draw):
                 self.env.step([sign_draw, 0, 0])
-            for _ in range(20):
+            for _ in range(30):
                 goal, *_ = self.env.step([0, 1, 0])
             goals.append(goal)
         return goals
 
     def run(self, pre_run_results):
-        if self.rank % 2 == 0:
-            self.cnf.main.with_im = True
-        else:
-            self.cnf.main.with_im = False
-
-        # if self.cnf.main.with_im:
-        #     print("starting dataset generation")
-        #     self._gen_dataset_im()
-        # else:
-        #     print("starting dataset generation")
-        #     self._gen_dataset_noim()
-
-        # self.train_models(pre_run_results)
         self.load_iv_state()
-        self.test_performance()
-        return ()
+        results = self.test_performance()
+        return results
 
     def test_performance(self):
-        goals = self.generate_goals(easy=5, medium=5, hard=5)
+        goals = self.generate_goals(easy=20, medium=0, hard=0)
+
+        total_episodes = 0
 
         for i in range(self.cnf.main.n_steps):
             state = self.env.reset()
             # choose goal
-            goal = goals[np.random.randint(len(goals))]
+            goal_idx = np.random.randint(len(goals))
+            goal = goals[goal_idx]
 
             ep_len = 0
             reward_sum = 0
             done = False
             while not done:
+                total_episodes += 1
                 reward = 0
 
                 action = self.agent.get_action(state, goal)
@@ -279,7 +196,6 @@ class Experiment(BaseExperiment):
 
                 ep_len += 1
                 if dist < 1:
-                    print("we did it!!!!!!!!!!11")
                     done = True
                     reward = 1
 
@@ -288,17 +204,14 @@ class Experiment(BaseExperiment):
                     reward = 0
 
                 reward_sum += reward
-                self.agent.set_reward(reward)
-                self.agent.set_is_done(done)
+                # self.agent.set_reward(reward)
+                # self.agent.set_is_done(done)
 
-            self.agent.train_ppo()
-            if i % 10 == 0:
-                self.results.append((self.rank, i, ep_len, self.cnf.main.with_im))
-
-            self.wandb.log({f"im: {self.cnf.main.with_im} episode length": ep_len})
+            # self.agent.train_ppo()
 
         self.save_config()
 
+        self.results.append((self.rank, total_episodes / self.cnf.main.n_steps))
         return self.results
 
     def save_config(self):
@@ -309,4 +222,9 @@ class Experiment(BaseExperiment):
 
     @staticmethod
     def plot(results):
-        pass
+        res = []
+        for key, value in results.items():
+            res.append(value[0])
+        df = pd.DataFrame(res, columns=["Rank", "Episode length"])
+        df.to_csv("results/ms6/without-im-easy.csv")
+        print(df)

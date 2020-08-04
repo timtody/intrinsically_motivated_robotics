@@ -120,25 +120,34 @@ class Experiment(BaseExperiment):
         action_sequence = self.compute_act_seq()
 
         results = np.zeros(Experiment.grid_size ** 2)
-        results_norm = np.zeros(Experiment.grid_size ** 2)
+        # results_norm = np.zeros(Experiment.grid_size ** 2)
         i = 0
         for act in action_sequence:
             if act == "stop":
                 dist_pre = self.compute_reward(state, goal)
-                iv_action = self.agent.get_inverse_action(
-                    torch.tensor(state).to(self.device),
-                    torch.tensor(goal).to(self.device),
+                iv_action = (
+                    self.agent.get_inverse_action(
+                        torch.tensor(state).to(self.device),
+                        torch.tensor(goal).to(self.device),
+                    )
+                    .cpu()
+                    .detach()
+                    .numpy()
                 )
+                if iv_action[0] > 1 or iv_action[1] > 1:
+                    iv_action = iv_action / iv_action.max()
+
                 self.env.step(iv_action * 0)
                 self.env.step(iv_action * 0)
                 state, *_ = self.env.step(iv_action)
                 dist_post = self.compute_reward(state, goal)
-                delta = -(dist_pre - dist_post)
-                if i == (Experiment.grid_size ** 2) // 2:
-                    results[i] = dist_post + 1
-                else:
-                    results[i] = dist_post / dist_pre
-                results_norm[i] = iv_action.norm()
+                delta = dist_pre - dist_post
+                results[i] = delta
+                # if i == (Experiment.grid_size ** 2) // 2:
+                #     results[i] = dist_post + 1
+                # else:
+                #     results[i] = dist_post / dist_pre
+                # results_norm[i] = iv_action.norm()
                 i += 1
                 state = self.env.reset()
             else:
@@ -183,8 +192,8 @@ class Experiment(BaseExperiment):
         for i in range(n_procs):
             data_pre = process_data(results[i][0])
             data_post = process_data(results[i][1])
-            data_pre.to_csv(f"results/ms3/bigresult_rank{i}_pre.csv")
-            data_post.to_csv(f"results/ms3/bigresult_rank{i}_post.csv")
+            data_pre.to_csv(f"results/ms3/norm_bigresult_rank{i}_pre.csv")
+            data_post.to_csv(f"results/ms3/norm_bigresult_rank{i}_post.csv")
             # data_pre.to_csv(f"results/ms3/test_rnd{i+12}_post.csv")
 
         #     if i > 0:

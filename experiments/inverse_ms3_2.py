@@ -138,8 +138,6 @@ class Experiment(BaseExperiment):
                 self.env.step(iv_action * 0)
                 state, *_ = self.env.step(iv_action)
                 dist_post = self.compute_reward(state, goal)
-                if iv_action[0] > 1 or iv_action[1] > 1:
-                    iv_action = iv_action / iv_action.max()
                 results[i] = iv_action
                 i += 1
                 state = self.env.reset()

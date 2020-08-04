@@ -57,9 +57,14 @@ class BaseExperiment:
 
         self.init_wandb()
 
-    def init_agent(self):
-        self.agent = Agent(self.action_dim, self.state_dim,
-                           self.cnf, self.device)
+    def init_agent(self, is_goal_based=False):
+        self.agent = Agent(
+            self.action_dim,
+            self.state_dim,
+            self.cnf,
+            self.device,
+            is_goal_based=is_goal_based,
+        )
 
     def init_wandb(self):
         # actually dont need to bind this here

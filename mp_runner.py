@@ -22,7 +22,7 @@ class Runner:
         for p in processes:
             p.join()
 
-        self.exp.plot(d)
+        self.exp.plot(d, self.cnf)
 
     def _start_env(self, rank, d, pre_run_results):
         self.cnf.env.torch_seed += rank
