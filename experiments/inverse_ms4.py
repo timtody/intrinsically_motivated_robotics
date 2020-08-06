@@ -122,7 +122,7 @@ class Experiment(BaseExperiment):
                 dist = self.compute_dist(state, goal)
 
                 ep_len += 1
-                if dist < 0.5:
+                if dist < 1:
                     done = True
                     reward = 10
 
@@ -136,7 +136,7 @@ class Experiment(BaseExperiment):
 
             self.agent.train_ppo()
             self.results.append((self.rank, i, ep_len, self.cnf.ppo.alpha))
-            # self.wandb.log({"episode_length": ep_len, "reward sum": reward_sum})
+            self.wandb.log({"episode length": ep_len})
 
         # self.save_config()
 
