@@ -26,7 +26,7 @@ class Experiment(BaseExperiment):
     def __init__(self, cnf, rank):
         super().__init__(cnf, rank)
         # reinit agent for goal based state size
-        self.init_agent(is_goal_based=True)
+        self.init_agent(is_goal_based=False)
         self.episode_len = 500
         self.results = []
         self.iv_state_template = (
@@ -63,7 +63,7 @@ class Experiment(BaseExperiment):
                 self.env.reset()
                 self.agent.train()
 
-        ds_name = f"out/db/long/noreset-0newdb_3dof_with-im_rank{self.rank}.p"
+        ds_name = f"out/db/long/new-5dof{self.rank}.p"
         print("Data set generation: write data (with im) set to", ds_name)
         with open(ds_name, "wb") as f:
             pickle.dump(dataset, f)
@@ -94,7 +94,7 @@ class Experiment(BaseExperiment):
 
             state = next_state
 
-        ds_name = f"out/db/long/noreset-0newdb_3dof_no-im_rank{self.rank}.p"
+        ds_name = f"out/db/long/new-5dof{self.rank}.p"
         print("Data set generation: write data (no im) set to", ds_name)
         with open(ds_name, "wb") as f:
             pickle.dump(dataset, f)
@@ -246,19 +246,19 @@ class Experiment(BaseExperiment):
         else:
             self.cnf.main.with_im = False
 
-        # if self.cnf.main.with_im:
-        #     print("starting dataset generation")
-        #     self._gen_dataset_im()
-        # else:
-        #     print("starting dataset generation")
-        #     self._gen_dataset_noim()
+        if self.cnf.main.with_im:
+            print("starting dataset generation")
+            self._gen_dataset_im()
+        else:
+            print("starting dataset generation")
+            self._gen_dataset_noim()
 
         # self.train_models(pre_run_results)
-        self.load_iv_state()
-        self.test_performance()
-        return ()
+        # self.load_iv_state()
+        # self.test_performance()
+        # return ()
 
-    def test_performance(self):
+    def test_performance(self, res):
         goals = self.generate_goals(easy=5, medium=5, hard=5)
 
         for i in range(self.cnf.main.n_steps):
@@ -308,5 +308,5 @@ class Experiment(BaseExperiment):
                 json.dump(OmegaConf.to_container(self.cnf, resolve=True), f)
 
     @staticmethod
-    def plot(results):
+    def plot(results, cnf):
         pass

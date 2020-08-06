@@ -107,6 +107,8 @@ class Experiment(BaseExperiment):
             goal, *_ = self.env.step([1] * self.cnf.env.action_dim)
 
         for i in range(self.cnf.main.n_steps):
+            if i % 100 == 0:
+                print(f"rank {self.rank} at step {i}")
             state = self.env.reset()
 
             ep_len = 0
