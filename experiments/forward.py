@@ -15,7 +15,7 @@ class Experiment(BaseExperiment):
         # experiment parameters
         self.episode_len = 500
         self.dataset = []
-        self.ds_path = f"out/forward/ds-rank{self.rank}.p"
+        self.ds_path = f"out/forward/ds-rank{self.rank + self.cnf.main.addrank}.p"
 
     def run(self, pre_run_results):
         self.gen_dataset()
@@ -39,7 +39,8 @@ class Experiment(BaseExperiment):
         state = self.env.reset()
 
         for i in range(self.cnf.main.n_steps):
-            print('dataset creation: rank', self.rank, 'at step', i)
+            if i % 10000 == 0:
+                print('dataset creation: rank', self.rank, 'at step', i)
             action = self.env.action_space.sample()
             nstate, *_ = self.env.step(action)
             self.dataset.append((state, nstate, action))

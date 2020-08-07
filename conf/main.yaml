@@ -12,6 +12,7 @@ main:
   iv_train_steps: 25000
   with_im: True
   dataset_len: 1000000
+  addrank: 0
 
 ppo:
   alpha: 0.2

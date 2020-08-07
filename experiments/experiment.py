@@ -159,5 +159,5 @@ class BaseExperiment:
         np.random.seed(state["np_seed"])
 
     @staticmethod
-    def plot(results):
+    def plot(results, cnf):
         pass
