@@ -2,8 +2,8 @@ import pickle
 import torch
 
 datasets = []
-for i in range(0, 20):
-    path = f"out/db/long/noreset-0newdb_3dof_with-im_rank{i}.p"
+for i in range(1, 20, 2):
+    path = f"out/db/long/new-5dof{i}.p"
     print("opening", path)
     try:
         with open(path, "rb") as f:
@@ -14,4 +14,4 @@ for i in range(0, 20):
     except:
         print("path not found")
 
-torch.save(datasets, "out/db-noreset-3dof-im.p")
+torch.save(datasets, "out/5dof-noim.p")

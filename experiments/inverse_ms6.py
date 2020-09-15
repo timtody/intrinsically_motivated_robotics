@@ -143,11 +143,10 @@ class Experiment(BaseExperiment):
             self.train_inverse_model(*self._split_dataset(dataset_noim))
 
     def generate_goals(self, easy=20, medium=20, hard=20):
-        easy_range = [0, 7]
-        med_range = [8, 20]
-        hard_range = [20, 30]
+        easy_range = [5, 10]
+        med_range = [10, 25]
+        hard_range = [25, 35]
         goals = []
-        # append easy goals
         goals += self._generate_goals(easy, easy_range)
         goals += self._generate_goals(medium, med_range)
         goals += self._generate_goals(hard, hard_range)
@@ -157,12 +156,20 @@ class Experiment(BaseExperiment):
         goals = []
         for _ in range(n):
             self.env.reset()
-            sign_draw = np.random.choice([-1, 1])
+            sign_draw = np.random.choice([-1, 1], size=3)
             horizontal_draw = np.random.randint(goal_range[0], high=goal_range[1])
-            for _ in range(horizontal_draw):
-                self.env.step([sign_draw, 0, 0])
-            for _ in range(30):
-                goal, *_ = self.env.step([0, 1, 0])
+
+            for i, sign in enumerate(sign_draw):
+                action = [0] * self.cnf.env.action_dim
+                action[i] = sign
+                for _ in range(horizontal_draw):
+                    goal, *_ = self.env.step(action)
+
+            # for _ in range(horizontal_draw):
+            #     self.env.step([sign_draw, 0, 0])
+            # for _ in range(30):
+            #     goal, *_ = self.env.step([0, 1, 0])
+
             goals.append(goal)
         return goals
 
@@ -171,10 +178,17 @@ class Experiment(BaseExperiment):
         results = self.test_performance()
         return results
 
-    def test_performance(self):
-        goals = self.generate_goals(easy=20, medium=0, hard=0)
+    def _test_performance(self, diff):
+        n_goals = self.cnf.main.n_goals
+        if diff == "Easy":
+            goals = self.generate_goals(easy=n_goals, medium=0, hard=0)
+        if diff == "Medium":
+            goals = self.generate_goals(easy=0, medium=n_goals, hard=0)
+        if diff == "Hard":
+            goals = self.generate_goals(easy=0, medium=0, hard=n_goals)
 
         total_episodes = 0
+        reward_sum = 0
 
         for i in range(self.cnf.main.n_steps):
             state = self.env.reset()
@@ -183,7 +197,6 @@ class Experiment(BaseExperiment):
             goal = goals[goal_idx]
 
             ep_len = 0
-            reward_sum = 0
             done = False
             while not done:
                 total_episodes += 1
@@ -199,7 +212,7 @@ class Experiment(BaseExperiment):
                     done = True
                     reward = 1
 
-                if ep_len > 1000:
+                if ep_len > 100:
                     done = True
                     reward = 0
 
@@ -210,9 +223,19 @@ class Experiment(BaseExperiment):
             # self.agent.train_ppo()
 
         self.save_config()
+        return (
+            self.rank,
+            diff,
+            self.cnf.main.with_im,
+            reward_sum / self.cnf.main.n_steps,
+        )
 
-        self.results.append((self.rank, total_episodes / self.cnf.main.n_steps))
-        return self.results
+    def test_performance(self):
+        diffs = ["Easy", "Medium", "Hard"]
+        results = []
+        for diff in diffs:
+            results.append(self._test_performance(diff))
+        return results
 
     def save_config(self):
         if self.rank == 0:
@@ -221,10 +244,12 @@ class Experiment(BaseExperiment):
                 json.dump(OmegaConf.to_container(self.cnf, resolve=True), f)
 
     @staticmethod
-    def plot(results):
+    def plot(results, cnf):
         res = []
         for key, value in results.items():
-            res.append(value[0])
-        df = pd.DataFrame(res, columns=["Rank", "Episode length"])
-        df.to_csv("results/ms6/without-im-easy.csv")
-        print(df)
+            for val in value:
+                res.append(val)
+        df = pd.DataFrame(
+            res, columns=["Rank", "Difficulty", "With IM", "Success rate"]
+        )
+        df.to_csv(f"results/ms6/all-diffs-im-{cnf.main.with_im}.csv")

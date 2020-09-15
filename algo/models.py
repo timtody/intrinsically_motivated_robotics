@@ -38,7 +38,7 @@ class ConvModule(nn.Module):
 
 class FCModule(nn.Module):
     """
-    Docstring: todo
+    Docstring: todo. Well too bad!
     """
 
     def __init__(self, state_dim, embedding_size):
@@ -97,8 +97,9 @@ class InverseModule(nn.Module):
         self.device = device
         # * 2 because we concatenate two states
         self.linear = nn.Linear(embedding_size * 2, 256)
-        self.linear2 = nn.Linear(256, 512)
-        self.head = nn.Linear(512, action_dim)
+        self.linear2 = nn.Linear(256, 1024)
+        self.linear3 = nn.Linear(1024, 1024)
+        self.head = nn.Linear(1024, action_dim)
         self.opt = optim.Adam(self.parameters(), lr=lr)
 
         # def __init__(self, embedding_size, action_dim, base, device, lr=0.0005):
@@ -122,7 +123,7 @@ class InverseModule(nn.Module):
         x = torch.cat([x, y], dim=1)
         x = F.relu(self.linear(x))
         x = F.relu(self.linear2(x))
-        # (self.linear3(x))
+        x = F.relu(self.linear3(x))
         x = self.head(x)
         return x
 
@@ -237,9 +238,6 @@ class ICModule(nn.Module):
         return self._forward(state, action)
 
     def get_action(self, this_state, next_state):
-        """
-        Given two states, predicts the action taken.
-        """
         this_state = torch.tensor(this_state).float()
         next_state = torch.tensor(next_state).float()
         return self._inverse(this_state, next_state)

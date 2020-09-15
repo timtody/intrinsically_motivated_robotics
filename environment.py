@@ -54,7 +54,11 @@ class Env(gym.Env):
     def _launch(self):
         scene_path = os.path.join("scenes", self.cnf.scene_path)
         self._pr = PyRep()
-        self._pr.launch(os.path.abspath(scene_path), headless=self.cnf.headless)
+        self._pr.launch(
+            os.path.abspath(scene_path),
+            headless=self.cnf.headless,
+            write_coppeliasim_stdout_to_file=False,
+        )
         self._pr.start()
 
     def _setup_robot(self):
@@ -84,7 +88,7 @@ class Env(gym.Env):
 
     def _setup_shapes(self):
         self._table = Shape("diningTable_visible")
-        self._concrete = Shape("Concrete")
+        # self._concrete = Shape("Concrete")
         self._head = Shape("Head")
 
     def get_tip_position(self):
