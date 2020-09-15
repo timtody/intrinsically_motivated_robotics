@@ -65,11 +65,11 @@ class ForwardModule(nn.Module):
         self.base = base
         self.n_layers = n_layers
         # we add + 1 because of the concatenated action
-        self.l1 = nn.Linear(embedding_size + action_dim, 256)
-        self.l2 = nn.Linear(256, 256)
+        self.l1 = nn.Linear(embedding_size + action_dim, 512)
+        self.l2 = nn.Linear(512, 512)
         self.l3 = nn.Linear(256, 256)
         self.l4 = nn.Linear(256, 256)
-        self.head = nn.Linear(256, embedding_size)
+        self.head = nn.Linear(512, embedding_size)
 
     def forward(self, x, a):
         with torch.no_grad():
@@ -242,7 +242,7 @@ class ICModule(nn.Module):
         next_state = torch.tensor(next_state).float()
         return self._inverse(this_state, next_state)
 
-    def train_forward(self, this_state, next_state, action, freeze=False, eval=True):
+    def train_forward(self, this_state, next_state, action, freeze=False, eval=False):
         action = torch.stack(action).float().to(self.device)
         this_state = torch.tensor(this_state).float().to(self.device)
         next_state = torch.tensor(next_state).float().to(self.device)

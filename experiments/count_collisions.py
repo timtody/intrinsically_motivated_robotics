@@ -253,37 +253,37 @@ class Experiment(BaseExperiment):
                     ).entropy()
                     self.wandb.log(
                         {
-                            "n collisions self": self.n_collisions_self,
-                            "n collisions other": self.n_collisions_other,
-                            "n collisions dyn": self.n_collisions_dynamic,
-                            "col rate self": self.n_collisions_self / self.global_step,
-                            "col rate other": self.n_collisions_other
-                            / self.global_step,
-                            "col rate dyn": self.n_collisions_dynamic
-                            / self.global_step,
-                            "batch col self": self_collisions_batch,
-                            "batch col ext": ext_collisions_batch,
-                            "batch col dyn": dyn_collisions_batch,
+                            # "n collisions self": self.n_collisions_self,
+                            # "n collisions other": self.n_collisions_other,
+                            # "n collisions dyn": self.n_collisions_dynamic,
+                            # "col rate self": self.n_collisions_self / self.global_step,
+                            # "col rate other": self.n_collisions_other
+                            # / self.global_step,
+                            # "col rate dyn": self.n_collisions_dynamic
+                            # / self.global_step,
+                            # "batch col self": self_collisions_batch,
+                            # "batch col ext": ext_collisions_batch,
+                            # "batch col dyn": dyn_collisions_batch,
                             # "n sounds": self.n_sounds,
                             "cum reward": self.reward_sum,
                             "batch reward": batch_reward,
-                            "policy loss": train_results["ploss"],
-                            "value loss": train_results["vloss"],
-                            "iteration time": time.time() - it_start,
-                            "joint entropy mean": joint_entropies_mean,
-                            "joint ranges mean": joint_ranges_mean,
-                            "mean action norm": actions_norms,
-                            "touch_map_entropy": touch_map_entropy,
-                            **{
-                                f"joint {i} ent": ent
-                                for i, ent in enumerate(joint_entropies)
-                            },
-                            # **{f"joint {i} min": min_max[0] for min_max in joint_min_max},
-                            # **{f"joint {i} max": min_max[1] for min_max in joint_min_max},
-                            **{
-                                f"joint {i} range": joint_range
-                                for i, joint_range in enumerate(joint_ranges)
-                            },
+                            # "policy loss": train_results["ploss"],
+                            # "value loss": train_results["vloss"],
+                            # "iteration time": time.time() - it_start,
+                            # "joint entropy mean": joint_entropies_mean,
+                            # "joint ranges mean": joint_ranges_mean,
+                            # "mean action norm": actions_norms,
+                            # "touch_map_entropy": touch_map_entropy,
+                            # **{
+                            #     f"joint {i} ent": ent
+                            #     for i, ent in enumerate(joint_entropies)
+                            # },
+                            # # **{f"joint {i} min": min_max[0] for min_max in joint_min_max},
+                            # # **{f"joint {i} max": min_max[1] for min_max in joint_min_max},
+                            # **{
+                            #     f"joint {i} range": joint_range
+                            #     for i, joint_range in enumerate(joint_ranges)
+                            # },
                         },
                         step=self.global_step,
                     )

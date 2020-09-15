@@ -57,7 +57,7 @@ class Env(gym.Env):
         self._pr.launch(
             os.path.abspath(scene_path),
             headless=self.cnf.headless,
-            write_coppeliasim_stdout_to_file=False,
+            write_coppeliasim_stdout_to_file=self.cnf.suppress_stdout,
         )
         self._pr.start()
 

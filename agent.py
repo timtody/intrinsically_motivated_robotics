@@ -74,11 +74,11 @@ class Agent:
 
     def get_inverse_action(self, state, goal) -> torch.Tensor:
         return self.icm.get_action(state, goal).squeeze()
-    
+
     def train_forward(self, state, nstate, action, eval=False):
         loss = self.icm.train_forward(state, nstate, action, eval=eval)
         return loss.mean()
-        
+
     def train_with_inverse_reward(self):
         """Trains the inverse model of the agent and uses its loss as the
         intrinsic reward"""
@@ -123,7 +123,7 @@ class Agent:
             self.ppo_mem.rewards = (
                 im_loss_batch
                 if not random_reward
-                else im_loss_batch.normal_(mean=28, std=140)
+                else im_loss_batch.normal_(mean=22, std=76)
             )
             ploss, vloss = self.ppo.update(self.ppo_mem)
             results["ploss"] = ploss
