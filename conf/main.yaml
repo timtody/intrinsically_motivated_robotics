@@ -12,7 +12,11 @@ main:
   iv_train_steps: 25000
   with_im: True
   dataset_len: 1000000
+<<<<<<< HEAD
   n_goals: 20
+=======
+  addrank: 0
+>>>>>>> 2684d0065473abc55b39964766ca66a40df11df9
 
 ppo:
   alpha: 0.2
