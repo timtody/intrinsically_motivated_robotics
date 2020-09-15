@@ -55,9 +55,7 @@ class Env(gym.Env):
         scene_path = os.path.join("scenes", self.cnf.scene_path)
         self._pr = PyRep()
         self._pr.launch(
-            os.path.abspath(scene_path),
-            headless=self.cnf.headless,
-            write_coppeliasim_stdout_to_file=self.cnf.suppress_stdout,
+            os.path.abspath(scene_path), headless=self.cnf.headless,
         )
         self._pr.start()
 
