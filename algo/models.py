@@ -204,7 +204,9 @@ class ICModule(nn.Module):
         torch.save(self._inverse.state_dict(), path)
 
     def load_inverse_state(self, state_dict) -> None:
-        self._inverse.load_state_dict(torch.load(state_dict))
+        self._inverse.load_state_dict(
+            torch.load(state_dict), map_location=torch.device("cpu")
+        )
 
     def parameters(self):
         """
