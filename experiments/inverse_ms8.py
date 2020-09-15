@@ -28,7 +28,7 @@ class Experiment(BaseExperiment):
     @staticmethod
     def _load_dataset_im(cnf):
         print("loading dataset im")
-        ds = torch.load("out/db-noreset-3dof-im.p")
+        ds = torch.load("out/db-noreset-3dof-im.p", map_location=torch.device("cpu"))
         # ds = []
         # file_names = glob.glob("out/db/iv_gen_dataset_prop_7dof_with*")
         # for fname in file_names:
@@ -224,7 +224,6 @@ class Experiment(BaseExperiment):
             self.agent.train_ppo()
             results.append((self.rank, diff, self.cnf.main.with_im, i, ep_len,))
 
-        self.save_config()
         return results
 
     def test_performance(self):
