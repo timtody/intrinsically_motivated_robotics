@@ -34,18 +34,26 @@ class Experiment(BaseExperiment):
         results = []
         cyclic, limits = self.env._arm.get_joint_intervals()
         old_limits = np.array(limits)
-        constrained_limits = old_limits * 0.1
-        relaxed_limits = old_limits * 0.2
-
+        constrained_limits = old_limits * 0.05
+        limits_a = constrained_limits
+        limits_a[1] += 1
+        limits_b = limits_a.copy()
+        limits_b[0] += -1
+        limits_c = limits_b.copy()
+        limits_c[0] += 1
         # set up constrained limits first
-        self.env._arm.set_joint_intervals(cyclic, constrained_limits.tolist())
-        res_constrained = self._run()
-        self.env._arm.set_joint_intervals(cyclic, old_limits.tolist())
-        res_unconstrained = self._run()
+        self.env._arm.set_joint_intervals(cyclic, limits_a.tolist())
+        res_a = self._run()
+        self.env._arm.set_joint_intervals(cyclic, limits_b.tolist())
+        res_b = self._run()
+        self.env._arm.set_joint_intervals(cyclic, limits_c.tolist())
+        res_c = self._run()
 
-        return res_constrained + res_unconstrained
+        return res_a + res_b + res_c
 
     @staticmethod
     def plot(results, cnf):
+        # print(results)
         df = pd.DataFrame(data=dict(results))
-        df.to_csv("results/forward/ms0/res.csv")
+        print(df)
+        df.to_csv("results/forward/ms0/res_test.csv")

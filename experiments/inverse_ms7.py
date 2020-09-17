@@ -164,9 +164,7 @@ class Experiment(BaseExperiment):
     #         for _ in range(horizontal_draw):
     #             self.env.step([sign_draw, 0, 0])
     #         for _ in range(30):
-    #             goal, *_ = self.env.step([0, 1, 0])
-    #         goals.append(goal)
-    #     return goals
+    #             goal, *_ = wandb: Waiting for W&B process to finish, PID 304710
 
     def generate_goals(self, easy=20, medium=20, hard=20):
         easy_range = [5, 10]

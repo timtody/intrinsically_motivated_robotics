@@ -28,7 +28,7 @@ class Experiment(BaseExperiment):
     @staticmethod
     def _load_dataset_im(cnf):
         print("loading dataset im")
-        ds = torch.load("out/db-noreset-3dof-im.p", map_location=torch.device("cpu"))
+        ds = torch.load("out/db-noreset-3dof-im.p")
         # ds = []
         # file_names = glob.glob("out/db/iv_gen_dataset_prop_7dof_with*")
         # for fname in file_names:
@@ -192,6 +192,8 @@ class Experiment(BaseExperiment):
         results = []
 
         for i in range(self.cnf.main.n_steps):
+            if not self.rank:
+                print("At step", i)
             state = self.env.reset()
             # choose goal
             goal_idx = np.random.randint(len(goals))

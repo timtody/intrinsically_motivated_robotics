@@ -18,7 +18,7 @@ if __name__ == "__main__":
     mp.set_start_method("spawn")
 
     # dynamicall import the experiment
-    experiment = sys.argv[1].split("/")[1].split(".")[0]
+    experiment = sys.argv[1].split("/")[-1].split(".")[0]
     module = importlib.import_module("." + experiment, package="experiments")
     exp = getattr(module, "Experiment")
 

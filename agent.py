@@ -103,7 +103,12 @@ class Agent:
         return results
 
     def train(
-        self, train_fw=True, train_ppo=True, freeze_fw_model=False, random_reward=False
+        self,
+        train_fw=True,
+        train_ppo=True,
+        freeze_fw_model=False,
+        random_reward=False,
+        length=0,
     ) -> dict:
         """
         Trains the ICM of the agent. This method clears the buffer which was filled by
@@ -120,11 +125,12 @@ class Agent:
 
         # train actor
         if train_ppo:
-            self.ppo_mem.rewards = (
-                im_loss_batch
-                if not random_reward
-                else im_loss_batch.normal_(mean=22, std=76)
-            )
+            try:
+                random_rew = im_loss_batch.normal_(mean=22, std=76)
+            except:
+                random_rew = torch.randn(length)
+                random_rew.normal_(mean=22, std=76)
+            self.ppo_mem.rewards = im_loss_batch if not random_reward else random_rew
             ploss, vloss = self.ppo.update(self.ppo_mem)
             results["ploss"] = ploss
             results["vloss"] = vloss

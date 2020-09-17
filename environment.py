@@ -442,6 +442,10 @@ class Env(gym.Env):
             # [obs.append(pos) for pos in self._gripper.get_joint_positions()]
             # [obs.append(open_amount) for open_amount in self._gripper.get_open_amount()]
 
+        if "vels" in self.cnf.state:
+            # moved from 'prop'
+            [obs.append(vel) for vel in self._arm.get_joint_velocities()]
+
         if "tac" in self.cnf.state:
             # switch = lambda x: 1 if x > 0.01 else 0
             # [obs.append(switch(reading)) for reading in self.read_force_sensors_hand()]
