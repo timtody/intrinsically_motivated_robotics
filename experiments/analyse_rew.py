@@ -48,12 +48,14 @@ class Experiment(BaseExperiment):
         res_b = self._run()
         self.env._arm.set_joint_intervals(cyclic, limits_c.tolist())
         res_c = self._run()
+        # set up constrained limits first
+        self.env._arm.set_joint_intervals(cyclic, limits_a.tolist())
+        res_d = self._run()
 
-        return res_a + res_b + res_c
+        return res_a + res_b + res_c + res_d
 
     @staticmethod
     def plot(results, cnf):
         # print(results)
         df = pd.DataFrame(data=dict(results))
-        print(df)
-        df.to_csv("results/forward/ms0/res_test.csv")
+        df.to_csv("results/forward/ms0/res_test_back.csv")
