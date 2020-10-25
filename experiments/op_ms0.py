@@ -41,7 +41,6 @@ class Experiment(BaseExperiment):
             self.generate_dataset_without_im()
 
     def generate_dataset_without_im(self):
-        print("BROOO")
         state = self.env.reset()
 
         for i in range(self.cnf.main.n_steps):
