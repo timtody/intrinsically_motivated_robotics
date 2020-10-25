@@ -53,7 +53,7 @@ class Experiment(BaseExperiment):
 
             if i % self.episode_len == self.episode_len - 1:
                 self.env.reset()
-            self.generate_dataset_without_im()reset()
+            self.generate_dataset_without_im()
 
         self.dataset = np.array(self.dataset)
 
@@ -81,7 +81,6 @@ class Experiment(BaseExperiment):
         self.dataset = np.array(self.dataset)
 
         torch.save(self.dataset, self.target_folder + f"/ds_with_im_rank{self.rank}.p")
-    
 
     def run(self, pre_run_results):
         self.generate_dataset()
