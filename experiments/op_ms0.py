@@ -41,6 +41,7 @@ class Experiment(BaseExperiment):
             self.generate_dataset_without_im()
 
     def generate_dataset_without_im(self):
+        print("BROOO")
         state = self.env.reset()
 
         for i in range(self.cnf.main.n_steps):
@@ -50,10 +51,8 @@ class Experiment(BaseExperiment):
             next_state, *_ = self.env.step(action)
             self.dataset.append((state, next_state, action))
             state = next_state
-
             if i % self.episode_len == self.episode_len - 1:
                 self.env.reset()
-            self.generate_dataset_without_im()
 
         self.dataset = np.array(self.dataset)
 
