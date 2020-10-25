@@ -5,11 +5,15 @@ from .experiment import BaseExperiment
 
 
 class Experiment(BaseExperiment):
+    """
+    Visualise the performance of the forward model in joint angle space
+    """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
     def load_dataset(self):
-        dataset = torch.load(f"results/forward/ms0/dataset/db_{self.cnf.env.state}")
+        dataset = torch.load(f"results/forward/dataset/database_{self.cnf.env.state}")
         split = 0.95
         dataset = np.array(dataset)
         np.random.shuffle(dataset)
@@ -18,7 +22,6 @@ class Experiment(BaseExperiment):
         return train_set, test_set
 
     def run(self, pre_run):
-        results = []
         eval_each = 10
         train_set, test_set = np.array(self.load_dataset())
         bsize = 256
@@ -29,14 +32,20 @@ class Experiment(BaseExperiment):
             action = [torch.tensor(ac) for ac in action]
             loss = self.agent.icm.train_forward(state, nstate, action)
 
-            if i % eval_each == 0:
+            if i % eval_each == eval_each - 1:
                 state, nstate, action = zip(*test_set)
+                state, nstate, action = zip(*train_set[idx])
                 # oh lord help me
                 action = [torch.tensor(ac) for ac in action]
                 loss = self.agent.icm.train_forward(state, nstate, action)
-                results.append(
-                    [self.rank, self.cnf.env.state, i, loss.mean().item(),]
-                )
+
+        state = self.env.reset()
+
+        # get the reward for the touch event
+        for i in range(50):
+            self.env.step([0, 1, 0, 0, 0, 0, 0])
+        exit(1)
+
         return results
 
     @staticmethod

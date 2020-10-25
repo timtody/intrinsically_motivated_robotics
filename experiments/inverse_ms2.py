@@ -148,9 +148,7 @@ class Experiment(BaseExperiment):
         )
         df_p = pd.DataFrame(
             p_results_as_list, columns=["Rank", "Episode", "Episode length", "Alpha",],
-        )
-        iv_base = alt.Chart(df_iv)
-        chart = iv_base.mark_line().encode(x="Episode", y="mean(Loss)", color="Mode:N")
+        )  #!/usr/bin/env pythonmark_line().encode(x="Episode", y="mean(Loss)", color="Mode:N")
         band = iv_base.mark_errorband(extent="stdev").encode(
             x="Episode", y="Loss", color=alt.Color("Mode:N"),
         )

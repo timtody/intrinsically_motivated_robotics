@@ -44,6 +44,11 @@ class Experiment(BaseExperiment):
         plt.savefig("results/goal_" + diff + ".pdf", bbox_inches="tight")
 
     def run(self, pre_run):
+        self.env.reset()
+        for i in range(6):
+            self.env.step([0, -1, 0])
+        self.cap("start")
+        exit(1)
         self.generate_goals(easy=1, medium=0, hard=0)
         self.cap("easy")
         self.generate_goals(easy=0, medium=1, hard=0)

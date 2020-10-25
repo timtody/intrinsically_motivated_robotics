@@ -5,11 +5,15 @@ from .experiment import BaseExperiment
 
 
 class Experiment(BaseExperiment):
+    """
+    Visualise the performance of the forward model in joint angle space
+    """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
     def load_dataset(self):
-        dataset = torch.load(f"results/forward/ms0/dataset/db_{self.cnf.env.state}")
+        dataset = torch.load(f"results/forward/dataset/database_{self.cnf.env.state}")
         split = 0.95
         dataset = np.array(dataset)
         np.random.shuffle(dataset)
@@ -29,8 +33,9 @@ class Experiment(BaseExperiment):
             action = [torch.tensor(ac) for ac in action]
             loss = self.agent.icm.train_forward(state, nstate, action)
 
-            if i % eval_each == 0:
+            if i % eval_each == eval_each - 1:
                 state, nstate, action = zip(*test_set)
+                state, nstate, action = zip(*train_set[idx])
                 # oh lord help me
                 action = [torch.tensor(ac) for ac in action]
                 loss = self.agent.icm.train_forward(state, nstate, action)
