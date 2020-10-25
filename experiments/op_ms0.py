@@ -52,7 +52,7 @@ class Experiment(BaseExperiment):
             state = next_state
 
             if i % self.episode_len == self.episode_len - 1:
-                self.env.
+                self.env.reset()
             self.generate_dataset_without_im()reset()
 
         self.dataset = np.array(self.dataset)
