@@ -3,12 +3,12 @@ This file unifies functionality for the PPO agent using the intrinsic curiosity 
 It's supposed to be used to quantitatively analyze the agent's touching behavior
 towards it's environment like the table, itself and a pendulum which is in the scene.
 """
-import os
 import torch
-import collections
 import numpy as np
+from utils import ReplayBuffer
 
 from algo.ppo_cont import PPO, Memory
+from algo.td3 import TD3
 from algo.models import ICModule
 
 
@@ -152,3 +152,66 @@ class Agent:
         self.icm.load_state(path)
         # load ppo
         self.ppo.load_state(path)
+
+
+class TD3Agent(Agent):
+    def __init__(
+        self,
+        action_dim,
+        state_dim,
+        cnf,
+        device,
+        is_goal_based=False,
+        inverse_model=None,
+    ):
+        # PPO related stuff
+        self.action_dim = action_dim
+        self.state_dim = state_dim
+        self.device = device
+        self.cnf = cnf
+        self.is_goal_based = is_goal_based
+
+        self.init_td3()
+
+        self.inverse_model = inverse_model
+
+    def set_inverse_model(self, model):
+        self.inverse_model = model
+
+    def get_inverse_action(self, state, goal) -> torch.Tensor:
+        state = torch.tensor(state).float().to(torch.device("cuda"))
+        goal = torch.tensor(goal).float().to(torch.device("cuda"))
+        return self.inverse_model(state, goal)
+
+    def init_td3(self):
+        self.policy = TD3(self.state_dim, self.action_dim, self.cnf.td3.max_action,)
+        self.buffer = ReplayBuffer(self.state_dim, self.action_dim)
+
+    def add_transition(self, state, action, nstate, reward, done):
+        self.buffer.add(state, action, nstate, reward, done)
+
+    def train(self):
+        self.policy.train(self.buffer, self.cnf.main.bsize)
+
+    def get_action(self, state, goal=None, inverse_action=None):
+        if goal is not None:
+            inverse_action = self.get_inverse_action(state, goal)
+
+        if self.is_goal_based:
+            state = np.concatenate([state, goal])
+
+        action = self.policy.select_action(np.array(state))
+        action += np.random.normal(
+            0, self.cnf.td3.max_action * self.cnf.td3.expl_noise, size=self.action_dim,
+        )
+
+        action = action.clip(-self.cnf.td3.max_action, self.cnf.td3.max_action)
+
+        if inverse_action is not None:
+            action = (
+                1 - self.cnf.td3.alpha
+            ) * action + self.cnf.td3.alpha * inverse_action.detach().cpu().numpy()
+
+            if (np.absolute(action) > 1).any():
+                action = action / np.absolute(action).max()
+        return action.squeeze()

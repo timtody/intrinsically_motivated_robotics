@@ -8,7 +8,7 @@ import collections
 import numpy as np
 from observation import Observation
 from environment import Env
-from agent import Agent
+from agent import Agent, TD3Agent
 from algo.ppo_cont import PPO, Memory
 from algo.models import ICModule
 from collections import defaultdict
@@ -49,7 +49,10 @@ class BaseExperiment:
         self.action_dim = cnf.env.action_dim
         self.state_dim = self.env.observation_space.shape[0]
 
-        self.init_agent()
+        if self.cnf.main.policy == "td3":
+            self.init_td3agent()
+        elif self.cnf.main.policy == "ppo":
+            self.init_agent()
 
         # setup experiment variables
         self.global_step = 0
@@ -59,6 +62,15 @@ class BaseExperiment:
 
     def init_agent(self, is_goal_based=False):
         self.agent = Agent(
+            self.action_dim,
+            self.state_dim,
+            self.cnf,
+            self.device,
+            is_goal_based=is_goal_based,
+        )
+
+    def init_td3agent(self, is_goal_based=False):
+        self.agent = TD3Agent(
             self.action_dim,
             self.state_dim,
             self.cnf,
@@ -77,7 +89,7 @@ class BaseExperiment:
             group=f"{self.cnf.wandb.group}",
             resume=bool(self.cnf.main.checkpoint),
         )
-        wandb.watch(self.agent.ppo.policy)
+        # wandb.watch(self.agent.ppo.policy)
 
     def create_checkpoint_dirs(self):
         if not os.path.exists(self.checkpoint_path):

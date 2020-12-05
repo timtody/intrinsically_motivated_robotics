@@ -144,8 +144,8 @@ class Experiment(BaseExperiment):
 
     def generate_goals(self, easy=20, medium=20, hard=20):
         easy_range = [5, 10]
-        med_range = [10, 25]
-        hard_range = [25, 35]
+        med_range = [10, 20]
+        hard_range = [20, 30]
         goals = []
         goals += self._generate_goals(easy, easy_range)
         goals += self._generate_goals(medium, med_range)

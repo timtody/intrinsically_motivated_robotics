@@ -1,17 +1,14 @@
-import pickle
 import torch
+import numpy as np
 
 datasets = []
-for i in range(1, 20, 2):
-    path = f"out/db/long/new-5dof{i}.p"
+for i in range(50):
+    path = f"out/ds/off-policy/ds_without_im_rank{i}.p"
     print("opening", path)
-    try:
-        with open(path, "rb") as f:
-            file = pickle.load(f)
-            datasets += file
-            del f
-            del file
-    except:
-        print("path not found")
+    ds = torch.load(path)
+    datasets.append(ds)
+    del ds
 
-torch.save(datasets, "out/5dof-noim.p")
+datasets = np.concatenate(datasets)
+
+torch.save(datasets, "out/ds/off-policy/dataset_without_im")

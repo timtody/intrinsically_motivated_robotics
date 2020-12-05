@@ -93,14 +93,19 @@ class InverseModule(nn.Module):
 
     def __init__(self, embedding_size, action_dim, base, device, lr=0.0005):
         super().__init__()
-        self.base = base
+        # self.base = base
         self.device = device
         # * 2 because we concatenate two states
+        self.linear_only = nn.Linear(embedding_size * 2, action_dim)
         self.linear = nn.Linear(embedding_size * 2, 256)
-        self.linear2 = nn.Linear(256, 1024)
-        self.linear3 = nn.Linear(1024, 1024)
-        self.head = nn.Linear(1024, action_dim)
-        self.opt = optim.Adam(self.parameters(), lr=lr)
+        self.linear2 = nn.Linear(256, 256)
+        self.linear3 = nn.Linear(256, 256)
+        self.head = nn.Linear(256, action_dim)
+        self.drop1 = nn.Dropout(p=0.3)
+        self.drop2 = nn.Dropout(p=0.3)
+        self.drop3 = nn.Dropout(p=0.3)
+        # self.head = nn.Linear(1024, action_dim)
+        self.opt = optim.Adam(self.parameters(), weight_decay=0.00001, lr=lr)
 
         # def __init__(self, embedding_size, action_dim, base, device, lr=0.0005):
         #         super().__init__()
@@ -114,16 +119,20 @@ class InverseModule(nn.Module):
         self.opt = optim.Adam(self.parameters(), lr=lr)
 
     def forward(self, x, y):
-        x = self.base(x)
-        y = self.base(y)
-        if x.dim() == 1:
-            x = x.unsqueeze(0)
-        if y.dim() == 1:
-            y = y.unsqueeze(0)
-        x = torch.cat([x, y], dim=1)
-        x = F.relu(self.linear(x))
-        x = F.relu(self.linear2(x))
-        x = F.relu(self.linear3(x))
+        # x = self.base(x)
+        # y = self.base(y)
+        # if x.dim() == 1:
+        #    x = x.unsqueeze(0)
+        # if y.dim() == 1:
+        #    y = y.unsqueeze(0)
+        if x.dim() > 1:
+            x = torch.cat([x, y], dim=1)
+        else:
+            x = torch.cat([x, y], dim=0)
+        # x = self.linear_only(x)
+        x = self.drop1(F.relu(self.linear(x)))
+        # x = self.drop2(F.relu(self.linear2(x)))
+        # x = self.drop3(F.relu(self.linear3(x)))
         x = self.head(x)
         return x
 

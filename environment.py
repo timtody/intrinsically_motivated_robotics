@@ -71,6 +71,11 @@ class Env(gym.Env):
             self._gripper.get_configuration_tree(),
         )
 
+    def set_arm_position(self, position):
+        self._set_vel_control(False)
+        self._arm.set_joint_positions(position)
+        self._set_vel_control(True)
+
     def _reset_robot(self):
         self._set_vel_control(False)
         self._arm.set_joint_positions(self._joint_start_positions)
@@ -583,25 +588,25 @@ class Env(gym.Env):
         # slf = sim.simReadCollision(handle)
         return other
 
-    def save_state(self, timestep):
-        path = os.path.join("checkpoints", str(timestep))
-        if not os.path.exists(path):
-            os.mkdir(path)
-        state = dict(
-            joint_positions=self._arm.get_joint_positions(),
-            gripper_positions=self._gripper.get_joint_positions(),
-            joint_start_positions=self._joint_start_positions,
-            gripper_start_position=self._gripper_start_positions,
-            gripper_last_position=list(self._gripper_last_position),
-            sound_played=self.sound_played,
-            gripper_speed=self.gripper_speed,
-            joint_target_velocities=self._arm.get_joint_target_velocities(),
-            gripper_target_velocities=self._gripper.get_joint_target_velocities(),
-        )
-        with open(
-            os.path.join("checkpoints", str(timestep), "env_state.json"), "w"
-        ) as f:
-            json.dump(state, f)
+    # goalimestep):
+    #     path = os.path.join("checkpoints", str(timestep))
+    #     if not os.path.exists(path):
+    #         os.mkdir(path)
+    #     state = dict(
+    #         joint_positions=self._arm.get_joint_positions(),
+    #         gripper_positions=self._gripper.get_joint_positions(),
+    #         joint_start_positions=self._joint_start_positions,
+    #         gripper_start_position=self._gripper_start_positions,
+    #         gripper_last_position=list(self._gripper_last_position),
+    #         sound_played=self.sound_played,
+    #         gripper_speed=self.gripper_speed,
+    #         joint_target_velocities=self._arm.get_joint_target_velocities(),
+    #         gripper_target_velocities=self._gripper.get_joint_target_velocities(),
+    #     )
+    #     with open(
+    #         os.path.join("checkpoints", str(timestep), "env_state.json"), "w"
+    #     ) as f:
+    #         json.dump(state, f)
 
     def load_state(self, path):
         print("loading env state")

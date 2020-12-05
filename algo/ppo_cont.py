@@ -79,9 +79,8 @@ class ActorCritic(nn.Module):
 
         if inverse_action is not None:
             action = (1 - self.alpha) * action + self.alpha * inverse_action.detach()
-            if action[0] > 1 or action[1] > 1:
-                action = action / action.max()
-
+            if (action.abs() > 1).any():
+                action = action / action.abs().max()
         action_logprob = dist.log_prob(action)
         entropy = dist.entropy()
 
