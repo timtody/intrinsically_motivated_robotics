@@ -9,6 +9,8 @@ main:
   save_every: 100000
   reset: False
 
+  tag: lorey-batcher
+
   iv_train_steps: 25000
   with_im: True
   dataset_len: 1000000

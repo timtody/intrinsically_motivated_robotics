@@ -47,7 +47,7 @@ class Experiment(BaseExperiment):
         return goals
 
     def run(self, pre_run_results):
-        goals = self.generate_goals(easy=0, medium=0, hard=1)
+        goals = self.generate_goals()
         goal = goals[0]
 
         model = IVModel(self.cnf, 2)
@@ -93,7 +93,7 @@ class Experiment(BaseExperiment):
                     done = True
                     reward = 10
 
-                if ep_len > 500:
+                if ep_len > 300:
                     done = True
                     reward = 0
 
@@ -135,4 +135,6 @@ class Experiment(BaseExperiment):
                 "alpha",
             ],
         )
-        df.to_csv(f"results/icdl/all-diffs-im-{cnf.main.with_im}-{datetime.now()}.csv")
+        df.to_csv(
+            f"results/icdl/{cnf.main.tag}-all-diffs-im-{cnf.main.with_im}-{datetime.now()}.csv"
+        )
