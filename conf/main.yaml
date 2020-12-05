@@ -39,7 +39,7 @@ td3:
   max_action: 1
   discount: 0.99
   alpha: 0.2
-  burn_in: 20000
+  burn_in: 50000
 
 env:
   scene_path: base.ttt
