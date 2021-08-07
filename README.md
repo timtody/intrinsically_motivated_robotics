@@ -2,3 +2,4 @@
 This repositoy contains the code for the [master's thesis](https://drive.google.com/file/d/1z-CzYXX3lF-L5jk5ozgvnYQmdprxqU0R/view?usp=sharing) on intrinsically motivated learning in robotics conducted at the [Frankfurt Institute for Advanced Studies](https://fias.institute/en/) under supervision of [Jochen Triesch](https://www.fias.science/en/neuroscience/research-groups/jochen-triesch/) and Charles Wilmot.
 
 ## Summary
+The goal of this thesis was to investigate how intrinsic motivation can be used to benefit the control of highly complex 7-DOF robot arms. We first conducted a detailed analysis how reinforcement learnign agents (PPO) without any extrinsic rewards discover and manipulate their environment. We found that exploration which uses intrinsic motivation computed from multiple modalities (proprioception **and** touch) is much more efficient than using either proprioception or touch in isolation. We then 
