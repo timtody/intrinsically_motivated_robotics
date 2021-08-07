@@ -5,7 +5,7 @@ The goal of this thesis was to investigate how intrinsic motivation can be used 
 
 We first conducted a detailed analysis how reinforcement learnign agents (PPO) without any extrinsic rewards discover and manipulate their environment. We found that exploration which uses intrinsic motivation computed from multiple modalities (proprioception **and** touch) is much more efficient than using either proprioception or touch in isolation. We thus advocate that all possible sensor streams should be factored in when trying to model human-like exploration schema.
 
-The second part of the thesis develops a novel reinforcement learning algorithm that uses a learned inverse model of the environment to reach goals in sparse reward settings. We find that this approach is order of magnitude more effective than using random exploration to reach goals. Furthermore, our approach is suited for on-policy learning methods and fulfills a similar role as hindsight experience replay (HER) does in off-policy settings.
+The second part of the thesis develops a novel reinforcement learning algorithm that uses a learned inverse model of the environment to reach goals in sparse reward settings. We find that this approach is order of magnitude more effective than using random exploration to reach goals. Furthermore, our approach is suited for on-policy learning methods and fulfills a similar role as hindsight experience replay (HER) does in off-policy settings. Our approach uses a mixture policy which consists of a linear interpolation of a standard PPO policy and a deep inverse model which is conditioned on goals. We use a mixing rate $\alpha$. Note that $\alpha = 0$ reduces to the baseline RL setting with only a PPO policy:
 
 ![performance](prod/alphas.png)
 
